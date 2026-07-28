@@ -1,32 +1,74 @@
-# React + TypeScript + Vite
+# Global Hub
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Hub personnel d'organisation (planning, notes, post-its, tâches, todo-list).
+Contexte produit, specs des modules et décisions techniques : voir
+[`PROJECT.md`](./PROJECT.md).
 
-Currently, two official plugins are available:
+## Prérequis
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Node 20+
+- npm
 
-## React Compiler
+## Installation
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## Lancer en local
+
+```bash
+npm run dev
+```
+
+App servie sur http://localhost:5173 (HMR activé).
+
+Build de production :
+
+```bash
+npm run build     # typecheck (tsc -b) + build Vite dans dist/
+npm run preview   # sert le build de production en local
+```
+
+## Storybook (librairie de composants)
+
+```bash
+npm run storybook
+```
+
+Storybook sur http://localhost:6006 — permet de développer/tester chaque
+widget (composants `src/components/ui` et `src/modules/*`) isolément, sans
+lancer toute l'appli.
+
+Build statique de Storybook (déploiement) :
+
+```bash
+npm run build-storybook
+```
+
+## Tests
+
+```bash
+npm run test        # lance les tests une fois (CI-friendly)
+npm run test:watch  # mode watch
+```
+
+Les tests sont branchés sur l'addon Vitest de Storybook : chaque story
+(`*.stories.tsx`) devient un test exécuté dans un navigateur headless
+(Playwright/Chromium). Aucune story n'existe encore à ce stade du projet —
+la commande `test` remontera donc `No test files found` tant qu'on n'a pas
+commencé à en écrire au fil de l'implémentation des modules.
+
+## Lint
+
+```bash
+npm run lint
+```
+
+Lint via [oxlint](https://oxc.rs/docs/guide/usage/linter).
+
+## Stack
+
+React + Vite + TypeScript, Tailwind v4 + shadcn/ui, React Flow (canvas des
+widgets), Dexie (stockage local IndexedDB), Storybook, PWA (`vite-plugin-pwa`).
+Détails et rationale dans [`PROJECT.md`](./PROJECT.md).
