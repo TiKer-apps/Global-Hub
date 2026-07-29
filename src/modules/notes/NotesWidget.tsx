@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ArrowDownNarrowWide, ArrowLeft, ArrowUpNarrowWide, Plus, Save, Trash2 } from 'lucide-react'
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { ModuleCard } from '@/components/module-card'
 import { db } from '@/lib/db'
 import { useNotesNavigation } from '@/canvas/notes-navigation'
 import { ToolbarButton } from '@/modules/text-editor/ToolbarButton'
@@ -147,72 +147,71 @@ export function NotesWidget() {
   const content = selectedId ? (selectedNote?.html ?? '') : draftHtml
 
   return (
-    <Card className="w-80">
-      <CardHeader>
-        <CardTitle>Notes</CardTitle>
-        <CardAction className="nodrag flex items-center gap-1">
-          {view === 'list' ? (
-            <ToolbarButton onClick={handleNewNote} aria-label="Nouvelle note">
-              <Plus className="size-3.5" />
-            </ToolbarButton>
-          ) : (
-            <>
-              <ToolbarButton onClick={handleShowList} aria-label="Retour à la liste">
-                <ArrowLeft className="size-3.5" />
-              </ToolbarButton>
-              {selectedId ? (
-                <ToolbarButton onClick={handleDeleteCurrentNote} aria-label="Supprimer la note">
-                  <Trash2 className="size-3.5" />
-                </ToolbarButton>
-              ) : (
-                <ToolbarButton onClick={handleSaveDraft} disabled={!hasDraftContent} aria-label="Enregistrer la note">
-                  <Save className="size-3.5" />
-                </ToolbarButton>
-              )}
-            </>
-          )}
-        </CardAction>
-      </CardHeader>
-      <CardContent className="nodrag">
-        {view === 'list' ? (
-          <div className="space-y-2">
-            <div className="flex items-center gap-1">
-              <select
-                value={sortField}
-                onChange={(e) => setSortField(e.target.value as SortField)}
-                aria-label="Trier par"
-                className="h-7 rounded-md border bg-background px-1.5 text-xs"
-              >
-                <option value="createdAt">Date de création</option>
-                <option value="updatedAt">Date de modification</option>
-              </select>
-              <ToolbarButton onClick={toggleSortDir} aria-label="Inverser l'ordre du tri">
-                {sortDir === 'desc' ? (
-                  <ArrowDownNarrowWide className="size-3.5" />
-                ) : (
-                  <ArrowUpNarrowWide className="size-3.5" />
-                )}
-              </ToolbarButton>
-            </div>
-            <NoteList notes={notes} onSelect={handleSelect} onToggleImportant={handleToggleImportant} />
-          </div>
-        ) : selectedId && selectedNote?.id !== selectedId ? (
-          <p className="text-sm text-muted-foreground">Chargement…</p>
+    <ModuleCard
+      className="w-80"
+      title="Notes"
+      headerClassName="bg-blue-300 text-white"
+      action={
+        view === 'list' ? (
+          <ToolbarButton onClick={handleNewNote} aria-label="Nouvelle note">
+            <Plus className="size-3.5" />
+          </ToolbarButton>
         ) : (
-          <div className="space-y-2">
-            <input
-              key={`title-${selectedId ?? 'draft'}`}
-              type="text"
-              autoComplete="off"
-              defaultValue={title}
-              onChange={(e) => handleTitleChange(e.target.value)}
-              placeholder="Titre"
-              className="w-full border-b bg-transparent px-1 pb-1.5 text-sm font-medium outline-none placeholder:text-muted-foreground placeholder:font-normal"
-            />
-            <NoteEditor key={`editor-${selectedId ?? 'draft'}`} content={content} onChange={handleContentChange} />
+          <>
+            <ToolbarButton onClick={handleShowList} aria-label="Retour à la liste">
+              <ArrowLeft className="size-3.5" />
+            </ToolbarButton>
+            {selectedId ? (
+              <ToolbarButton onClick={handleDeleteCurrentNote} aria-label="Supprimer la note">
+                <Trash2 className="size-3.5" />
+              </ToolbarButton>
+            ) : (
+              <ToolbarButton onClick={handleSaveDraft} disabled={!hasDraftContent} aria-label="Enregistrer la note">
+                <Save className="size-3.5" />
+              </ToolbarButton>
+            )}
+          </>
+        )
+      }
+    >
+      {view === 'list' ? (
+        <div className="space-y-2">
+          <div className="flex items-center gap-1">
+            <select
+              value={sortField}
+              onChange={(e) => setSortField(e.target.value as SortField)}
+              aria-label="Trier par"
+              className="h-7 rounded-md border bg-background px-1.5 text-xs"
+            >
+              <option value="createdAt">Date de création</option>
+              <option value="updatedAt">Date de modification</option>
+            </select>
+            <ToolbarButton onClick={toggleSortDir} aria-label="Inverser l'ordre du tri">
+              {sortDir === 'desc' ? (
+                <ArrowDownNarrowWide className="size-3.5" />
+              ) : (
+                <ArrowUpNarrowWide className="size-3.5" />
+              )}
+            </ToolbarButton>
           </div>
-        )}
-      </CardContent>
-    </Card>
+          <NoteList notes={notes} onSelect={handleSelect} onToggleImportant={handleToggleImportant} />
+        </div>
+      ) : selectedId && selectedNote?.id !== selectedId ? (
+        <p className="text-sm text-muted-foreground">Chargement…</p>
+      ) : (
+        <div className="space-y-2">
+          <input
+            key={`title-${selectedId ?? 'draft'}`}
+            type="text"
+            autoComplete="off"
+            defaultValue={title}
+            onChange={(e) => handleTitleChange(e.target.value)}
+            placeholder="Titre"
+            className="w-full border-b bg-transparent px-1 pb-1.5 text-sm font-medium outline-none placeholder:text-muted-foreground placeholder:font-normal"
+          />
+          <NoteEditor key={`editor-${selectedId ?? 'draft'}`} content={content} onChange={handleContentChange} />
+        </div>
+      )}
+    </ModuleCard>
   )
 }

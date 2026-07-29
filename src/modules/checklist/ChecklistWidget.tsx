@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { ModuleCard } from '@/components/module-card'
 import { cn } from '@/lib/utils'
 import type { ChecklistLine } from './types'
 
@@ -14,28 +14,21 @@ interface ChecklistWidgetProps {
 // -> grisée + coche), styles différents portés par chaque module appelant.
 export function ChecklistWidget({ title, lines, onToggleLine, className }: ChecklistWidgetProps) {
   return (
-    <Card className={cn('w-72', className)}>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-1">
-        {lines.length === 0 && (
-          <p className="text-sm text-muted-foreground">À implémenter.</p>
-        )}
-        {lines.map((line) => (
-          <div
-            key={line.id}
-            onClick={() => onToggleLine?.(line.id)}
-            className={cn(
-              'cursor-pointer text-sm',
-              line.isItem && line.done && 'line-through text-muted-foreground',
-              !line.isItem && line.done && 'text-muted-foreground',
-            )}
-          >
-            {!line.isItem && line.done ? `${line.text} ✓` : line.text}
-          </div>
-        ))}
-      </CardContent>
-    </Card>
+    <ModuleCard className={cn('w-72', className)} title={title} contentClassName="space-y-1">
+      {lines.length === 0 && <p className="text-sm text-muted-foreground">À implémenter.</p>}
+      {lines.map((line) => (
+        <div
+          key={line.id}
+          onClick={() => onToggleLine?.(line.id)}
+          className={cn(
+            'cursor-pointer text-sm',
+            line.isItem && line.done && 'line-through text-muted-foreground',
+            !line.isItem && line.done && 'text-muted-foreground',
+          )}
+        >
+          {!line.isItem && line.done ? `${line.text} ✓` : line.text}
+        </div>
+      ))}
+    </ModuleCard>
   )
 }

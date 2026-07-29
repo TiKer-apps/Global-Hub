@@ -127,9 +127,15 @@ global-hub/
     ├── main.tsx
     ├── App.tsx                # rend <HubCanvas />
     ├── index.css              # imports Tailwind + thème shadcn
-    ├── components/ui/         # composants shadcn (button, card)
+    ├── components/
+    │   ├── ui/                 # composants shadcn (button, card, popover)
+    │   └── module-card.tsx     # coquille commune à tous les widgets (nodrag,
+    │                           # en-tête full-bleed) — chaque module l'utilise
+    │                           # au lieu d'implémenter Card directement
     ├── canvas/
-    │   └── HubCanvas.tsx       # canvas React Flow + nodeTypes des modules
+    │   ├── HubCanvas.tsx       # canvas React Flow + nodeTypes des modules
+    │   └── notes-navigation.tsx # contexte de coordination entre widgets
+    │                           # indépendants (ex. Important -> ouvrir une note)
     ├── lib/
     │   ├── db.ts               # schéma Dexie (events, notes, postIts, tasks, todos)
     │   ├── types.ts            # type partagé Importable
@@ -167,10 +173,29 @@ affichés sur le canvas, sans logique métier.
   plus tard en surcouche si besoin.
 - **Frontend** : React + Vite + TypeScript.
 - **UI** : Tailwind + shadcn/ui pour les composants des widgets.
+- **ModuleCard** (`src/components/module-card.tsx`) : coquille commune à tous
+  les widgets, chaque module l'utilise plutôt que d'implémenter `Card`
+  (shadcn) directement.
+  - Pose `nodrag` une fois pour toutes sur le contenu (obligatoire pour
+    rester interactif sur un node React Flow).
+  - `headerClassName` colore **`Card` en entier** (identité visuelle du
+    module) ; la zone d'action et `CardContent` repassent explicitement sur
+    fond neutre (`bg-card`/`text-foreground`), ne laissant la couleur
+    visible qu'autour du titre.
+  - La zone d'action est une `div` maison (pas le `CardAction` shadcn, qui
+    imposerait sa propre grille limitant sa largeur au contenu) en `flex-1`
+    pour occuper l'espace restant, hauteur de ligne fixe (`h-10`) avec la
+    zone d'action à 90 % de cette hauteur.
+  - ⚠️ Ne pas passer de classe custom type `.important-surface` à
+    `headerClassName` : `Card` a sa propre classe utilitaire `bg-card`, et
+    la couche Tailwind `utilities` passe après `components` dans la
+    cascade — une classe `@layer components` perdrait face à `bg-card` à
+    spécificité égale. Toujours passer des utilitaires Tailwind directs
+    (`bg-orange-300 text-white`, etc.).
 - **Style "important"** : classe partagée `.important-surface` (définie dans
   `src/index.css` via `@layer components`, fond orange pâle + texte blanc)
-  pour tout élément flaggé important, quel que soit le module. Un seul
-  endroit à modifier pour changer la couleur partout.
+  — utilisée pour les **lignes/items** flaggés important dans une liste (ex.
+  notes), pas pour la couleur d'en-tête d'un module (cf. limite ci-dessus).
 - **Storybook** : pour tester/valider les widgets visuellement, indépendamment
   de l'appli.
 - **Layout** : React Flow — canvas zoomable/pannable, chaque module est un

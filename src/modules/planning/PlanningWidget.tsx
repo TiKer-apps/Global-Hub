@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { ModuleCard } from '@/components/module-card'
 import type { PlanningWidgetConfig } from './types'
 
 interface PlanningWidgetProps {
@@ -7,15 +7,13 @@ interface PlanningWidgetProps {
 
 export function PlanningWidget({ config }: PlanningWidgetProps) {
   return (
-    <Card className="w-80">
-      <CardHeader>
-        <CardTitle className="capitalize">
-          Planning — {config.view} ({config.mode})
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm text-muted-foreground">À implémenter.</p>
-      </CardContent>
-    </Card>
+    <ModuleCard
+      className="w-80"
+      titleClassName="capitalize"
+      headerClassName="bg-green-600 text-white"
+      title={`Planning — ${config.view} (${config.mode})`}
+    >
+      <p className="text-sm text-muted-foreground">À implémenter.</p>
+    </ModuleCard>
   )
 }
