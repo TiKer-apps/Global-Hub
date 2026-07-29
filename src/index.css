@@ -128,3 +128,12 @@
     @apply font-sans;
     }
 }
+
+@layer components {
+  /* Style partagé pour tout élément flaggé `important`, quel que soit le
+     module — appliqué aux items de la liste des notes et à l'en-tête du
+     widget Important ; à réutiliser pour tâches/événements plus tard. */
+  .important-surface {
+    @apply bg-orange-300 text-white;
+  }
+}

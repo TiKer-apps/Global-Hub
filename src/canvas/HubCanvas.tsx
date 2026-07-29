@@ -16,6 +16,7 @@ import { PostItWidget } from '@/modules/post-its/PostItWidget'
 import { TasksWidget } from '@/modules/tasks/TasksWidget'
 import { TodoListWidget } from '@/modules/todo-list/TodoListWidget'
 import { ImportantWidget } from '@/modules/important/ImportantWidget'
+import { NotesNavigationProvider } from './notes-navigation'
 
 const nodeTypes: NodeTypes = {
   planning: () => <PlanningWidget config={{ view: 'week', mode: 'extended' }} />,
@@ -45,17 +46,19 @@ export function HubCanvas() {
 
   return (
     <div className="h-screen w-screen">
-      <ReactFlow
-        nodes={nodes}
-        onNodesChange={onNodesChange}
-        nodeTypes={nodeTypes}
-        nodesConnectable={false}
-        fitView
-      >
-        <Background />
-        <Controls />
-        <MiniMap />
-      </ReactFlow>
+      <NotesNavigationProvider>
+        <ReactFlow
+          nodes={nodes}
+          onNodesChange={onNodesChange}
+          nodeTypes={nodeTypes}
+          nodesConnectable={false}
+          fitView
+        >
+          <Background />
+          <Controls />
+          <MiniMap />
+        </ReactFlow>
+      </NotesNavigationProvider>
     </div>
   )
 }

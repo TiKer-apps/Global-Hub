@@ -86,9 +86,25 @@ implémenter le comportement réel de chaque widget.
   ayant le statut `important` activé (ex : case à cocher sur un événement).
   - Basé uniquement sur l'état `important`, pas de filtre par date — tout
     élément flaggé apparaît, peu importe quand.
-  - En v1, seul le planning implémente concrètement ce flag ; notes/post-its
-    (et futurs modules) hériteront du même statut plus tard, sans que
-    l'architecture du module Important ait besoin de changer.
+  - **Implémenté** pour les notes (seule source réelle à ce stade — le
+    planning n'a pas encore d'UI). Affichage en **rubriques par type**
+    (« Notes », puis plus tard « Événements », « Tâches »...) — lecture
+    seule, pas de gestion du flag ici (ça reste à la source, ex. le "!" dans
+    la liste des notes). Étendre à d'autres sources plus tard = une requête
+    + une rubrique de plus, même principe.
+  - Cliquer un item note l'ouvre directement dans le widget Notes (bascule
+    en vue éditeur sur cette note). Coordination entre les deux widgets via
+    `NotesNavigationProvider` (`src/canvas/notes-navigation.tsx`), un
+    contexte React fourni au niveau du canvas — les nodes React Flow sont
+    sinon complètement indépendants. Limite actuelle : ça ne déplace pas la
+    vue sur le canvas si le widget Notes est hors écran, ça met juste à jour
+    son état.
+  - ⚠️ IndexedDB n'accepte pas les booléens comme clé d'index valide (les
+    enregistrements avec une valeur non indexable sont silencieusement
+    exclus de l'index). Le flag `important` est indexé dans le schéma Dexie
+    mais on ne s'appuie jamais sur `.where('important')` — on lit toute la
+    table et on filtre en mémoire. Garder ce réflexe pour toute future
+    source (events, post-its).
   - Présentation (liste chronologique vs groupée) à affiner une fois
     plusieurs types d'éléments réellement flaggables.
 
@@ -127,7 +143,7 @@ global-hub/
         ├── checklist/          # ChecklistWidget.tsx, types.ts — partagé par tasks/todo-list
         ├── tasks/              # TasksWidget.tsx (wrapper de ChecklistWidget) — placeholder
         ├── todo-list/          # TodoListWidget.tsx (wrapper de ChecklistWidget) — placeholder
-        └── important/          # ImportantWidget.tsx, types.ts — placeholder
+        └── important/          # ImportantWidget.tsx, types.ts — agrège les notes flaggées
 ```
 
 Le module **notes** est implémenté (éditeur Tiptap minimal : gras, italique,
@@ -151,6 +167,10 @@ affichés sur le canvas, sans logique métier.
   plus tard en surcouche si besoin.
 - **Frontend** : React + Vite + TypeScript.
 - **UI** : Tailwind + shadcn/ui pour les composants des widgets.
+- **Style "important"** : classe partagée `.important-surface` (définie dans
+  `src/index.css` via `@layer components`, fond orange pâle + texte blanc)
+  pour tout élément flaggé important, quel que soit le module. Un seul
+  endroit à modifier pour changer la couleur partout.
 - **Storybook** : pour tester/valider les widgets visuellement, indépendamment
   de l'appli.
 - **Layout** : React Flow — canvas zoomable/pannable, chaque module est un

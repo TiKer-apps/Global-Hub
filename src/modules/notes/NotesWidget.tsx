@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { ArrowDownNarrowWide, ArrowLeft, ArrowUpNarrowWide, Plus, Save, Trash2 } from 'lucide-react'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { db } from '@/lib/db'
+import { useNotesNavigation } from '@/canvas/notes-navigation'
 import { ToolbarButton } from '@/modules/text-editor/ToolbarButton'
 import type { Note } from './types'
 import { NoteEditor } from './NoteEditor'
@@ -85,6 +86,15 @@ export function NotesWidget() {
     setSelectedId(id)
     setView('editor')
   }
+
+  // Un autre widget (Important) peut demander l'ouverture d'une note
+  // précise sans connaître directement ce composant.
+  const { requestedNoteId, consumeOpenRequest } = useNotesNavigation()
+  useEffect(() => {
+    if (!requestedNoteId) return
+    handleSelect(requestedNoteId)
+    consumeOpenRequest()
+  }, [requestedNoteId])
 
   const handleNewNote = () => {
     commitDraft()
