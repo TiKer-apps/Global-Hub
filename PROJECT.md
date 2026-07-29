@@ -64,9 +64,25 @@ implémenter le comportement réel de chaque widget.
     quittant la vue éditeur (retour liste ou nouvelle note via « + »).
   - Suppression d'une note depuis la liste (confirmation avant suppression).
 
-- **Post-its** : même principe que les notes (simple), avec en plus un choix
-  parmi quelques polices stylées (set curaté, pas un choix libre parmi
-  toutes les polices système).
+- **Post-its** : **implémenté**, modèle différent des notes — un "bloc"
+  (`PostItWidget`, widget fixe) et des post-its détachés indépendants
+  (`PostItNote`, un node React Flow par post-it, dragable).
+  - Le bloc affiche un carré jaune ; cliquer dessus ouvre un brouillon local
+    (non persisté) directement dessus. Le bouton "Détacher" transforme ce
+    brouillon en un vrai enregistrement `PostIt` (Dexie) — à ce moment il
+    apparaît sur le canvas comme un post-it indépendant, et le bloc repart
+    à vide.
+  - Un post-it détaché est dragable par défaut (`nodrag` seulement pendant
+    l'édition, sinon on ne pourrait jamais le déplacer en le saisissant).
+    Cliquer dessus l'active : le texte devient éditable directement sur le
+    fond jaune, et un menu flottant apparaît au-dessus (polices + suppression).
+    Se ferme au clic en dehors (listener `mousedown` sur `document`).
+  - Position persistée dans Dexie (`x`/`y` sur `PostIt`) — contrairement aux
+    widgets fixes, dont la position reste locale pour l'instant. Pendant un
+    drag, la position affichée passe par un état local (`dragOverrides`)
+    pour rester fluide ; Dexie n'est mis à jour qu'au relâchement.
+  - Polices : set curaté de piles système (`src/modules/post-its/fonts.ts`),
+    pas de nouvelle dépendance webfont pour l'instant.
 
 - **Tâches** et **Todo-list** : deux composants distincts (styles
   probablement très différents à terme), mais avec le même comportement
@@ -145,7 +161,8 @@ global-hub/
         ├── notes/              # NotesWidget.tsx (Dexie) + NoteEditor.tsx (Tiptap) + story
         ├── text-editor/        # TextStyleExtras (Tiptap), Toolbar{Button,Popover,Divider}
         │                       # — partagé par notes/ et les futurs post-its
-        ├── post-its/           # PostItWidget.tsx, types.ts (PostIt) — placeholder
+        ├── post-its/           # PostItWidget.tsx (bloc), PostItNote.tsx (note
+        │                       # détachée, node dynamique), fonts.ts, types.ts
         ├── checklist/          # ChecklistWidget.tsx, types.ts — partagé par tasks/todo-list
         ├── tasks/              # TasksWidget.tsx (wrapper de ChecklistWidget) — placeholder
         ├── todo-list/          # TodoListWidget.tsx (wrapper de ChecklistWidget) — placeholder
