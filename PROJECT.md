@@ -46,6 +46,15 @@ implémenter le comportement réel de chaque widget.
 - **Notes** : édition simple avec une petite barre d'outils — couleur de
   texte, taille, gras, italique. Pas de mise en forme avancée (titres,
   listes imbriquées...), on reste minimal.
+  - Une seule instance du widget gère une **liste** de notes (pas une note
+    fixe par widget). Deux vues, basculables via des boutons toggle dans
+    l'en-tête : **Liste** (titre de chaque note + toggle important) et
+    **Éditeur** (champ titre + éditeur riche).
+  - L'éditeur reflète la sélection courante de la liste : pas de sélection
+    → brouillon local non persisté (vide tant que rien n'est tapé) ;
+    sélection → édition directe de la note, sauvegarde debouncée comme
+    avant. Un brouillon non vide n'est enregistré comme nouvelle note qu'en
+    quittant la vue éditeur (retour liste ou nouvelle note via « + »).
 
 - **Post-its** : même principe que les notes (simple), avec en plus un choix
   parmi quelques polices stylées (set curaté, pas un choix libre parmi
@@ -102,17 +111,21 @@ global-hub/
     │   ├── types.ts            # type partagé Importable
     │   └── utils.ts            # helper cn() (shadcn)
     └── modules/
-        ├── planning/           # PlanningWidget.tsx, types.ts (CalendarEvent...)
-        ├── notes/              # NotesWidget.tsx, types.ts (Note)
-        ├── post-its/           # PostItWidget.tsx, types.ts (PostIt)
+        ├── planning/           # PlanningWidget.tsx, types.ts (CalendarEvent...) — placeholder
+        ├── notes/              # NotesWidget.tsx (Dexie) + NoteEditor.tsx (Tiptap) + story
+        ├── text-editor/        # TextStyleExtras (Tiptap), Toolbar{Button,Popover,Divider}
+        │                       # — partagé par notes/ et les futurs post-its
+        ├── post-its/           # PostItWidget.tsx, types.ts (PostIt) — placeholder
         ├── checklist/          # ChecklistWidget.tsx, types.ts — partagé par tasks/todo-list
-        ├── tasks/              # TasksWidget.tsx (wrapper de ChecklistWidget)
-        ├── todo-list/          # TodoListWidget.tsx (wrapper de ChecklistWidget)
-        └── important/          # ImportantWidget.tsx, types.ts
+        ├── tasks/              # TasksWidget.tsx (wrapper de ChecklistWidget) — placeholder
+        ├── todo-list/          # TodoListWidget.tsx (wrapper de ChecklistWidget) — placeholder
+        └── important/          # ImportantWidget.tsx, types.ts — placeholder
 ```
 
-Chaque module ne contient pour l'instant qu'un composant placeholder affiché
-sur le canvas (aucune logique métier implémentée).
+Le module **notes** est implémenté (éditeur Tiptap minimal : gras, italique,
+taille et couleur en sous-menus, correcteur orthographique désactivable,
+persistance Dexie débouncée). Les autres modules restent des placeholders
+affichés sur le canvas, sans logique métier.
 
 ### Scripts npm
 

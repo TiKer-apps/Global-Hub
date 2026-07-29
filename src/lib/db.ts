@@ -20,6 +20,11 @@ class HubDatabase extends Dexie {
       tasks: 'id',
       todos: 'id',
     })
+    // v2 : index sur createdAt pour permettre le tri de la liste des notes
+    // par date de création, en plus de la date de modification.
+    this.version(2).stores({
+      notes: 'id, createdAt, updatedAt, important',
+    })
   }
 }
 
