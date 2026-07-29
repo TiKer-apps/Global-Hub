@@ -136,4 +136,15 @@
   .important-surface {
     @apply bg-orange-300 text-white;
   }
+
+  /* Placeholder Tiptap (@tiptap/extension-placeholder) : l'extension pose
+     l'attribut `data-placeholder` et la classe `is-editor-empty`, mais ne
+     fournit aucun style — c'est à l'appli de l'afficher. */
+  .ProseMirror p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    color: var(--muted-foreground);
+    pointer-events: none;
+  }
 }

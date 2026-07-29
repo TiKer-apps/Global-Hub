@@ -7,15 +7,17 @@ declare module '@tiptap/core' {
       unsetColor: () => ReturnType
       setFontSize: (fontSize: string) => ReturnType
       unsetFontSize: () => ReturnType
+      setFontFamily: (fontFamily: string) => ReturnType
+      unsetFontFamily: () => ReturnType
     }
   }
 }
 
 // Tiptap ne fournit pas d'extension FontSize stable (uniquement en
 // prerelease), et le mark `textStyle` ne peut porter qu'un seul jeu
-// d'attributs enregistré sous ce nom : color et fontSize sont donc
-// regroupés dans une seule extension plutôt qu'empilés séparément (deux
-// extensions nommées `textStyle` s'écraseraient l'une l'autre).
+// d'attributs enregistré sous ce nom : color, fontSize et fontFamily sont
+// donc regroupés dans une seule extension plutôt qu'empilés séparément
+// (plusieurs extensions nommées `textStyle` s'écraseraient l'une l'autre).
 export const TextStyleExtras = TextStyle.extend({
   addAttributes() {
     return {
@@ -34,6 +36,14 @@ export const TextStyleExtras = TextStyle.extend({
         renderHTML: (attributes: { fontSize?: string | null }) => {
           if (!attributes.fontSize) return {}
           return { style: `font-size: ${attributes.fontSize}` }
+        },
+      },
+      fontFamily: {
+        default: null,
+        parseHTML: (element: HTMLElement) => element.style.fontFamily || null,
+        renderHTML: (attributes: { fontFamily?: string | null }) => {
+          if (!attributes.fontFamily) return {}
+          return { style: `font-family: ${attributes.fontFamily}` }
         },
       },
     }
@@ -57,6 +67,14 @@ export const TextStyleExtras = TextStyle.extend({
         () =>
         ({ chain }) =>
           chain().setMark('textStyle', { fontSize: null }).removeEmptyTextStyle().run(),
+      setFontFamily:
+        (fontFamily: string) =>
+        ({ chain }) =>
+          chain().setMark('textStyle', { fontFamily }).run(),
+      unsetFontFamily:
+        () =>
+        ({ chain }) =>
+          chain().setMark('textStyle', { fontFamily: null }).removeEmptyTextStyle().run(),
     }
   },
 })

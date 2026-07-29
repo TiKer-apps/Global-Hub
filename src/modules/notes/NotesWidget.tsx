@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowDownNarrowWide, ArrowLeft, ArrowUpNarrowWide, Plus, Save, Trash2 } from 'lucide-react'
+import { useNodeId, useReactFlow } from '@xyflow/react'
+import { ArrowDownNarrowWide, ArrowLeft, ArrowUpNarrowWide, Plus, Save, Sticker, Trash2 } from 'lucide-react'
 import { ModuleCard } from '@/components/module-card'
 import { db } from '@/lib/db'
 import { useNotesNavigation } from '@/canvas/notes-navigation'
 import { ToolbarButton } from '@/modules/text-editor/ToolbarButton'
+import { RichTextEditor } from '@/modules/text-editor/RichTextEditor'
 import type { Note } from './types'
-import { NoteEditor } from './NoteEditor'
 import { NoteList } from './NoteList'
 
 const SAVE_DEBOUNCE_MS = 400
@@ -22,6 +23,9 @@ export function NotesWidget() {
   const [draftHtml, setDraftHtml] = useState('')
   const [sortField, setSortField] = useState<SortField>('updatedAt')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
+  const nodeId = useNodeId()
+  const { getNode } = useReactFlow()
+  const postItCount = useLiveQuery(() => db.postIts.count(), []) ?? 0
 
   const notes = useLiveQuery(() => {
     const collection = db.notes.orderBy(sortField)
@@ -146,6 +150,24 @@ export function NotesWidget() {
   const title = selectedId ? (selectedNote?.title ?? '') : draftTitle
   const content = selectedId ? (selectedNote?.html ?? '') : draftHtml
 
+  // Reprend le contenu courant (brouillon ou note sélectionnée) tel quel
+  // dans un nouveau post-it détaché, sans dépendre de l'état de sauvegarde
+  // de la note elle-même.
+  const handleCreatePostIt = () => {
+    if (!content || content === '<p></p>') return
+    const notesPosition = nodeId ? getNode(nodeId)?.position : undefined
+    const jitter = (postItCount % 5) * 20
+    const now = new Date().toISOString()
+    db.postIts.add({
+      id: crypto.randomUUID(),
+      html: content,
+      important: false,
+      createdAt: now,
+      x: (notesPosition?.x ?? 400) + jitter,
+      y: (notesPosition?.y ?? 0) + 260 + jitter,
+    })
+  }
+
   return (
     <ModuleCard
       className="w-80"
@@ -200,16 +222,25 @@ export function NotesWidget() {
         <p className="text-sm text-muted-foreground">Chargement…</p>
       ) : (
         <div className="space-y-2">
-          <input
-            key={`title-${selectedId ?? 'draft'}`}
-            type="text"
-            autoComplete="off"
-            defaultValue={title}
-            onChange={(e) => handleTitleChange(e.target.value)}
-            placeholder="Titre"
-            className="w-full border-b bg-transparent px-1 pb-1.5 text-sm font-medium outline-none placeholder:text-muted-foreground placeholder:font-normal"
-          />
-          <NoteEditor key={`editor-${selectedId ?? 'draft'}`} content={content} onChange={handleContentChange} />
+          <div className="flex items-center gap-1 border-b pb-1.5">
+            <input
+              key={`title-${selectedId ?? 'draft'}`}
+              type="text"
+              autoComplete="off"
+              defaultValue={title}
+              onChange={(e) => handleTitleChange(e.target.value)}
+              placeholder="Titre"
+              className="min-w-0 flex-1 bg-transparent px-1 text-sm font-medium outline-none placeholder:text-muted-foreground placeholder:font-normal"
+            />
+            <ToolbarButton
+              onClick={handleCreatePostIt}
+              disabled={!content || content === '<p></p>'}
+              aria-label="Créer un post-it à partir de cette note"
+            >
+              <Sticker className="size-3.5" />
+            </ToolbarButton>
+          </div>
+          <RichTextEditor key={`editor-${selectedId ?? 'draft'}`} content={content} onChange={handleContentChange} />
         </div>
       )}
     </ModuleCard>

@@ -43,9 +43,12 @@ implémenter le comportement réel de chaque widget.
     `recurrence` (champ réservé, non géré en v1). Champ `important`
     (booléen) propre à Global Hub, pas un champ standard externe.
 
-- **Notes** : édition simple avec une petite barre d'outils — couleur de
-  texte, taille, gras, italique. Pas de mise en forme avancée (titres,
-  listes imbriquées...), on reste minimal.
+- **Notes** : édition simple avec une petite barre d'outils partagée avec
+  les post-its (`StyleToolbar`, voir plus bas) — couleur de texte, taille,
+  police, gras, italique. Pas de mise en forme avancée (titres, listes
+  imbriquées...), on reste minimal.
+  - Bouton à droite du champ titre (vue éditeur) pour créer un post-it à
+    partir du contenu courant (brouillon ou note sélectionnée, tel quel).
   - Une seule instance du widget gère une **liste** de notes (pas une note
     fixe par widget). Deux vues : **Liste** (titre de chaque note + toggle
     important) et **Éditeur** (champ titre + éditeur riche).
@@ -66,23 +69,30 @@ implémenter le comportement réel de chaque widget.
 
 - **Post-its** : **implémenté**, modèle différent des notes — un "bloc"
   (`PostItWidget`, widget fixe) et des post-its détachés indépendants
-  (`PostItNote`, un node React Flow par post-it, dragable).
-  - Le bloc affiche un carré jaune ; cliquer dessus ouvre un brouillon local
-    (non persisté) directement dessus. Le bouton "Détacher" transforme ce
-    brouillon en un vrai enregistrement `PostIt` (Dexie) — à ce moment il
-    apparaît sur le canvas comme un post-it indépendant, et le bloc repart
-    à vide.
+  (`PostItNote`, un node React Flow par post-it, dragable). Même moteur
+  d'édition riche (Tiptap) et même toolbar que les notes (`StyleToolbar`) —
+  voir "Éditeur de texte partagé" plus bas.
+  - Le bloc affiche un carré jaune avec sa toolbar toujours visible (pas de
+    bascule affichage/édition ici, c'est un widget fixe comme les autres) ;
+    on y écrit un brouillon local (non persisté). Le bouton "Détacher"
+    transforme ce brouillon en un vrai enregistrement `PostIt` (Dexie) — à
+    ce moment il apparaît sur le canvas comme un post-it indépendant, et le
+    bloc repart à vide.
   - Un post-it détaché est dragable par défaut (`nodrag` seulement pendant
     l'édition, sinon on ne pourrait jamais le déplacer en le saisissant).
     Cliquer dessus l'active : le texte devient éditable directement sur le
-    fond jaune, et un menu flottant apparaît au-dessus (polices + suppression).
-    Se ferme au clic en dehors (listener `mousedown` sur `document`).
-  - Position persistée dans Dexie (`x`/`y` sur `PostIt`) — contrairement aux
-    widgets fixes, dont la position reste locale pour l'instant. Pendant un
-    drag, la position affichée passe par un état local (`dragOverrides`)
-    pour rester fluide ; Dexie n'est mis à jour qu'au relâchement.
-  - Polices : set curaté de piles système (`src/modules/post-its/fonts.ts`),
-    pas de nouvelle dépendance webfont pour l'instant.
+    fond jaune, et la toolbar apparaît flottante au-dessus (centrée), avec
+    en plus un bouton de suppression. Se ferme au clic en dehors (listener
+    `mousedown` en phase **capture** sur `document` — la phase bulle ne
+    suffit pas, React Flow stoppe la propagation de certains clics pour son
+    propre suivi de drag/sélection).
+  - Position persistée dans Dexie (`x`/`y` sur `PostIt`). Les nodes
+    dynamiques passent par le même state `nodes` + `applyNodeChanges` que
+    les widgets fixes (pas de circuit séparé) — Dexie ne sert que de
+    persistance, synchronisé dans `nodes` à l'ajout/suppression et écrit
+    depuis `nodes` en fin de drag. Les faire suivre un circuit différent
+    avait cassé le suivi interne du drag par React Flow (le node
+    disparaissait).
 
 - **Tâches** et **Todo-list** : deux composants distincts (styles
   probablement très différents à terme), mais avec le même comportement
@@ -158,11 +168,12 @@ global-hub/
     │   └── utils.ts            # helper cn() (shadcn)
     └── modules/
         ├── planning/           # PlanningWidget.tsx, types.ts (CalendarEvent...) — placeholder
-        ├── notes/              # NotesWidget.tsx (Dexie) + NoteEditor.tsx (Tiptap) + story
-        ├── text-editor/        # TextStyleExtras (Tiptap), Toolbar{Button,Popover,Divider}
-        │                       # — partagé par notes/ et les futurs post-its
+        ├── notes/              # NotesWidget.tsx (Dexie), NoteList.tsx
+        ├── text-editor/        # useRichTextEditor, StyleToolbar, RichTextEditor,
+        │                       # TextStyleExtras (Tiptap), Toolbar{Button,Popover,
+        │                       # Divider}, fonts.ts — partagé par notes/ et post-its/
         ├── post-its/           # PostItWidget.tsx (bloc), PostItNote.tsx (note
-        │                       # détachée, node dynamique), fonts.ts, types.ts
+        │                       # détachée, node dynamique), types.ts
         ├── checklist/          # ChecklistWidget.tsx, types.ts — partagé par tasks/todo-list
         ├── tasks/              # TasksWidget.tsx (wrapper de ChecklistWidget) — placeholder
         ├── todo-list/          # TodoListWidget.tsx (wrapper de ChecklistWidget) — placeholder
@@ -209,6 +220,26 @@ affichés sur le canvas, sans logique métier.
     cascade — une classe `@layer components` perdrait face à `bg-card` à
     spécificité égale. Toujours passer des utilitaires Tailwind directs
     (`bg-orange-300 text-white`, etc.).
+- **Éditeur de texte partagé** (`src/modules/text-editor/`) : notes et
+  post-its utilisent le même moteur riche (Tiptap), pas deux implémentations
+  parallèles — indispensable pour qu'un post-it créé à partir d'une note
+  garde exactement sa mise en forme (`html` transféré tel quel).
+  - `TextStyleExtras` (`text-style.ts`) : extension Tiptap portant `color`,
+    `fontSize` et `fontFamily` sur le même mark `textStyle`.
+  - `useRichTextEditor` : hook créant l'éditeur + l'état dérivé pour la
+    toolbar (bold/italic/taille/police/couleur) + le correcteur
+    orthographique. Prend un paramètre `editable` (les post-its détachés
+    basculent affichage figé ↔ édition active ; les widgets fixes restent
+    toujours éditables).
+  - `StyleToolbar` : la toolbar elle-même, un slot `extra` pour les boutons
+    propres à l'appelant (ex. suppression sur un post-it détaché) sans
+    qu'elle ait besoin de les connaître. Icône "Aa" = police (rendue dans la
+    police active, ouvre un menu listant les polices), icône `ALargeSmall` =
+    taille (icône différente de la police pour ne pas les confondre).
+  - `RichTextEditor` : composition inline (toolbar au-dessus + contenu),
+    utilisée par les notes et le bloc post-it. Un post-it détaché compose
+    `useRichTextEditor` + `StyleToolbar` séparément à la place, pour que la
+    toolbar flotte au-dessus du post-it plutôt que de pousser son contenu.
 - **Style "important"** : classe partagée `.important-surface` (définie dans
   `src/index.css` via `@layer components`, fond orange pâle + texte blanc)
   — utilisée pour les **lignes/items** flaggés important dans une liste (ex.
