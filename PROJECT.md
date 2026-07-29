@@ -47,14 +47,22 @@ implémenter le comportement réel de chaque widget.
   texte, taille, gras, italique. Pas de mise en forme avancée (titres,
   listes imbriquées...), on reste minimal.
   - Une seule instance du widget gère une **liste** de notes (pas une note
-    fixe par widget). Deux vues, basculables via des boutons toggle dans
-    l'en-tête : **Liste** (titre de chaque note + toggle important) et
-    **Éditeur** (champ titre + éditeur riche).
+    fixe par widget). Deux vues : **Liste** (titre de chaque note + toggle
+    important) et **Éditeur** (champ titre + éditeur riche).
+  - En-tête contextuel par vue, un seul bouton pertinent visible à la fois :
+    - Vue **Liste** : uniquement **+** (nouvelle note).
+    - Vue **Éditeur** : **Liste** (y retourner) + soit **Enregistrer**
+      (brouillon non encore persisté, désactivé si vide) soit **Supprimer**
+      (note déjà réelle) — jamais les deux, jamais "+" ici.
+    Pas de bouton "Éditeur" séparé — redondant avec la sélection d'un item
+    ou "+". Suppression retirée de la liste (elle vit dans l'éditeur).
   - L'éditeur reflète la sélection courante de la liste : pas de sélection
     → brouillon local non persisté (vide tant que rien n'est tapé) ;
     sélection → édition directe de la note, sauvegarde debouncée comme
-    avant. Un brouillon non vide n'est enregistré comme nouvelle note qu'en
+    avant. Un brouillon non vide est enregistré soit explicitement (bouton
+    Enregistrer, reste ouvert dans l'éditeur), soit en filet de sécurité en
     quittant la vue éditeur (retour liste ou nouvelle note via « + »).
+  - Suppression d'une note depuis la liste (confirmation avant suppression).
 
 - **Post-its** : même principe que les notes (simple), avec en plus un choix
   parmi quelques polices stylées (set curaté, pas un choix libre parmi

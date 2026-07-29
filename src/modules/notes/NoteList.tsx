@@ -17,7 +17,10 @@ export function NoteList({ notes, onSelect, onToggleImportant }: NoteListProps) 
   }
 
   return (
-    <ul className="max-h-64 space-y-0.5 overflow-y-auto">
+    // ~5 lignes visibles (calé sur la hauteur d'une ligne + son espacement),
+    // le reste scrolle. `nowheel` : sans ça, la molette est captée par le
+    // zoom du canvas React Flow plutôt que de scroller la liste.
+    <ul className="nowheel max-h-[150px] space-y-0.5 overflow-y-auto">
       {notes.map((note) => (
         <li key={note.id} className="flex items-center gap-1">
           <button

@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowDownNarrowWide, ArrowUpNarrowWide, List, NotebookPen, Plus } from 'lucide-react'
+import { ArrowDownNarrowWide, ArrowLeft, ArrowUpNarrowWide, Plus, Save, Trash2 } from 'lucide-react'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { db } from '@/lib/db'
 import { ToolbarButton } from '@/modules/text-editor/ToolbarButton'
-import { ToolbarDivider } from '@/modules/text-editor/ToolbarDivider'
 import type { Note } from './types'
 import { NoteEditor } from './NoteEditor'
 import { NoteList } from './NoteList'
@@ -53,16 +52,18 @@ export function NotesWidget() {
     )
   }
 
+  const hasDraftContent = draftTitle.trim() !== '' || (draftHtml !== '' && draftHtml !== '<p></p>')
+
   // Sans sélection, le titre/contenu tapés restent un brouillon local, non
-  // persisté — seulement commité comme nouvelle note s'il n'est pas vide, au
-  // moment de quitter la vue éditeur (retour liste ou nouvelle note).
-  const commitDraftIfNeeded = () => {
-    if (selectedId) return
-    const hasContent = draftTitle.trim() !== '' || (draftHtml !== '' && draftHtml !== '<p></p>')
-    if (!hasContent) return
+  // persisté — commité comme nouvelle note s'il n'est pas vide, soit
+  // explicitement (bouton Enregistrer), soit implicitement en quittant la
+  // vue éditeur (retour liste ou nouvelle note), en filet de sécurité.
+  const commitDraft = (): string | null => {
+    if (selectedId || !hasDraftContent) return null
     const now = new Date().toISOString()
+    const id = crypto.randomUUID()
     db.notes.add({
-      id: crypto.randomUUID(),
+      id,
       title: draftTitle,
       html: draftHtml,
       important: false,
@@ -71,29 +72,47 @@ export function NotesWidget() {
     })
     setDraftTitle('')
     setDraftHtml('')
+    return id
   }
 
   const handleShowList = () => {
-    commitDraftIfNeeded()
+    commitDraft()
     setView('list')
   }
 
   const handleSelect = (id: string) => {
-    commitDraftIfNeeded()
+    commitDraft()
     setSelectedId(id)
     setView('editor')
   }
 
   const handleNewNote = () => {
-    commitDraftIfNeeded()
+    commitDraft()
     setSelectedId(null)
     setDraftTitle('')
     setDraftHtml('')
     setView('editor')
   }
 
+  // Valide explicitement le brouillon en cours : la note devient réelle et
+  // reste ouverte dans l'éditeur (sauvegarde live comme toute note existante).
+  const handleSaveDraft = () => {
+    const id = commitDraft()
+    if (id) setSelectedId(id)
+  }
+
   const handleToggleImportant = (id: string, important: boolean) => {
     db.notes.update(id, { important })
+  }
+
+  // Supprime la note actuellement ouverte dans l'éditeur (bouton dédié,
+  // n'a de sens que là — rien à supprimer depuis un brouillon non enregistré).
+  const handleDeleteCurrentNote = () => {
+    if (!selectedId) return
+    if (!confirm('Supprimer cette note ?')) return
+    db.notes.delete(selectedId)
+    setSelectedId(null)
+    setView('list')
   }
 
   const toggleSortDir = () => setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
@@ -122,18 +141,24 @@ export function NotesWidget() {
       <CardHeader>
         <CardTitle>Notes</CardTitle>
         <CardAction className="nodrag flex items-center gap-1">
-          <ToolbarButton active={view === 'list'} onClick={handleShowList} aria-label="Voir la liste">
-            <List className="size-3.5" />
-          </ToolbarButton>
-          <ToolbarButton active={view === 'editor'} onClick={() => setView('editor')} aria-label="Voir l'éditeur">
-            <NotebookPen className="size-3.5" />
-          </ToolbarButton>
-          {view === 'list' && (
+          {view === 'list' ? (
+            <ToolbarButton onClick={handleNewNote} aria-label="Nouvelle note">
+              <Plus className="size-3.5" />
+            </ToolbarButton>
+          ) : (
             <>
-              <ToolbarDivider />
-              <ToolbarButton onClick={handleNewNote} aria-label="Nouvelle note">
-                <Plus className="size-3.5" />
+              <ToolbarButton onClick={handleShowList} aria-label="Retour à la liste">
+                <ArrowLeft className="size-3.5" />
               </ToolbarButton>
+              {selectedId ? (
+                <ToolbarButton onClick={handleDeleteCurrentNote} aria-label="Supprimer la note">
+                  <Trash2 className="size-3.5" />
+                </ToolbarButton>
+              ) : (
+                <ToolbarButton onClick={handleSaveDraft} disabled={!hasDraftContent} aria-label="Enregistrer la note">
+                  <Save className="size-3.5" />
+                </ToolbarButton>
+              )}
             </>
           )}
         </CardAction>
