@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ModuleCard } from '@/components/module-card'
 import { db } from '@/lib/db'
-import { useNotesNavigation } from '@/canvas/notes-navigation'
+import { useModuleNavigation } from '@/canvas/module-navigation'
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -20,12 +20,14 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 export function ImportantWidget() {
   const importantNotes =
     useLiveQuery(() => db.notes.toArray().then((notes) => notes.filter((n) => n.important)), []) ?? []
-  const { requestOpenNote } = useNotesNavigation()
+  const importantTasks =
+    useLiveQuery(() => db.tasks.toArray().then((tasks) => tasks.filter((t) => t.important)), []) ?? []
+  const { requestOpen } = useModuleNavigation()
 
-  // Rubriques par type de source — pour l'instant seules les notes existent
-  // vraiment ; ajouter événements/tâches/todo-list plus tard = une query +
-  // une Section de plus, même principe.
-  const hasAny = importantNotes.length > 0
+  // Rubriques par type de source — pour l'instant notes et tâches ; ajouter
+  // événements/todo-list plus tard = une query + une Section de plus, même
+  // principe.
+  const hasAny = importantNotes.length > 0 || importantTasks.length > 0
 
   return (
     <ModuleCard
@@ -37,21 +39,42 @@ export function ImportantWidget() {
       {!hasAny ? (
         <p className="text-sm text-muted-foreground">Rien de marqué important pour l'instant.</p>
       ) : (
-        <Section title="Notes">
-          <ul className="nowheel max-h-40 space-y-0.5 overflow-y-auto">
-            {importantNotes.map((note) => (
-              <li key={note.id}>
-                <button
-                  type="button"
-                  onClick={() => requestOpenNote(note.id)}
-                  className="w-full truncate rounded-md px-2 py-1 text-left text-sm hover:bg-muted"
-                >
-                  {(note.title ?? '').trim() || 'Sans titre'}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </Section>
+        <>
+          {importantNotes.length > 0 && (
+            <Section title="Notes">
+              <ul className="nowheel max-h-40 space-y-0.5 overflow-y-auto">
+                {importantNotes.map((note) => (
+                  <li key={note.id}>
+                    <button
+                      type="button"
+                      onClick={() => requestOpen('notes', note.id)}
+                      className="w-full truncate rounded-md px-2 py-1 text-left text-sm hover:bg-muted"
+                    >
+                      {(note.title ?? '').trim() || 'Sans titre'}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </Section>
+          )}
+          {importantTasks.length > 0 && (
+            <Section title="Tâches">
+              <ul className="nowheel max-h-40 space-y-0.5 overflow-y-auto">
+                {importantTasks.map((task) => (
+                  <li key={task.id}>
+                    <button
+                      type="button"
+                      onClick={() => requestOpen('tasks', task.id)}
+                      className="w-full truncate rounded-md px-2 py-1 text-left text-sm hover:bg-muted"
+                    >
+                      {(task.title ?? '').trim() || 'Sans titre'}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </Section>
+          )}
+        </>
       )}
     </ModuleCard>
   )

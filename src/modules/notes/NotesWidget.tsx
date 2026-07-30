@@ -4,7 +4,7 @@ import { useNodeId, useReactFlow } from '@xyflow/react'
 import { ArrowDownNarrowWide, ArrowLeft, ArrowUpNarrowWide, Plus, Save, Sticker, Trash2 } from 'lucide-react'
 import { ModuleCard } from '@/components/module-card'
 import { db } from '@/lib/db'
-import { useNotesNavigation } from '@/canvas/notes-navigation'
+import { useModuleNavigation } from '@/canvas/module-navigation'
 import { ToolbarButton } from '@/modules/text-editor/ToolbarButton'
 import { RichTextEditor } from '@/modules/text-editor/RichTextEditor'
 import type { Note } from './types'
@@ -93,12 +93,12 @@ export function NotesWidget() {
 
   // Un autre widget (Important) peut demander l'ouverture d'une note
   // précise sans connaître directement ce composant.
-  const { requestedNoteId, consumeOpenRequest } = useNotesNavigation()
+  const { request, consumeOpenRequest } = useModuleNavigation()
   useEffect(() => {
-    if (!requestedNoteId) return
-    handleSelect(requestedNoteId)
+    if (request?.module !== 'notes') return
+    handleSelect(request.id)
     consumeOpenRequest()
-  }, [requestedNoteId])
+  }, [request])
 
   const handleNewNote = () => {
     commitDraft()

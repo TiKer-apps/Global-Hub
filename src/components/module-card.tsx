@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 
@@ -12,21 +12,38 @@ interface ModuleCardProps {
   children: ReactNode
 }
 
-// Coquille commune à tous les widgets du canvas :
-// - `nodrag` posé une fois pour toutes sur le contenu (indispensable pour
-//   qu'un widget reste interactif sur un node React Flow — sinon le premier
-//   mousedown est capté par le drag du node plutôt que par le widget) ;
-// - `Card` reste blanche ; `CardHeader` porte la couleur (`headerClassName`)
-//   sur toute sa largeur ;
-// - titre et zone d'action sont chacun une superposition de deux fonds :
-//   le titre a un fond blanc dessous et la couleur par-dessus (découpe
-//   arrondie en bas à droite), la zone d'action l'inverse — couleur dessous,
-//   blanc par-dessus (découpe arrondie en haut à gauche). Ça crée une
-//   transition en courbe entre les deux zones plutôt qu'une jonction nette.
-//   `cn(headerClassName, 'bg-transparent')` sur le titre : récupère juste la
-//   couleur de *texte* de `headerClassName` (tailwind-merge écrase son
-//   `bg-*` par le `bg-transparent` qui suit, même catégorie d'utilitaire)
-//   sans quoi son fond opaque cacherait la découpe.
+const NOTCH_RADIUS = 14
+// Le bas du path (bord droit) déborde de 1px sous la vraie hauteur du
+// header : la hauteur de celui-ci se calcule en px fractionnaires, ce qui
+// laisse parfois un liseré de sa couleur visible juste avant le contenu.
+// Le SVG grandit d'autant pour que ce débord soit réellement peint (pas
+// juste dans le viewBox) et chevauche `CardContent`. Ne touche pas au calcul
+// de la courbe (`h - r`), seulement au bord bas droit du rectangle.
+const BOTTOM_BLEED = 1
+
+// Découpe entre le titre et la zone d'action, en un seul path SVG : une
+// forme vectorielle n'a par définition aucune frontière entre deux boîtes
+// DOM, donc plus de liseré possible au zoom (non entier) du canvas React
+// Flow — contrairement à la technique précédente (deux div superposées par
+// zone), qui exigeait des rustines en pixels pour chaque bord partagé.
+// `tw` (largeur du titre) est mesurée au runtime car le texte est variable.
+// La frontière est un S : le calque coloré du titre a son propre coin
+// arrondi convexe en bas (rounded-br), le calque blanc de l'action le sien
+// en haut (rounded-tl) — pas une simple encoche unique.
+function headerNotchPath(w: number, h: number, tw: number, r: number) {
+  return [
+    `M ${tw + r} 0`,
+    `L ${w} 0`,
+    `L ${w} ${h + BOTTOM_BLEED}`,
+    `L ${tw - r} ${h + BOTTOM_BLEED}`,
+    `L ${tw - r} ${h}`,
+    `A ${r} ${r} 0 0 0 ${tw} ${h - r}`,
+    `L ${tw} ${r}`,
+    `A ${r} ${r} 0 0 1 ${tw + r} 0`,
+    'Z',
+  ].join(' ')
+}
+
 export function ModuleCard({
   title,
   titleClassName,
@@ -38,49 +55,70 @@ export function ModuleCard({
 }: ModuleCardProps) {
   const cardRef = useRef<HTMLDivElement>(null)
   const headerRef = useRef<HTMLDivElement>(null)
+  const titleRef = useRef<HTMLDivElement>(null)
+  const [shape, setShape] = useState<{ w: number; h: number; tw: number } | null>(null)
 
-  // Test : la couleur de bordure de la Card reprend le fond du header. Passe
-  // par la couleur *calculée* (pas une classe `border-*` reconstruite depuis
-  // `headerClassName`) car `headerClassName` est assemblé au runtime — le nom
-  // de classe littéral n'apparaît jamais tel quel dans le source, donc le
-  // scanner statique de Tailwind ne génère jamais la règle correspondante.
+  // La bordure ET le fond de la Card reprennent celui du header. Passe par
+  // la couleur *calculée* (pas une classe `border-*`/`bg-*` reconstruite
+  // depuis `headerClassName`) car `headerClassName` est assemblé au runtime —
+  // le nom de classe littéral n'apparaît jamais tel quel dans le source, donc
+  // le scanner statique de Tailwind ne génère jamais la règle correspondante.
+  // Le fond coloré (pas seulement la bordure) évite qu'un liseré blanc/gris
+  // n'apparaisse aux bords si un pixel du contenu ne recouvre pas tout à fait
+  // la Card.
   useEffect(() => {
     if (!cardRef.current || !headerRef.current) return
-    cardRef.current.style.borderColor = getComputedStyle(headerRef.current).backgroundColor
+    const color = getComputedStyle(headerRef.current).backgroundColor
+    cardRef.current.style.borderColor = color
+    cardRef.current.style.backgroundColor = color
   }, [headerClassName])
+
+  // `offsetWidth`/`offsetHeight` (mesure de mise en page locale) plutôt que
+  // `getBoundingClientRect` : le canvas applique un `transform: scale(...)`
+  // non entier, qui fausserait la mesure avec les coordonnées écran.
+  useLayoutEffect(() => {
+    const header = headerRef.current
+    const titleEl = titleRef.current
+    if (!header || !titleEl) return
+    const measure = () => setShape({ w: header.offsetWidth, h: header.offsetHeight, tw: titleEl.offsetWidth })
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(header)
+    observer.observe(titleEl)
+    return () => observer.disconnect()
+  }, [title, action])
 
   return (
     <Card ref={cardRef} className={cn('gap-0 py-0 border', className)}>
-      <CardHeader ref={headerRef} className={headerClassName}>
-        <div className="flex h-10 mt-1 items-center border-none">
-          <div className="relative -ml-4 h-full">
-            <div className="absolute top-px right-px bottom-0 left-0 bg-card" />
-            <div className={cn('absolute inset-0 rounded-br-xl', headerClassName)} />
-            <CardTitle
-              className={cn(
-                'relative z-10 flex h-full items-center border-none pr-2 pl-4 pt-0 mt-[-1px] mr-[-1px]',
-                headerClassName,
-                'bg-transparent',
-                titleClassName,
-              )}
-            >
-              {title}
-            </CardTitle>
-          </div>
-
-          <div className="relative -mr-4 h-full flex-1">
-            <div className={cn('absolute top-0 right-0 bottom-px left-px', headerClassName)} />
-            <div className="absolute inset-0 rounded-t-xl bg-card" />
-            <div className="nodrag relative z-10 flex h-full items-center justify-end gap-1 border-none pr-4 text-foreground">
-              {action}
-            </div>
+      <CardHeader ref={headerRef} className={cn('relative p-0', headerClassName)}>
+        {shape && (
+          <svg
+            className="pointer-events-none absolute inset-x-0 top-0 w-full"
+            style={{ height: shape.h + BOTTOM_BLEED }}
+            viewBox={`0 0 ${shape.w} ${shape.h + BOTTOM_BLEED}`}
+            preserveAspectRatio="none"
+          >
+            <path d={headerNotchPath(shape.w, shape.h, shape.tw, NOTCH_RADIUS)} className="fill-card" />
+          </svg>
+        )}
+        <div className="relative flex h-10 items-center">
+          <CardTitle
+            ref={titleRef}
+            className={cn(
+              'relative z-10 flex h-full items-center pr-2 pl-4',
+              headerClassName,
+              'bg-transparent',
+              titleClassName,
+            )}
+          >
+            {title}
+          </CardTitle>
+          <div className="nodrag relative z-10 flex h-full flex-1 items-center justify-end gap-1 pr-4 text-foreground">
+            {action}
           </div>
         </div>
       </CardHeader>
-      {/* `-mt-px` : la hauteur du header est calculée en px fractionnaires,
-          ce qui laisse parfois un liseré d'1 px du fond de la Card visible
-          entre les deux — le léger chevauchement l'absorbe. */}
-      <CardContent className={cn('-mt-px nodrag rounded-b-md bg-card py-4 text-foreground', contentClassName)}>
+      <CardContent className={cn('nodrag rounded-b-md bg-card py-4 text-foreground', contentClassName)}>
         {children}
       </CardContent>
     </Card>

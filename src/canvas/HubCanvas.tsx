@@ -18,8 +18,9 @@ import { PostItWidget } from '@/modules/post-its/PostItWidget'
 import { PostItNote } from '@/modules/post-its/PostItNote'
 import { TasksWidget } from '@/modules/tasks/TasksWidget'
 import { TodoListWidget } from '@/modules/todo-list/TodoListWidget'
+import { TodoSheetNote } from '@/modules/todo-list/TodoSheetNote'
 import { ImportantWidget } from '@/modules/important/ImportantWidget'
-import { NotesNavigationProvider } from './notes-navigation'
+import { ModuleNavigationProvider } from './module-navigation'
 
 const nodeTypes: NodeTypes = {
   planning: () => <PlanningWidget config={{ view: 'week', mode: 'extended' }} />,
@@ -28,6 +29,7 @@ const nodeTypes: NodeTypes = {
   postItNote: ({ id }) => <PostItNote postItId={id} />,
   tasks: () => <TasksWidget />,
   todoList: () => <TodoListWidget />,
+  todoSheetNote: ({ id }) => <TodoSheetNote sheetId={id} />,
   important: ImportantWidget,
 }
 
@@ -52,45 +54,63 @@ export function HubCanvas() {
   const postIts = useLiveQuery(() => db.postIts.toArray(), []) ?? []
   const postItIds = useMemo(() => new Set(postIts.map((p) => p.id)), [postIts])
 
+  const todoSheets = useLiveQuery(() => db.todoSheets.toArray(), []) ?? []
+  const todoSheetIds = useMemo(() => new Set(todoSheets.map((s) => s.id)), [todoSheets])
+
   useEffect(() => {
     setNodes((nds) => {
       const existingIds = new Set(nds.map((n) => n.id))
-      const stillPresent = nds.filter((n) => n.type !== 'postItNote' || postItIds.has(n.id))
-      const added: Node[] = postIts
+      const stillPresent = nds.filter(
+        (n) => (n.type !== 'postItNote' || postItIds.has(n.id)) && (n.type !== 'todoSheetNote' || todoSheetIds.has(n.id)),
+      )
+      // `zIndex: 1` : sans ça, un post-it/fiche détaché à l'instant apparaît
+      // sous le widget fixe dont il vient de sortir — React Flow élève le
+      // node encore "selected" (celui sur lequel on vient de cliquer un
+      // bouton) via `elevateNodesOnSelect`, désactivé ci-dessous, mais
+      // autant garantir l'ordre indépendamment de la sélection.
+      const addedPostIts: Node[] = postIts
         .filter((p) => !existingIds.has(p.id))
-        .map((p) => ({ id: p.id, type: 'postItNote', position: { x: p.x, y: p.y }, data: {} }))
+        .map((p) => ({ id: p.id, type: 'postItNote', position: { x: p.x, y: p.y }, data: {}, zIndex: 1 }))
+      const addedSheets: Node[] = todoSheets
+        .filter((s) => !existingIds.has(s.id))
+        .map((s) => ({ id: s.id, type: 'todoSheetNote', position: { x: s.x, y: s.y }, data: {}, zIndex: 1 }))
+      const added = [...addedPostIts, ...addedSheets]
       return added.length ? [...stillPresent, ...added] : stillPresent
     })
-  }, [postIts, postItIds])
+  }, [postIts, postItIds, todoSheets, todoSheetIds])
 
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {
       setNodes((nds) => applyNodeChanges(changes, nds))
 
       for (const change of changes) {
-        if (change.type === 'position' && change.position && !change.dragging && postItIds.has(change.id)) {
+        if (change.type !== 'position' || !change.position || change.dragging) continue
+        if (postItIds.has(change.id)) {
           db.postIts.update(change.id, { x: change.position.x, y: change.position.y })
+        } else if (todoSheetIds.has(change.id)) {
+          db.todoSheets.update(change.id, { x: change.position.x, y: change.position.y })
         }
       }
     },
-    [postItIds],
+    [postItIds, todoSheetIds],
   )
 
   return (
     <div className="h-screen w-screen">
-      <NotesNavigationProvider>
+      <ModuleNavigationProvider>
         <ReactFlow
           nodes={nodes}
           onNodesChange={onNodesChange}
           nodeTypes={nodeTypes}
           nodesConnectable={false}
+          elevateNodesOnSelect={false}
           fitView
         >
           <Background />
           <Controls />
           <MiniMap />
         </ReactFlow>
-      </NotesNavigationProvider>
+      </ModuleNavigationProvider>
     </div>
   )
 }
