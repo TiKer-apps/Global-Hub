@@ -34,12 +34,14 @@ const nodeTypes: NodeTypes = {
 }
 
 const initialNodes: Node[] = [
+  // Planning est bien plus large (grille semaine) que les autres widgets —
+  // décalé à droite/en dessous pour ne pas chevaucher le reste.
   { id: 'planning-week', type: 'planning', position: { x: 0, y: 0 }, data: {} },
-  { id: 'notes-1', type: 'notes', position: { x: 400, y: 0 }, data: {} },
-  { id: 'post-it-1', type: 'postIt', position: { x: 720, y: 0 }, data: {} },
-  { id: 'tasks-1', type: 'tasks', position: { x: 0, y: 300 }, data: {} },
-  { id: 'todo-1', type: 'todoList', position: { x: 400, y: 300 }, data: {} },
-  { id: 'important-1', type: 'important', position: { x: 720, y: 300 }, data: {} },
+  { id: 'notes-1', type: 'notes', position: { x: 700, y: 0 }, data: {} },
+  { id: 'post-it-1', type: 'postIt', position: { x: 1020, y: 0 }, data: {} },
+  { id: 'tasks-1', type: 'tasks', position: { x: 0, y: 560 }, data: {} },
+  { id: 'todo-1', type: 'todoList', position: { x: 400, y: 560 }, data: {} },
+  { id: 'important-1', type: 'important', position: { x: 720, y: 560 }, data: {} },
 ]
 
 export function HubCanvas() {
