@@ -1,11 +1,11 @@
 import { useMemo } from 'react'
 import { cn } from '@/lib/utils'
-import { DAY_LABELS, getWeekDays, isSameDay } from './date-utils'
+import { DAY_LABELS, isSameDay } from './date-utils'
 import type { CalendarEvent } from './types'
 
 interface WeekMinimalProps {
   events: CalendarEvent[]
-  daysCount: 5 | 7
+  days: Date[]
 }
 
 function formatHour(d: Date) {
@@ -18,16 +18,17 @@ function formatHour(d: Date) {
 // s'il y en a plusieurs le même jour) avec juste la plage horaire en texte —
 // une case vide en pointillés si rien ce jour-là. Même technique d'en-tête
 // `sticky` que WeekGrid pour garder les colonnes alignées au scroll.
-export function WeekMinimal({ events, daysCount }: WeekMinimalProps) {
+export function WeekMinimal({ events, days }: WeekMinimalProps) {
+  // `today` : la vraie date du jour, pour le surlignage — indépendant de la
+  // semaine affichée (`days`), qui peut être passée/future après navigation.
   const today = useMemo(() => new Date(), [])
-  const days = useMemo(() => getWeekDays(today).slice(0, daysCount), [today, daysCount])
 
   const eventsByDay = useMemo(
     () => days.map((day) => events.filter((e) => !e.allDay && isSameDay(new Date(e.start), day))),
     [events, days],
   )
 
-  const columns = `repeat(${daysCount}, 1fr)`
+  const columns = `repeat(${days.length}, 1fr)`
 
   return (
     <div className="nowheel max-h-96 overflow-y-auto text-xs">

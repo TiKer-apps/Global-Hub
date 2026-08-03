@@ -38,6 +38,11 @@ class HubDatabase extends Dexie {
     this.version(4).stores({
       tasks: 'id, createdAt, updatedAt, important',
     })
+    // v5 : index sur externalId pour dédupliquer les events lors d'un
+    // ré-import .ics (cf. ics-import.ts).
+    this.version(5).stores({
+      events: 'id, start, source, important, externalId',
+    })
   }
 }
 

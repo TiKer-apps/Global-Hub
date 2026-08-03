@@ -23,3 +23,12 @@ export interface PlanningWidgetConfig {
   view: PlanningView
   mode: PlanningMode
 }
+
+// Plage horaire sélectionnée par glisser dans WeekGrid (heures entières,
+// `endHour` exclusif) — remonté au parent pour pré-remplir la future modale
+// de création d'event.
+export interface TimeRangeSelection {
+  day: Date
+  startHour: number
+  endHour: number
+}

@@ -15,6 +15,18 @@ export function getWeekDays(reference: Date): Date[] {
   })
 }
 
+export function addDays(date: Date, amount: number): Date {
+  const d = new Date(date)
+  d.setDate(d.getDate() + amount)
+  return d
+}
+
 export function isSameDay(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
+}
+
+const WEEK_RANGE_FORMAT = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' })
+
+export function formatWeekRange(days: Date[]): string {
+  return `${WEEK_RANGE_FORMAT.format(days[0])} – ${WEEK_RANGE_FORMAT.format(days[days.length - 1])}`
 }
