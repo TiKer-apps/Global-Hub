@@ -20,6 +20,8 @@ import { TasksWidget } from '@/modules/tasks/TasksWidget'
 import { TodoListWidget } from '@/modules/todo-list/TodoListWidget'
 import { TodoSheetNote } from '@/modules/todo-list/TodoSheetNote'
 import { ImportantWidget } from '@/modules/important/ImportantWidget'
+import { ModuleDrawer } from './ModuleDrawer'
+import { MODULES } from './module-registry'
 import { ModuleNavigationProvider } from './module-navigation'
 
 const nodeTypes: NodeTypes = {
@@ -33,15 +35,17 @@ const nodeTypes: NodeTypes = {
   important: ImportantWidget,
 }
 
+// Agencement qui reflète l'ordre de priorité voulu (cf. module-registry.ts) :
+// Important puis Planning en premier (rangée 1, Planning bien plus large
+// que les autres widgets — décalé pour ne pas chevaucher Important), Notes
+// puis Tâches ensuite, enfin Post-it puis Todo-list (rangée 2).
 const initialNodes: Node[] = [
-  // Planning est bien plus large (grille semaine) que les autres widgets —
-  // décalé à droite/en dessous pour ne pas chevaucher le reste.
-  { id: 'planning-week', type: 'planning', position: { x: 0, y: 0 }, data: {} },
-  { id: 'notes-1', type: 'notes', position: { x: 700, y: 0 }, data: {} },
-  { id: 'post-it-1', type: 'postIt', position: { x: 1020, y: 0 }, data: {} },
-  { id: 'tasks-1', type: 'tasks', position: { x: 0, y: 560 }, data: {} },
-  { id: 'todo-1', type: 'todoList', position: { x: 400, y: 560 }, data: {} },
-  { id: 'important-1', type: 'important', position: { x: 720, y: 560 }, data: {} },
+  { id: 'important-1', type: 'important', position: { x: 0, y: 0 }, data: {} },
+  { id: 'planning-week', type: 'planning', position: { x: 320, y: 0 }, data: {} },
+  { id: 'notes-1', type: 'notes', position: { x: 0, y: 560 }, data: {} },
+  { id: 'tasks-1', type: 'tasks', position: { x: 360, y: 560 }, data: {} },
+  { id: 'post-it-1', type: 'postIt', position: { x: 720, y: 560 }, data: {} },
+  { id: 'todo-1', type: 'todoList', position: { x: 1000, y: 560 }, data: {} },
 ]
 
 export function HubCanvas() {
@@ -58,6 +62,41 @@ export function HubCanvas() {
 
   const todoSheets = useLiveQuery(() => db.todoSheets.toArray(), []) ?? []
   const todoSheetIds = useMemo(() => new Set(todoSheets.map((s) => s.id)), [todoSheets])
+
+  // Nodes masqués via le drawer (cf. ModuleDrawer) — widgets fixes ou
+  // post-its/fiches détachés individuels, même mécanisme pour les deux (le
+  // filtre ci-dessous ne fait aucune distinction). Juste retirés du rendu,
+  // pas de suppression ni de persistance : rouvrir un node masqué le refait
+  // apparaître à sa position d'origine.
+  //
+  // Masquer/afficher Post-it ou Todo-list masque/affiche aussi ses instances
+  // détachées — mais cliquer une instance individuelle ne touche jamais au
+  // module ni à ses autres instances (asymétrique, cf. demande utilisateur).
+  const [hiddenModuleIds, setHiddenModuleIds] = useState<Set<string>>(new Set())
+  const toggleModule = useCallback(
+    (id: string) => {
+      setHiddenModuleIds((prev) => {
+        const next = new Set(prev)
+        const willHide = !next.has(id)
+
+        const module = MODULES.find((m) => m.id === id)
+        const childIds =
+          module?.instanceKind === 'postIt'
+            ? postIts.map((p) => p.id)
+            : module?.instanceKind === 'todoSheet'
+              ? todoSheets.map((s) => s.id)
+              : []
+
+        for (const targetId of [id, ...childIds]) {
+          if (willHide) next.add(targetId)
+          else next.delete(targetId)
+        }
+        return next
+      })
+    },
+    [postIts, todoSheets],
+  )
+  const visibleNodes = useMemo(() => nodes.filter((n) => !hiddenModuleIds.has(n.id)), [nodes, hiddenModuleIds])
 
   useEffect(() => {
     setNodes((nds) => {
@@ -99,9 +138,15 @@ export function HubCanvas() {
 
   return (
     <div className="h-screen w-screen">
+      <ModuleDrawer
+        hiddenModuleIds={hiddenModuleIds}
+        onToggleModule={toggleModule}
+        postIts={postIts}
+        todoSheets={todoSheets}
+      />
       <ModuleNavigationProvider>
         <ReactFlow
-          nodes={nodes}
+          nodes={visibleNodes}
           onNodesChange={onNodesChange}
           nodeTypes={nodeTypes}
           nodesConnectable={false}
