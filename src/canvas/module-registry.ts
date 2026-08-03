@@ -3,8 +3,10 @@ import { CalendarDays, FileText, ListChecks, ListTodo, Star, StickyNote, type Lu
 export interface ModuleDefinition {
   id: string
   label: string
-  colorClass: string
   icon: LucideIcon
+  // Thème (cf. theme-presets.ts) utilisé tant que rien n'a été personnalisé
+  // dans la modale de réglages (cf. module-theme.tsx).
+  defaultThemeId: string
   // Post-it/Todo-list ont des instances détachées dynamiques (post-its,
   // fiches) qu'on peut aussi afficher/masquer individuellement — cf.
   // ModuleDrawer, qui liste ces sous-vignettes sous la catégorie.
@@ -14,16 +16,14 @@ export interface ModuleDefinition {
 // Un "module" = un widget fixe du board (id = celui de son node dans
 // HubCanvas) — pas les post-its/fiches détachés eux-mêmes, qui sont des
 // instances dynamiques rattachées à leur module via `instanceKind`.
-// `colorClass` reprend le `headerClassName` (couleur seule) de chaque widget
-// pour garder la même identité visuelle dans le menu des modules.
 // Ordre de priorité voulu : Important, Planning, Notes, Tâches, Post-it,
 // Todo-list — reflété ici (ordre du drawer) et dans `initialNodes` de
 // HubCanvas (agencement du board).
 export const MODULES: ModuleDefinition[] = [
-  { id: 'important-1', label: 'Important', colorClass: 'bg-orange-300', icon: Star },
-  { id: 'planning-week', label: 'Planning', colorClass: 'bg-green-600', icon: CalendarDays },
-  { id: 'notes-1', label: 'Notes', colorClass: 'bg-blue-300', icon: FileText },
-  { id: 'tasks-1', label: 'Tâches', colorClass: 'bg-violet-500', icon: ListChecks },
-  { id: 'post-it-1', label: 'Post-it', colorClass: 'bg-yellow-400', icon: StickyNote, instanceKind: 'postIt' },
-  { id: 'todo-1', label: 'Todo-list', colorClass: 'bg-red-500', icon: ListTodo, instanceKind: 'todoSheet' },
+  { id: 'important-1', label: 'Important', icon: Star, defaultThemeId: 'orange-300' },
+  { id: 'planning-week', label: 'Planning', icon: CalendarDays, defaultThemeId: 'green-600' },
+  { id: 'notes-1', label: 'Notes', icon: FileText, defaultThemeId: 'blue-300' },
+  { id: 'tasks-1', label: 'Tâches', icon: ListChecks, defaultThemeId: 'violet-500' },
+  { id: 'post-it-1', label: 'Post-it', icon: StickyNote, defaultThemeId: 'yellow-400', instanceKind: 'postIt' },
+  { id: 'todo-1', label: 'Todo-list', icon: ListTodo, defaultThemeId: 'red-500', instanceKind: 'todoSheet' },
 ]

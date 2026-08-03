@@ -4,6 +4,7 @@ import { useNodeId, useReactFlow } from '@xyflow/react'
 import { EditorContent } from '@tiptap/react'
 import { SquareArrowOutUpRight } from 'lucide-react'
 import { ModuleCard } from '@/components/module-card'
+import { useModuleHeaderClassName } from '@/canvas/module-theme'
 import { db } from '@/lib/db'
 import { ToolbarButton } from '@/modules/text-editor/ToolbarButton'
 import { StyleToolbar } from '@/modules/text-editor/StyleToolbar'
@@ -39,6 +40,7 @@ function parseDraftLines(html: string): ChecklistLine[] {
 // post-it, la fiche détachée n'est plus éditable une fois créée : seul le
 // texte écrit ICI passe par l'éditeur riche.
 export function TodoListWidget() {
+  const headerClassName = useModuleHeaderClassName('todo-1', 'red-500')
   const [draftHtml, setDraftHtml] = useState('')
   const nodeId = useNodeId()
   const { getNode } = useReactFlow()
@@ -71,7 +73,7 @@ export function TodoListWidget() {
   }
 
   return (
-    <ModuleCard className="w-72" title="Todo-list" headerClassName="bg-red-500 text-white">
+    <ModuleCard className="w-72" title="Todo-list" headerClassName={headerClassName}>
       <div className="flex flex-col items-center gap-2">
         {editor && editorState && (
           <StyleToolbar

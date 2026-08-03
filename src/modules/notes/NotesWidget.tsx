@@ -5,6 +5,7 @@ import { ArrowDownNarrowWide, ArrowLeft, ArrowUpNarrowWide, Plus, Save, Sticker,
 import { ModuleCard } from '@/components/module-card'
 import { db } from '@/lib/db'
 import { useModuleNavigation } from '@/canvas/module-navigation'
+import { useModuleHeaderClassName } from '@/canvas/module-theme'
 import { ToolbarButton } from '@/modules/text-editor/ToolbarButton'
 import { RichTextEditor } from '@/modules/text-editor/RichTextEditor'
 import type { Note } from './types'
@@ -17,6 +18,7 @@ type SortField = 'createdAt' | 'updatedAt'
 type SortDir = 'asc' | 'desc'
 
 export function NotesWidget() {
+  const headerClassName = useModuleHeaderClassName('notes-1', 'blue-300')
   const [view, setView] = useState<View>('list')
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [draftTitle, setDraftTitle] = useState('')
@@ -172,7 +174,7 @@ export function NotesWidget() {
     <ModuleCard
       className="w-80"
       title="Notes"
-      headerClassName="bg-blue-300 text-white"
+      headerClassName={headerClassName}
       action={
         view === 'list' ? (
           <ToolbarButton onClick={handleNewNote} aria-label="Nouvelle note">

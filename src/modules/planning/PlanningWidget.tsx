@@ -2,6 +2,7 @@ import { useCallback, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Briefcase, CalendarDays, CalendarRange, ChevronLeft, ChevronRight, Clock, LayoutGrid, Plus, Rows3, Upload } from 'lucide-react'
 import { ModuleCard } from '@/components/module-card'
+import { useModuleHeaderClassName } from '@/canvas/module-theme'
 import { db } from '@/lib/db'
 import { ToolbarButton } from '@/modules/text-editor/ToolbarButton'
 import { addDays, formatWeekRange, getWeekDays } from './date-utils'
@@ -27,6 +28,7 @@ type ViewMode = 'grid' | 'minimal'
 // d'affichage propres à ce widget (choisies dans l'UI, pas figées par la
 // config du node) — `config` ne sert plus que de valeur initiale.
 export function PlanningWidget({ config }: PlanningWidgetProps) {
+  const headerClassName = useModuleHeaderClassName('planning-week', 'green-600')
   const events = useLiveQuery(() => db.events.toArray(), []) ?? []
   const [daysCount, setDaysCount] = useState<5 | 7>(7)
   const [hourMode, setHourMode] = useState<PlanningMode>(config.mode)
@@ -76,7 +78,7 @@ export function PlanningWidget({ config }: PlanningWidgetProps) {
     <ModuleCard
       className="w-[640px]"
       titleClassName="capitalize"
-      headerClassName="bg-green-600 text-white"
+      headerClassName={headerClassName}
       title={`Planning — ${config.view}`}
       action={
         <>

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ArrowDownNarrowWide, ArrowLeft, ArrowUpNarrowWide, Plus, Save, Trash2 } from 'lucide-react'
 import { ModuleCard } from '@/components/module-card'
+import { useModuleHeaderClassName } from '@/canvas/module-theme'
 import { db } from '@/lib/db'
 import { useModuleNavigation } from '@/canvas/module-navigation'
 import { ToolbarButton } from '@/modules/text-editor/ToolbarButton'
@@ -21,6 +22,7 @@ type SortDir = 'asc' | 'desc'
 // d'un aperçu en direct (TaskPreview) qui rend les lignes '-' en cases à
 // cocher, cf. TaskPreview.
 export function TasksWidget() {
+  const headerClassName = useModuleHeaderClassName('tasks-1', 'violet-500')
   const [view, setView] = useState<View>('list')
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [draftTitle, setDraftTitle] = useState('')
@@ -153,7 +155,7 @@ export function TasksWidget() {
     <ModuleCard
       className="w-80"
       title="Tâches"
-      headerClassName="bg-violet-500 text-white"
+      headerClassName={headerClassName}
       action={
         view === 'list' ? (
           <ToolbarButton onClick={handleNewTask} aria-label="Nouvelle tâche">

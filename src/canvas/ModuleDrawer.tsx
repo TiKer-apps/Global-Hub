@@ -1,9 +1,12 @@
 import { useState } from 'react'
-import { Eye, EyeOff, PanelLeftOpen, X } from 'lucide-react'
+import { Eye, EyeOff, PanelLeftOpen, Settings, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { PostIt } from '@/modules/post-its/types'
 import type { TodoSheet } from '@/modules/todo-list/types'
-import { MODULES } from './module-registry'
+import { ModuleSettingsModal } from './ModuleSettingsModal'
+import { MODULES, type ModuleDefinition } from './module-registry'
+import { useModuleHeaderClassName } from './module-theme'
+import { extractBgClass } from './theme-presets'
 
 interface ModuleDrawerProps {
   hiddenModuleIds: Set<string>
@@ -35,6 +38,7 @@ function previewForTodoSheet(sheet: TodoSheet): string {
 // individuels), même mécanisme de masquage que les modules eux-mêmes.
 export function ModuleDrawer({ hiddenModuleIds, onToggleModule, postIts, todoSheets }: ModuleDrawerProps) {
   const [open, setOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   const instancesFor = (kind?: 'postIt' | 'todoSheet'): Instance[] => {
     if (kind === 'postIt') return postIts.map((p) => ({ id: p.id, preview: stripHtml(p.html) }))
@@ -57,11 +61,11 @@ export function ModuleDrawer({ hiddenModuleIds, onToggleModule, postIts, todoShe
 
       <div
         className={cn(
-          'fixed top-0 left-0 z-50 h-full w-72 overflow-y-auto border-r bg-card p-4 shadow-lg transition-transform duration-200',
+          'fixed top-0 left-0 z-50 flex h-full w-72 flex-col border-r bg-card shadow-lg transition-transform duration-200',
           open ? 'translate-x-0' : '-translate-x-full',
         )}
       >
-        <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center justify-between p-4 pb-4">
           <h2 className="text-sm font-semibold">Modules</h2>
           <button
             type="button"
@@ -72,74 +76,100 @@ export function ModuleDrawer({ hiddenModuleIds, onToggleModule, postIts, todoShe
             <X className="size-4" />
           </button>
         </div>
-        <div className="grid grid-flow-row-dense grid-cols-2 gap-3">
-          {MODULES.map((module) => {
-            const isVisible = !hiddenModuleIds.has(module.id)
-            const Icon = module.icon
-            const instances = instancesFor(module.instanceKind)
+        <div className="flex-1 overflow-y-auto px-4">
+          <div className="grid grid-flow-row-dense grid-cols-2 gap-3">
+            {MODULES.map((module) => {
+              const isVisible = !hiddenModuleIds.has(module.id)
+              const instances = instancesFor(module.instanceKind)
 
-            return (
-              <div
-                key={module.id}
-                className={cn(module.instanceKind && 'col-span-2', instances.length > 0 && 'border-b border-border pb-3')}
-              >
-                <button
-                  type="button"
-                  onClick={() => onToggleModule(module.id)}
-                  aria-pressed={isVisible}
-                  className={cn(
-                    'flex w-full flex-col items-center gap-1.5 rounded-lg border-2 p-2.5 transition-colors',
-                    isVisible ? 'border-green-500' : 'border-muted-foreground/30',
-                  )}
+              return (
+                <div
+                  key={module.id}
+                  className={cn(module.instanceKind && 'col-span-2', instances.length > 0 && 'border-b border-border pb-3')}
                 >
-                  <div
-                    className={cn(
-                      'relative flex h-12 w-full items-center justify-center rounded-md text-white',
-                      module.colorClass,
-                    )}
-                  >
-                    <Icon className="size-5" />
-                    <span className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full border bg-card">
-                      {isVisible ? (
-                        <Eye className="size-3 text-green-600" />
-                      ) : (
-                        <EyeOff className="size-3 text-muted-foreground" />
-                      )}
-                    </span>
-                  </div>
-                  <span className="text-xs font-medium">{module.label}</span>
-                </button>
-                {instances.length > 0 && (
-                  <div className="mt-2 space-y-1">
-                    {instances.map((instance) => {
-                      const instanceVisible = !hiddenModuleIds.has(instance.id)
-                      return (
-                        <button
-                          key={instance.id}
-                          type="button"
-                          onClick={() => onToggleModule(instance.id)}
-                          aria-pressed={instanceVisible}
-                          className={cn(
-                            'flex w-full items-center gap-2 rounded-md border-2 px-2 py-1 text-left text-xs transition-colors',
-                            instanceVisible ? 'border-green-500' : 'border-muted-foreground/30',
-                          )}
-                        >
-                          <span className="flex-1 truncate">{instance.preview}</span>
-                          {instanceVisible ? (
-                            <Eye className="size-3 shrink-0 text-green-600" />
-                          ) : (
-                            <EyeOff className="size-3 shrink-0 text-muted-foreground" />
-                          )}
-                        </button>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-            )
-          })}
+                  <ModuleTile module={module} isVisible={isVisible} onToggle={() => onToggleModule(module.id)} />
+                  {instances.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      {instances.map((instance) => {
+                        const instanceVisible = !hiddenModuleIds.has(instance.id)
+                        return (
+                          <button
+                            key={instance.id}
+                            type="button"
+                            onClick={() => onToggleModule(instance.id)}
+                            aria-pressed={instanceVisible}
+                            className={cn(
+                              'flex w-full items-center gap-2 rounded-md border-2 px-2 py-1 text-left text-xs transition-colors',
+                              instanceVisible ? 'border-green-500' : 'border-muted-foreground/30',
+                            )}
+                          >
+                            <span className="flex-1 truncate">{instance.preview}</span>
+                            {instanceVisible ? (
+                              <Eye className="size-3 shrink-0 text-green-600" />
+                            ) : (
+                              <EyeOff className="size-3 shrink-0 text-muted-foreground" />
+                            )}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+        <div className="border-t p-4">
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(true)}
+            className="flex w-full items-center justify-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm font-medium hover:bg-muted"
+          >
+            <Settings className="size-4" />
+            Réglages des modules
+          </button>
         </div>
       </div>
+
+      <ModuleSettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
     </>
+  )
+}
+
+interface ModuleTileProps {
+  module: ModuleDefinition
+  isVisible: boolean
+  onToggle: () => void
+}
+
+// Vignette d'un module dans le drawer — composant à part pour pouvoir
+// appeler le hook de thème par module (nombre de modules fixe, donc l'ordre
+// des hooks reste stable d'un rendu à l'autre).
+function ModuleTile({ module, isVisible, onToggle }: ModuleTileProps) {
+  const Icon = module.icon
+  const bgClass = extractBgClass(useModuleHeaderClassName(module.id, module.defaultThemeId))
+
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-pressed={isVisible}
+      className={cn(
+        'flex w-full flex-col items-center gap-1.5 rounded-lg border-2 p-2.5 transition-colors',
+        isVisible ? 'border-green-500' : 'border-muted-foreground/30',
+      )}
+    >
+      <div className={cn('relative flex h-12 w-full items-center justify-center rounded-md text-white', bgClass)}>
+        <Icon className="size-5" />
+        <span className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full border bg-card">
+          {isVisible ? (
+            <Eye className="size-3 text-green-600" />
+          ) : (
+            <EyeOff className="size-3 text-muted-foreground" />
+          )}
+        </span>
+      </div>
+      <span className="text-xs font-medium">{module.label}</span>
+    </button>
   )
 }

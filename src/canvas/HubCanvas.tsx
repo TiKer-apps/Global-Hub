@@ -23,6 +23,7 @@ import { ImportantWidget } from '@/modules/important/ImportantWidget'
 import { ModuleDrawer } from './ModuleDrawer'
 import { MODULES } from './module-registry'
 import { ModuleNavigationProvider } from './module-navigation'
+import { ModuleThemeProvider } from './module-theme'
 
 const nodeTypes: NodeTypes = {
   planning: () => <PlanningWidget config={{ view: 'week', mode: 'extended' }} />,
@@ -137,27 +138,29 @@ export function HubCanvas() {
   )
 
   return (
-    <div className="h-screen w-screen">
-      <ModuleDrawer
-        hiddenModuleIds={hiddenModuleIds}
-        onToggleModule={toggleModule}
-        postIts={postIts}
-        todoSheets={todoSheets}
-      />
-      <ModuleNavigationProvider>
-        <ReactFlow
-          nodes={visibleNodes}
-          onNodesChange={onNodesChange}
-          nodeTypes={nodeTypes}
-          nodesConnectable={false}
-          elevateNodesOnSelect={false}
-          fitView
-        >
-          <Background />
-          <Controls />
-          <MiniMap />
-        </ReactFlow>
-      </ModuleNavigationProvider>
-    </div>
+    <ModuleThemeProvider>
+      <div className="h-screen w-screen">
+        <ModuleDrawer
+          hiddenModuleIds={hiddenModuleIds}
+          onToggleModule={toggleModule}
+          postIts={postIts}
+          todoSheets={todoSheets}
+        />
+        <ModuleNavigationProvider>
+          <ReactFlow
+            nodes={visibleNodes}
+            onNodesChange={onNodesChange}
+            nodeTypes={nodeTypes}
+            nodesConnectable={false}
+            elevateNodesOnSelect={false}
+            fitView
+          >
+            <Background />
+            <Controls />
+            <MiniMap />
+          </ReactFlow>
+        </ModuleNavigationProvider>
+      </div>
+    </ModuleThemeProvider>
   )
 }

@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { ModuleCard } from '@/components/module-card'
 import { db } from '@/lib/db'
 import { useModuleNavigation } from '@/canvas/module-navigation'
+import { useModuleHeaderClassName } from '@/canvas/module-theme'
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -18,6 +19,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 // de l'index) : on lit toute la table et on filtre en mémoire plutôt que de
 // se fier à `.where('important')`, peu fiable sur un champ booléen.
 export function ImportantWidget() {
+  const headerClassName = useModuleHeaderClassName('important-1', 'orange-300')
   const importantNotes =
     useLiveQuery(() => db.notes.toArray().then((notes) => notes.filter((n) => n.important)), []) ?? []
   const importantTasks =
@@ -33,7 +35,7 @@ export function ImportantWidget() {
     <ModuleCard
       className="w-72"
       title="Important"
-      headerClassName="bg-orange-300 text-white"
+      headerClassName={headerClassName}
       contentClassName="space-y-3"
     >
       {!hasAny ? (

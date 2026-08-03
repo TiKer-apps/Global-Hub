@@ -4,6 +4,7 @@ import { useNodeId, useReactFlow } from '@xyflow/react'
 import { EditorContent } from '@tiptap/react'
 import { SquareArrowOutUpRight } from 'lucide-react'
 import { ModuleCard } from '@/components/module-card'
+import { useModuleHeaderClassName } from '@/canvas/module-theme'
 import { db } from '@/lib/db'
 import { ToolbarButton } from '@/modules/text-editor/ToolbarButton'
 import { StyleToolbar } from '@/modules/text-editor/StyleToolbar'
@@ -18,6 +19,7 @@ const isEmptyHtml = (html: string) => !html || html === '<p></p>'
 // Toolbar toujours visible ici (pas de bascule affichage/édition comme sur
 // un post-it détaché — c'est un widget fixe comme les autres).
 export function PostItWidget() {
+  const headerClassName = useModuleHeaderClassName('post-it-1', 'yellow-400')
   const [draftHtml, setDraftHtml] = useState('')
   const nodeId = useNodeId()
   const { getNode } = useReactFlow()
@@ -48,7 +50,7 @@ export function PostItWidget() {
   }
 
   return (
-    <ModuleCard className="w-64" title="Post-it" headerClassName="bg-yellow-400 text-black">
+    <ModuleCard className="w-64" title="Post-it" headerClassName={headerClassName}>
       <div className="flex flex-col items-center gap-2">
         {editor && editorState && (
           <StyleToolbar
