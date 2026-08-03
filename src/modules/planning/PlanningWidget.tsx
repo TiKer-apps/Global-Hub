@@ -1,10 +1,11 @@
 import { useCallback, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Briefcase, CalendarDays, CalendarRange, ChevronLeft, ChevronRight, Clock, LayoutGrid, Rows3, Upload } from 'lucide-react'
+import { Briefcase, CalendarDays, CalendarRange, ChevronLeft, ChevronRight, Clock, LayoutGrid, Plus, Rows3, Upload } from 'lucide-react'
 import { ModuleCard } from '@/components/module-card'
 import { db } from '@/lib/db'
 import { ToolbarButton } from '@/modules/text-editor/ToolbarButton'
 import { addDays, formatWeekRange, getWeekDays } from './date-utils'
+import { EventFormModal } from './EventFormModal'
 import { importIcsEvents } from './ics-import'
 import { WeekGrid } from './WeekGrid'
 import { WeekMinimal } from './WeekMinimal'
@@ -33,10 +34,27 @@ export function PlanningWidget({ config }: PlanningWidgetProps) {
   const [referenceDate, setReferenceDate] = useState(() => new Date())
   const [importStatus, setImportStatus] = useState<string | null>(null)
   const [selection, setSelection] = useState<TimeRangeSelection | null>(null)
+  const [isEventModalOpen, setIsEventModalOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const days = useMemo(() => getWeekDays(referenceDate).slice(0, daysCount), [referenceDate, daysCount])
-  const handleSelectionChange = useCallback((next: TimeRangeSelection | null) => setSelection(next), [])
+
+  // Une sélection de plage horaire finalisée dans WeekGrid ouvre directement
+  // la modale, pré-remplie avec cette plage.
+  const handleSelectionChange = useCallback((next: TimeRangeSelection | null) => {
+    setSelection(next)
+    if (next) setIsEventModalOpen(true)
+  }, [])
+
+  const handleNewEventClick = () => {
+    setSelection(null)
+    setIsEventModalOpen(true)
+  }
+
+  const handleEventModalOpenChange = (open: boolean) => {
+    setIsEventModalOpen(open)
+    if (!open) setSelection(null)
+  }
 
   const goToPreviousWeek = () => setReferenceDate((d) => addDays(d, -7))
   const goToNextWeek = () => setReferenceDate((d) => addDays(d, 7))
@@ -72,6 +90,9 @@ export function PlanningWidget({ config }: PlanningWidgetProps) {
           />
           <ToolbarButton onClick={() => fileInputRef.current?.click()} aria-label="Importer un fichier .ics">
             <Upload className="size-3.5" />
+          </ToolbarButton>
+          <ToolbarButton onClick={handleNewEventClick} aria-label="Nouvel événement">
+            <Plus className="size-3.5" />
           </ToolbarButton>
           {config.view === 'week' && (
             <>
@@ -132,6 +153,7 @@ export function PlanningWidget({ config }: PlanningWidgetProps) {
       ) : (
         <p className="text-sm text-muted-foreground">Vue « {config.view} » à implémenter.</p>
       )}
+      <EventFormModal open={isEventModalOpen} onOpenChange={handleEventModalOpenChange} selection={selection} />
     </ModuleCard>
   )
 }
