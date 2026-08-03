@@ -4,6 +4,7 @@ import { ModuleCard } from '@/components/module-card'
 import { db } from '@/lib/db'
 import { useModuleNavigation } from '@/canvas/module-navigation'
 import { useModuleHeaderClassName } from '@/canvas/module-theme'
+import { useModuleStyleId } from '@/canvas/module-style'
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -20,6 +21,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 // se fier à `.where('important')`, peu fiable sur un champ booléen.
 export function ImportantWidget() {
   const headerClassName = useModuleHeaderClassName('important-1', 'orange-300')
+  const headerStyle = useModuleStyleId('important-1', 'wave')
   const importantNotes =
     useLiveQuery(() => db.notes.toArray().then((notes) => notes.filter((n) => n.important)), []) ?? []
   const importantTasks =
@@ -36,6 +38,7 @@ export function ImportantWidget() {
       className="w-72"
       title="Important"
       headerClassName={headerClassName}
+      variant={headerStyle}
       contentClassName="space-y-3"
     >
       {!hasAny ? (

@@ -2,6 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 're
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 
+export type HeaderStyle = 'wave' | 'flat'
+
 interface ModuleCardProps {
   title: ReactNode
   titleClassName?: string
@@ -10,9 +12,12 @@ interface ModuleCardProps {
   contentClassName?: string
   className?: string
   children: ReactNode
+  // 'wave' (défaut) : encoche SVG entre titre et actions, cf. headerNotchPath.
+  // 'flat' : header à plat, une seule couleur pleine sur toute la largeur.
+  variant?: HeaderStyle
 }
 
-const NOTCH_RADIUS = 14
+export const NOTCH_RADIUS = 14
 // Le bas du path (bord droit) déborde de 1px sous la vraie hauteur du
 // header : la hauteur de celui-ci se calcule en px fractionnaires, ce qui
 // laisse parfois un liseré de sa couleur visible juste avant le contenu.
@@ -30,7 +35,7 @@ const BOTTOM_BLEED = 1
 // La frontière est un S : le calque coloré du titre a son propre coin
 // arrondi convexe en bas (rounded-br), le calque blanc de l'action le sien
 // en haut (rounded-tl) — pas une simple encoche unique.
-function headerNotchPath(w: number, h: number, tw: number, r: number) {
+export function headerNotchPath(w: number, h: number, tw: number, r: number) {
   return [
     `M ${tw + r} 0`,
     `L ${w} 0`,
@@ -52,7 +57,9 @@ export function ModuleCard({
   contentClassName,
   className,
   children,
+  variant = 'wave',
 }: ModuleCardProps) {
+  const isWave = variant === 'wave'
   const cardRef = useRef<HTMLDivElement>(null)
   const headerRef = useRef<HTMLDivElement>(null)
   const titleRef = useRef<HTMLDivElement>(null)
@@ -77,6 +84,10 @@ export function ModuleCard({
   // `getBoundingClientRect` : le canvas applique un `transform: scale(...)`
   // non entier, qui fausserait la mesure avec les coordonnées écran.
   useLayoutEffect(() => {
+    if (!isWave) {
+      setShape(null)
+      return
+    }
     const header = headerRef.current
     const titleEl = titleRef.current
     if (!header || !titleEl) return
@@ -86,12 +97,12 @@ export function ModuleCard({
     observer.observe(header)
     observer.observe(titleEl)
     return () => observer.disconnect()
-  }, [title, action])
+  }, [title, action, isWave])
 
   return (
     <Card ref={cardRef} className={cn('gap-0 py-0 border', className)}>
       <CardHeader ref={headerRef} className={cn('relative p-0', headerClassName)}>
-        {shape && (
+        {isWave && shape && (
           <svg
             className="pointer-events-none absolute inset-x-0 top-0 w-full"
             style={{ height: shape.h + BOTTOM_BLEED }}
@@ -105,15 +116,19 @@ export function ModuleCard({
           <CardTitle
             ref={titleRef}
             className={cn(
-              'relative z-10 flex h-full items-center pr-2 pl-4',
-              headerClassName,
-              'bg-transparent',
+              'relative z-10 flex h-full items-center pl-4',
+              isWave ? [headerClassName, 'bg-transparent', 'pr-4'] : 'pr-2',
               titleClassName,
             )}
           >
             {title}
           </CardTitle>
-          <div className="nodrag relative z-10 flex h-full flex-1 items-center justify-end gap-1 pr-4 text-foreground">
+          <div
+            className={cn(
+              'nodrag relative z-10 flex h-full flex-1 items-center justify-end gap-1 pr-4',
+              isWave && 'text-foreground',
+            )}
+          >
             {action}
           </div>
         </div>

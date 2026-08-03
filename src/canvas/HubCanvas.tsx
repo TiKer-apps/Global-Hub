@@ -23,6 +23,7 @@ import { ImportantWidget } from '@/modules/important/ImportantWidget'
 import { ModuleDrawer } from './ModuleDrawer'
 import { MODULES } from './module-registry'
 import { ModuleNavigationProvider } from './module-navigation'
+import { ModuleStyleProvider } from './module-style'
 import { ModuleThemeProvider } from './module-theme'
 
 const nodeTypes: NodeTypes = {
@@ -139,28 +140,30 @@ export function HubCanvas() {
 
   return (
     <ModuleThemeProvider>
-      <div className="h-screen w-screen">
-        <ModuleDrawer
-          hiddenModuleIds={hiddenModuleIds}
-          onToggleModule={toggleModule}
-          postIts={postIts}
-          todoSheets={todoSheets}
-        />
-        <ModuleNavigationProvider>
-          <ReactFlow
-            nodes={visibleNodes}
-            onNodesChange={onNodesChange}
-            nodeTypes={nodeTypes}
-            nodesConnectable={false}
-            elevateNodesOnSelect={false}
-            fitView
-          >
-            <Background />
-            <Controls />
-            <MiniMap />
-          </ReactFlow>
-        </ModuleNavigationProvider>
-      </div>
+      <ModuleStyleProvider>
+        <div className="h-screen w-screen">
+          <ModuleDrawer
+            hiddenModuleIds={hiddenModuleIds}
+            onToggleModule={toggleModule}
+            postIts={postIts}
+            todoSheets={todoSheets}
+          />
+          <ModuleNavigationProvider>
+            <ReactFlow
+              nodes={visibleNodes}
+              onNodesChange={onNodesChange}
+              nodeTypes={nodeTypes}
+              nodesConnectable={false}
+              elevateNodesOnSelect={false}
+              fitView
+            >
+              <Background />
+              <Controls />
+              <MiniMap />
+            </ReactFlow>
+          </ModuleNavigationProvider>
+        </div>
+      </ModuleStyleProvider>
     </ModuleThemeProvider>
   )
 }

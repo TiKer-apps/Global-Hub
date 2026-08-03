@@ -110,3 +110,31 @@ export const NoAction: Story = {
     children: <p className="text-sm text-muted-foreground">Sans action dans le header.</p>,
   },
 }
+
+// Style "plein" (cf. HeaderStyle dans module-card.tsx) — une seule couleur
+// pleine sur toute la largeur, sans l'encoche SVG entre titre et actions.
+export const Flat: Story = {
+  args: {
+    title: 'Notes',
+    headerClassName: 'bg-blue-300 text-white',
+    className: 'w-80',
+    variant: 'flat',
+    action: (
+      <ToolbarButton aria-label="Nouvelle note">
+        <Plus className="size-3.5" />
+      </ToolbarButton>
+    ),
+    children: <p className="text-sm text-muted-foreground">Contenu du module.</p>,
+  },
+}
+
+export const FlatLongTitle: Story = {
+  args: {
+    title: 'Planning — Week (Extended)',
+    titleClassName: 'capitalize',
+    headerClassName: 'bg-green-600 text-white',
+    className: 'w-[500px]',
+    variant: 'flat',
+    children: <p className="text-sm text-muted-foreground">Titre long dans le header à plat.</p>,
+  },
+}

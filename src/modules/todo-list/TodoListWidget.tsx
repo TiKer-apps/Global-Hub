@@ -5,6 +5,7 @@ import { EditorContent } from '@tiptap/react'
 import { SquareArrowOutUpRight } from 'lucide-react'
 import { ModuleCard } from '@/components/module-card'
 import { useModuleHeaderClassName } from '@/canvas/module-theme'
+import { useModuleStyleId } from '@/canvas/module-style'
 import { db } from '@/lib/db'
 import { ToolbarButton } from '@/modules/text-editor/ToolbarButton'
 import { StyleToolbar } from '@/modules/text-editor/StyleToolbar'
@@ -41,6 +42,7 @@ function parseDraftLines(html: string): ChecklistLine[] {
 // texte écrit ICI passe par l'éditeur riche.
 export function TodoListWidget() {
   const headerClassName = useModuleHeaderClassName('todo-1', 'red-500')
+  const headerStyle = useModuleStyleId('todo-1', 'wave')
   const [draftHtml, setDraftHtml] = useState('')
   const nodeId = useNodeId()
   const { getNode } = useReactFlow()
@@ -73,7 +75,7 @@ export function TodoListWidget() {
   }
 
   return (
-    <ModuleCard className="w-72" title="Todo-list" headerClassName={headerClassName}>
+    <ModuleCard className="w-72" title="Todo-list" headerClassName={headerClassName} variant={headerStyle}>
       <div className="flex flex-col items-center gap-2">
         {editor && editorState && (
           <StyleToolbar

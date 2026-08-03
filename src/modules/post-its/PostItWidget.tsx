@@ -5,6 +5,7 @@ import { EditorContent } from '@tiptap/react'
 import { SquareArrowOutUpRight } from 'lucide-react'
 import { ModuleCard } from '@/components/module-card'
 import { useModuleHeaderClassName } from '@/canvas/module-theme'
+import { useModuleStyleId } from '@/canvas/module-style'
 import { db } from '@/lib/db'
 import { ToolbarButton } from '@/modules/text-editor/ToolbarButton'
 import { StyleToolbar } from '@/modules/text-editor/StyleToolbar'
@@ -20,6 +21,7 @@ const isEmptyHtml = (html: string) => !html || html === '<p></p>'
 // un post-it détaché — c'est un widget fixe comme les autres).
 export function PostItWidget() {
   const headerClassName = useModuleHeaderClassName('post-it-1', 'yellow-400')
+  const headerStyle = useModuleStyleId('post-it-1', 'wave')
   const [draftHtml, setDraftHtml] = useState('')
   const nodeId = useNodeId()
   const { getNode } = useReactFlow()
@@ -50,7 +52,7 @@ export function PostItWidget() {
   }
 
   return (
-    <ModuleCard className="w-64" title="Post-it" headerClassName={headerClassName}>
+    <ModuleCard className="w-64" title="Post-it" headerClassName={headerClassName} variant={headerStyle}>
       <div className="flex flex-col items-center gap-2">
         {editor && editorState && (
           <StyleToolbar

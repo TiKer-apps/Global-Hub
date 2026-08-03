@@ -159,7 +159,12 @@ function ModuleTile({ module, isVisible, onToggle }: ModuleTileProps) {
         isVisible ? 'border-green-500' : 'border-muted-foreground/30',
       )}
     >
-      <div className={cn('relative flex h-12 w-full items-center justify-center rounded-md text-white', bgClass)}>
+      <div
+        className={cn(
+          'relative flex h-12 w-full items-center justify-center rounded-md border border-border text-white shadow-sm',
+          bgClass,
+        )}
+      >
         <Icon className="size-5" />
         <span className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full border bg-card">
           {isVisible ? (

@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { ArrowDownNarrowWide, ArrowLeft, ArrowUpNarrowWide, Plus, Save, Trash2 } from 'lucide-react'
 import { ModuleCard } from '@/components/module-card'
 import { useModuleHeaderClassName } from '@/canvas/module-theme'
+import { useModuleStyleId } from '@/canvas/module-style'
 import { db } from '@/lib/db'
 import { useModuleNavigation } from '@/canvas/module-navigation'
 import { ToolbarButton } from '@/modules/text-editor/ToolbarButton'
@@ -23,6 +24,7 @@ type SortDir = 'asc' | 'desc'
 // cocher, cf. TaskPreview.
 export function TasksWidget() {
   const headerClassName = useModuleHeaderClassName('tasks-1', 'violet-500')
+  const headerStyle = useModuleStyleId('tasks-1', 'wave')
   const [view, setView] = useState<View>('list')
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [draftTitle, setDraftTitle] = useState('')
@@ -156,6 +158,7 @@ export function TasksWidget() {
       className="w-80"
       title="Tâches"
       headerClassName={headerClassName}
+      variant={headerStyle}
       action={
         view === 'list' ? (
           <ToolbarButton onClick={handleNewTask} aria-label="Nouvelle tâche">

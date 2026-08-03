@@ -1,9 +1,25 @@
+import { headerNotchPath, NOTCH_RADIUS } from '@/components/module-card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Tabs, TabsList, TabsPanel, TabsTab } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
-import { useModuleThemeId, useSetModuleTheme } from './module-theme'
+import { useModuleHeaderClassName, useModuleThemeId, useSetModuleTheme } from './module-theme'
+import { HEADER_STYLE_OPTIONS, useModuleStyleId, useSetModuleStyle } from './module-style'
 import { MODULES, type ModuleDefinition } from './module-registry'
-import { THEME_PRESETS } from './theme-presets'
+import { extractBgClass, THEME_PRESETS } from './theme-presets'
+
+// Bordure + ombre légère sur les aperçus de couleur/style — sans ça, un
+// aperçu clair (ex. la moitié blanche du style "Vague") se fond dans le fond
+// de la modale et devient illisible.
+const PREVIEW_CLASSNAME = 'border border-border shadow-sm'
+
+// Dimensions fictives pour le path de l'aperçu "Vague" — mêmes proportions
+// que le vrai header (h-10 = 40px, NOTCH_RADIUS), `tw` fixé au milieu faute
+// de vrai titre à mesurer ici. Même fonction que le vrai ModuleCard : les
+// deux courbes (haut ET bas) sont donc forcément fidèles, pas une
+// approximation à deux div qui ne rendait que la courbe du haut.
+const PREVIEW_W = 120
+const PREVIEW_H = 40
+const PREVIEW_TITLE_W = 60
 
 interface ModuleSettingsModalProps {
   open: boolean
@@ -29,7 +45,8 @@ export function ModuleSettingsModal({ open, onOpenChange }: ModuleSettingsModalP
             ))}
           </TabsList>
           {MODULES.map((module) => (
-            <TabsPanel key={module.id} value={module.id} className="pt-4">
+            <TabsPanel key={module.id} value={module.id} className="space-y-4 pt-4">
+              <ModuleStylePicker module={module} />
               <ModuleThemePicker module={module} />
             </TabsPanel>
           ))}
@@ -63,12 +80,58 @@ function ModuleThemePicker({ module }: { module: ModuleDefinition }) {
               <div
                 className={cn(
                   'flex h-10 w-full items-center justify-center rounded-md text-xs font-medium',
+                  PREVIEW_CLASSNAME,
                   preset.headerClassName,
                 )}
               >
                 Aa
               </div>
               <span className="text-xs">{preset.label}</span>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function ModuleStylePicker({ module }: { module: ModuleDefinition }) {
+  const currentStyleId = useModuleStyleId(module.id, module.defaultStyleId)
+  const setStyleId = useSetModuleStyle()
+  const bgClass = extractBgClass(useModuleHeaderClassName(module.id, module.defaultThemeId))
+
+  return (
+    <div>
+      <h3 className="mb-3 text-sm font-medium">Style du header</h3>
+      <div className="grid grid-cols-4 gap-3 sm:grid-cols-5">
+        {HEADER_STYLE_OPTIONS.map((option) => {
+          const isSelected = option.id === currentStyleId
+          return (
+            <button
+              key={option.id}
+              type="button"
+              onClick={() => setStyleId(module.id, option.id)}
+              aria-pressed={isSelected}
+              className={cn(
+                'flex flex-col items-center gap-1.5 rounded-lg border-2 p-2 transition-colors',
+                isSelected ? 'border-primary' : 'border-transparent hover:border-muted-foreground/30',
+              )}
+            >
+              <div className={cn('relative h-10 w-full overflow-hidden rounded-md', bgClass, PREVIEW_CLASSNAME)}>
+                {option.id === 'wave' && (
+                  <svg
+                    className="absolute inset-0 h-full w-full"
+                    viewBox={`0 0 ${PREVIEW_W} ${PREVIEW_H}`}
+                    preserveAspectRatio="none"
+                  >
+                    <path
+                      d={headerNotchPath(PREVIEW_W, PREVIEW_H, PREVIEW_TITLE_W, NOTCH_RADIUS)}
+                      className="fill-card"
+                    />
+                  </svg>
+                )}
+              </div>
+              <span className="text-xs">{option.label}</span>
             </button>
           )
         })}
