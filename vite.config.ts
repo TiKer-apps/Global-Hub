@@ -31,6 +31,15 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src')
     }
   },
+  // `aria-query` (CJS, requis en transitif par @storybook/addon-vitest via
+  // @testing-library/dom) fait planter le pré-bundling par défaut : Vite ne
+  // détecte pas ses exports nommés (`elementRoles`...) dans le contexte de
+  // Vitest en mode navigateur, alors qu'un require() Node classique les voit
+  // bien. Le forcer dans optimizeDeps fait passer ce module par l'analyse
+  // CJS->ESM d'esbuild en amont, qui gère correctement l'interop.
+  optimizeDeps: {
+    include: ['aria-query', 'lz-string', 'pretty-format'],
+  },
   test: {
     projects: [{
       extends: true,

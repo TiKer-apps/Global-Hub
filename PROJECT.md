@@ -4,6 +4,214 @@ Application personnelle d'organisation : une vue unique regroupant plusieurs
 modules (planning, notes, post-its, tâches, todo-list) sous forme de widgets
 disposés librement sur un canvas zoomable.
 
+## Statut — jalon du 2026-08-03
+
+Six jours de développement itératif (17 commits, 2026-07-28 → 2026-08-03).
+Les six modules du board sont fonctionnels et personnalisables (thème de
+couleur + style de header) depuis un menu de réglages ; reste du polish
+(voir "À affiner").
+
+- **Notes** — implémenté : liste + éditeur riche (Tiptap), sauvegarde
+  debouncée, suppression avec confirmation, création d'un post-it à partir
+  d'une note.
+- **Post-it** — implémenté : bloc fixe (brouillon local) + post-its détachés
+  indépendants (nodes React Flow dragables), même moteur d'édition riche que
+  Notes, position persistée dans Dexie.
+- **Tâches** / **Todo-list** — implémenté via un moteur `checklist` partagé
+  (`src/modules/checklist/`) : texte libre, une ligne commençant par `-` est
+  cochable/rayable au clic.
+- **Planning** — vue **semaine** implémentée (grille étendue / récap
+  compact, 5 ou 7 jours), création d'événement via modale
+  (`EventFormModal`), **import ponctuel de fichier `.ics`** (pas de
+  synchro live — voir `ics-import.ts`). Vues jour/mois du modèle initial
+  (`PlanningView = 'day' | 'week' | 'month'`) **pas encore construites**.
+- **Important** — implémenté pour les notes uniquement (agrégation par type,
+  ouverture directe dans Notes). Pas encore branché sur planning/tâches.
+- **Drawer + Réglages des modules** (nouveau ce jalon) — panneau
+  afficher/masquer chaque module (et, pour Post-it/Todo-list, chaque
+  instance détachée individuellement, avec masquage en cascade
+  module→instances mais pas l'inverse) + modale de réglages par module
+  (thème de couleur et style de header "Vague"/"Plein", persistés en
+  localStorage, cf. "Théming des modules" plus bas).
+- **Storybook consolidé** — composants réutilisables (`components/ui/*`,
+  `module-card.tsx`) couverts par des stories ; `npm run test` (chaque story
+  = un test Vitest/Playwright) fonctionne réellement (voir "Gotchas" plus
+  bas — cassé jusqu'à ce jalon, corrigé le 2026-08-03).
+
+## Architecture
+
+```
+global-hub/
+├── PROJECT.md
+├── README.md
+├── vite.config.ts             # plugins react/tailwind/pwa + alias @/* + config vitest
+├── .storybook/
+│   ├── main.ts                 # retire VitePWA du build Storybook (cf. Gotchas)
+│   └── preview.tsx             # importe src/index.css (cf. Gotchas)
+└── src/
+    ├── App.tsx                 # rend <HubCanvas />
+    ├── index.css                # Tailwind + thème shadcn
+    ├── components/
+    │   ├── ui/                  # design system réutilisable : button, card,
+    │   │                        # dialog, popover, tabs — chacun avec une
+    │   │                        # story Storybook (sauf button/card)
+    │   └── module-card.tsx      # coquille commune à tous les widgets
+    │                            # (nodrag, header full-bleed, variant
+    │                            # wave/flat) — cf. module-card.stories.tsx
+    ├── canvas/                  # orchestration transverse, pas de logique
+    │   │                        # métier d'un module en particulier
+    │   ├── HubCanvas.tsx          # canvas React Flow + nodeTypes
+    │   ├── ModuleDrawer.tsx       # panneau afficher/masquer les modules
+    │   ├── ModuleSettingsModal.tsx # modale de réglages (thème + style)
+    │   ├── module-registry.ts     # liste des 6 modules fixes + leurs défauts
+    │   ├── module-navigation.tsx  # coordination Important -> Notes
+    │   ├── module-theme.tsx       # Context+localStorage : thème par module
+    │   ├── module-style.tsx       # Context+localStorage : style par module
+    │   └── theme-presets.ts       # presets de couleur (14 au 2026-08-03)
+    ├── lib/
+    │   ├── db.ts                 # schéma Dexie (events, notes, postIts, tasks, todos)
+    │   ├── types.ts              # type partagé Importable
+    │   └── utils.ts              # helper cn() (shadcn)
+    └── modules/                 # un dossier par module métier
+        ├── planning/              # PlanningWidget, WeekGrid/WeekMinimal,
+        │                          # EventFormModal, ics-import, date-utils
+        ├── notes/                 # NotesWidget, NoteList
+        ├── text-editor/           # moteur Tiptap partagé (notes + post-its)
+        ├── post-its/              # PostItWidget (bloc), PostItNote (détaché)
+        ├── checklist/             # moteur partagé (tasks + todo-list)
+        ├── tasks/                 # TasksWidget (wrapper de ChecklistWidget)
+        ├── todo-list/             # TodoListWidget + TodoSheetNote (détaché)
+        └── important/             # ImportantWidget — agrège les éléments flaggés
+```
+
+**Règle de placement** pour du nouveau code : un comportement propre à *un*
+module → `modules/<nom>/` ; une coordination *entre* modules ou une
+personnalisation transverse (thème, visibilité, navigation) → `canvas/` ; un
+composant sans aucune connaissance du domaine (bouton, card, modale) →
+`components/ui/`, avec une story Storybook (voir "Definition of done").
+
+## Théming des modules (thème + style)
+
+Chaque module a un thème de couleur (`defaultThemeId`, `theme-presets.ts`)
+et un style de header (`defaultStyleId`, `'wave'` par défaut — encoche SVG
+entre titre et actions — ou `'flat'` — une seule couleur pleine, sans
+découpe). Les deux sont personnalisables par module dans la modale de
+réglages (accessible depuis le bouton en bas du drawer) et persistés
+séparément dans localStorage (`ModuleThemeProvider`/`ModuleStyleProvider`,
+deux Context+localStorage distincts plutôt qu'un seul générique — chacun est
+volontairement petit et à une seule responsabilité).
+
+- **Pourquoi Context+localStorage et pas Dexie ici** : ce sont des
+  préférences d'apparence UI, pas de la donnée applicative (pas besoin
+  d'index, de requêtes, de versioning de schéma). Dexie reste réservé aux
+  vraies entités métier (notes, tâches, événements...).
+- **Pourquoi deux providers séparés plutôt qu'un seul** : générer une
+  abstraction commune pour seulement deux cas d'usage aurait ajouté de la
+  complexité sans bénéfice réel — trois lignes dupliquées valent mieux
+  qu'une fausse généralisation prématurée.
+
+## Decisions & gotchas techniques
+
+- **Type d'appli** : PWA (desktop + mobile, un seul codebase, installable,
+  offline-first).
+- **Frontend** : React + Vite + TypeScript. **UI** : Tailwind + shadcn/ui
+  (composants construits sur `@base-ui/react`, pas Radix).
+- **`ModuleCard`** (`src/components/module-card.tsx`) : coquille commune à
+  tous les widgets.
+  - `headerClassName` colore le header en entier ; `CardContent` repasse
+    sur fond neutre.
+  - ⚠️ Ne jamais construire `headerClassName` en concaténant des bouts de
+    classe au runtime (ex. `` `bg-${color}-300` ``) : le scanner statique de
+    Tailwind (JIT) ne détecte que des noms de classe qui apparaissent comme
+    littéraux quelque part dans le source. `theme-presets.ts` définit donc
+    chaque `headerClassName` comme une chaîne littérale complète.
+  - ⚠️ Ne pas passer de classe custom type `.important-surface` à
+    `headerClassName` : la couche Tailwind `utilities` (dont `bg-card`)
+    passe après `components` dans la cascade, donc une classe
+    `@layer components` perdrait à spécificité égale. Toujours des
+    utilitaires Tailwind directs.
+- **Éditeur de texte partagé** (`src/modules/text-editor/`) : notes et
+  post-its utilisent le même moteur Tiptap — indispensable pour qu'un
+  post-it créé à partir d'une note garde exactement sa mise en forme.
+- **Stockage** : local-first via Dexie (IndexedDB) pour la donnée
+  applicative ; localStorage pour les préférences UI (thème/style/drawer).
+  ⚠️ IndexedDB n'accepte pas les booléens comme clé d'index valide (les
+  enregistrements avec une valeur non indexable sont silencieusement
+  exclus de l'index) — le flag `important` est indexé dans le schéma Dexie
+  mais on ne s'appuie jamais sur `.where('important')`, on lit toute la
+  table et on filtre en mémoire. Garder ce réflexe pour toute future source
+  (events, post-its).
+- **Storybook réutilise `vite.config.ts`** de l'app, qui inclut `VitePWA` —
+  ça faisait planter `build-storybook` (précache workbox tentant d'inclure
+  les bundles de Storybook lui-même). Fixé via un `viteFinal` dans
+  `.storybook/main.ts` qui retire ce plugin pour le build de Storybook
+  uniquement.
+- **Storybook a son propre point d'entrée** (`preview.tsx`), qui ne passe
+  pas par `main.tsx` — `src/index.css` (Tailwind + thème) n'y était donc
+  jamais chargé, rendant les composants non stylés dans l'iframe Storybook.
+  Fixé par un simple `import '../src/index.css'` dans `preview.tsx`.
+- **`npm run test` (Storybook + Vitest, chaque story = un test navigateur)**
+  échouait au démarrage même : plusieurs dépendances transitives CJS
+  (`aria-query`, `lz-string`, `pretty-format`, requises par
+  `@testing-library/*` via `@storybook/addon-vitest`) n'étaient pas
+  détectées par le pré-bundling automatique de Vite en mode navigateur —
+  erreurs d'interop ESM/CJS (`does not provide an export named ...`,
+  `exports is not defined`) alors qu'un `require()` Node classique les
+  voyait très bien. Fixé en les listant explicitement dans
+  `optimizeDeps.include` (`vite.config.ts`) pour forcer leur pré-bundling
+  par esbuild. Si une nouvelle story fait apparaître une erreur similaire
+  sur un autre paquet CJS, même fix : l'ajouter à cette liste.
+
+## Definition of done (composants réutilisables)
+
+Tout composant sous `components/ui/*` ou de la même nature que
+`module-card.tsx` (partagé, sans logique métier) doit avoir une story
+Storybook avant d'être considéré terminé. Ça a déjà attrapé deux bugs réels
+ce jalon (surlignage de l'onglet actif qui ne s'appliquait jamais faute du
+bon attribut `data-*`, aperçu du style "Vague" ne montrant que la moitié de
+la courbe) — sans la story pour aller vérifier visuellement, ces deux bugs
+seraient passés inaperçus.
+
+## Convention de commentaires (ce document et le code)
+
+Les commentaires expliquent le **pourquoi**, jamais le **quoi** (le nom des
+identifiants suffit) : une contrainte cachée, un contournement pour un bug
+précis, un comportement qui surprendrait à la lecture. Si retirer le
+commentaire ne rendrait rien confus, il ne devrait pas exister. Même
+principe dans ce fichier : les sections "Gotchas"/"Pourquoi" ci-dessus
+documentent des décisions non évidentes, pas une redite de ce que le code
+dit déjà.
+
+## Reporté à plus tard (objectif long terme, pas en cours)
+
+- **Comptes / authentification.**
+- **Synchronisation multi-appareils** — objectif à long terme, pas engagé
+  pour l'instant. Le code appelle Dexie directement dans chaque widget
+  (`db.notes.toArray()`...), **pas** de couche repository aujourd'hui :
+  si ce chantier démarre un jour, prévoir cette abstraction à ce moment-là
+  plutôt que de supposer qu'elle existe déjà.
+- **Import calendrier externe live** (Google/Outlook, synchro continue) —
+  seul l'import ponctuel d'un fichier `.ics` est fait à ce jour (voir
+  Statut). Le modèle de données (`source`, `externalId`) est déjà prêt pour
+  ça.
+
+## À affiner
+
+- Vues jour/mois du Planning (seule la semaine est construite).
+- Étendre "Important" au planning et aux tâches (actuellement notes
+  seulement).
+- Todo-list : le module pourrait être simplifié (rien d'acté).
+- Suite du polish visuel général sur les 6 modules.
+
+---
+
+## Archive — état au 2026-07-28 (scaffold initial)
+
+Conservé tel quel pour retrouver la description/les specs initiales du
+projet, avant l'implémentation des modules. Ne reflète plus l'état actuel
+du code (voir "Statut" en haut de ce fichier) — certains points (ex.
+"Reporté à plus tard : import calendrier") sont depuis partiellement faits.
+
 ## Statut
 
 Scaffolding posé (Vite/React/TS, Tailwind, shadcn/ui, React Flow, Dexie,
@@ -134,7 +342,7 @@ implémenter le comportement réel de chaque widget.
   - Présentation (liste chronologique vs groupée) à affiner une fois
     plusieurs types d'éléments réellement flaggables.
 
-## Structure du projet
+## Structure du projet (scaffold initial)
 
 ```
 global-hub/

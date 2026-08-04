@@ -2,7 +2,8 @@
 
 Hub personnel d'organisation (planning, notes, post-its, tâches, todo-list).
 Contexte produit, specs des modules et décisions techniques : voir
-[`PROJECT.md`](./PROJECT.md).
+[`PROJECT.md`](./PROJECT.md). Conventions de travail (avec l'impact
+concret de chacune) : voir [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
 ## Prérequis
 
@@ -55,9 +56,16 @@ npm run test:watch  # mode watch
 
 Les tests sont branchés sur l'addon Vitest de Storybook : chaque story
 (`*.stories.tsx`) devient un test exécuté dans un navigateur headless
-(Playwright/Chromium). Aucune story n'existe encore à ce stade du projet —
-la commande `test` remontera donc `No test files found` tant qu'on n'a pas
-commencé à en écrire au fil de l'implémentation des modules.
+(Playwright/Chromium) — aucune assertion à écrire à la main, la story qui
+render sans erreur suffit à faire passer le test. Tout composant réutilisable
+(`components/ui/*`, `module-card.tsx`) doit avoir une story avant d'être
+considéré terminé (cf. `PROJECT.md`, "Definition of done").
+
+⚠️ Si `npm run test` échoue au démarrage avec une erreur d'import du genre
+`does not provide an export named ...` ou `exports is not defined` sur un
+paquet CJS transitif (`aria-query`, `lz-string`, `pretty-format`...), c'est
+que le pré-bundling Vite ne l'a pas détecté — l'ajouter à
+`optimizeDeps.include` dans `vite.config.ts` (cf. `PROJECT.md`, "Gotchas").
 
 ## Lint
 
