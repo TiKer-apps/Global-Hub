@@ -2,8 +2,10 @@ import { useCallback, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Briefcase, CalendarDays, CalendarRange, ChevronLeft, ChevronRight, Clock, LayoutGrid, Plus, Rows3, Upload } from 'lucide-react'
 import { ModuleCard } from '@/components/module-card'
+import type { RadialMenuItem } from '@/components/ui/radial-menu'
 import { useModuleHeaderClassName } from '@/canvas/module-theme'
 import { useModuleStyleId } from '@/canvas/module-style'
+import { ModuleRadialTrigger } from '@/canvas/module-radial-trigger'
 import { db } from '@/lib/db'
 import { ToolbarButton } from '@/modules/text-editor/ToolbarButton'
 import { addDays, formatWeekRange, getWeekDays } from './date-utils'
@@ -76,89 +78,86 @@ export function PlanningWidget({ config }: PlanningWidgetProps) {
     e.target.value = ''
   }
 
+  // Un seul bouton en en-tête (cf. RADIAL_MENU.md) ouvre un menu radial
+  // regroupant ce qui était jusque-là 5 boutons séparés. Label ET icône
+  // décrivent la cible de l'action (pas l'état courant) — pertinent pour un
+  // menu qui se referme après le clic, contrairement à un bouton persistant.
+  const radialItems: RadialMenuItem[] = [
+    { id: 'import-ics', label: 'Importer .ics', icon: <Upload />, onSelect: () => fileInputRef.current?.click() },
+    { id: 'new-event', label: 'Nouvel événement', icon: <Plus />, onSelect: handleNewEventClick },
+    ...(config.view === 'week'
+      ? ([
+          {
+            id: 'toggle-days',
+            label: daysCount === 7 ? 'Passer à 5 jours' : 'Passer à 7 jours',
+            icon: daysCount === 7 ? <CalendarRange /> : <CalendarDays />,
+            onSelect: () => setDaysCount((d) => (d === 7 ? 5 : 7)),
+          },
+          ...(viewMode !== 'minimal'
+            ? [
+                {
+                  id: 'toggle-hours',
+                  label: hourMode === 'extended' ? 'Horaires compacts (8h-19h)' : 'Horaires étendus (00h-24h)',
+                  icon: hourMode === 'extended' ? <Briefcase /> : <Clock />,
+                  onSelect: () => setHourMode((m) => (m === 'extended' ? 'compact' : 'extended')),
+                },
+              ]
+            : []),
+          {
+            id: 'toggle-view-mode',
+            label: viewMode === 'grid' ? 'Mode minimaliste' : 'Mode grille',
+            icon: viewMode === 'grid' ? <Rows3 /> : <LayoutGrid />,
+            onSelect: () => setViewMode((v) => (v === 'grid' ? 'minimal' : 'grid')),
+          },
+        ] satisfies RadialMenuItem[])
+      : []),
+  ]
+
   return (
-    <ModuleCard
-      className="w-[640px]"
-      titleClassName="capitalize"
-      headerClassName={headerClassName}
-      variant={headerStyle}
-      title={`Planning — ${config.view}`}
-      action={
-        <>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".ics"
-            multiple
-            onChange={handleFilesSelected}
-            className="hidden"
-          />
-          <ToolbarButton onClick={() => fileInputRef.current?.click()} aria-label="Importer un fichier .ics">
-            <Upload className="size-3.5" />
-          </ToolbarButton>
-          <ToolbarButton onClick={handleNewEventClick} aria-label="Nouvel événement">
-            <Plus className="size-3.5" />
-          </ToolbarButton>
-          {config.view === 'week' && (
-            <>
-              <ToolbarButton
-                onClick={() => setDaysCount((d) => (d === 7 ? 5 : 7))}
-                aria-label={daysCount === 7 ? 'Passer à 5 jours' : 'Passer à 7 jours'}
-              >
-                {daysCount === 7 ? <CalendarDays className="size-3.5" /> : <CalendarRange className="size-3.5" />}
-              </ToolbarButton>
-              <ToolbarButton
-                onClick={() => setHourMode((m) => (m === 'extended' ? 'compact' : 'extended'))}
-                disabled={viewMode === 'minimal'}
-                aria-label={hourMode === 'extended' ? 'Passer en horaires compacts (8h-19h)' : 'Passer en horaires étendus (00h-24h)'}
-              >
-                {hourMode === 'extended' ? <Clock className="size-3.5" /> : <Briefcase className="size-3.5" />}
-              </ToolbarButton>
-              <ToolbarButton
-                onClick={() => setViewMode((v) => (v === 'grid' ? 'minimal' : 'grid'))}
-                aria-label={viewMode === 'grid' ? 'Passer en mode minimaliste' : 'Passer en mode grille'}
-              >
-                {viewMode === 'grid' ? <Rows3 className="size-3.5" /> : <LayoutGrid className="size-3.5" />}
-              </ToolbarButton>
-            </>
-          )}
-        </>
-      }
-    >
-      {importStatus && <p className="mb-2 text-xs text-muted-foreground">{importStatus}</p>}
-      {config.view === 'week' ? (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1">
-              <ToolbarButton onClick={goToPreviousWeek} aria-label="Semaine précédente">
-                <ChevronLeft className="size-3.5" />
-              </ToolbarButton>
-              <span className="min-w-28 text-center text-xs text-muted-foreground">{formatWeekRange(days)}</span>
-              <ToolbarButton onClick={goToNextWeek} aria-label="Semaine suivante">
-                <ChevronRight className="size-3.5" />
+    <ModuleRadialTrigger items={radialItems} variant="slide"> {/* values : slide or thread */}
+      <input ref={fileInputRef} type="file" accept=".ics" multiple onChange={handleFilesSelected} className="hidden" />
+      <ModuleCard
+        className="w-[640px]"
+        titleClassName="capitalize"
+        headerClassName={headerClassName}
+        variant={headerStyle}
+        title={`Planning — ${config.view}`}
+      >
+        {importStatus && <p className="mb-2 text-xs text-muted-foreground">{importStatus}</p>}
+        {config.view === 'week' ? (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1">
+                <ToolbarButton onClick={goToPreviousWeek} aria-label="Semaine précédente">
+                  <ChevronLeft className="size-3.5" />
+                </ToolbarButton>
+                <span className="min-w-28 text-center text-xs text-muted-foreground">{formatWeekRange(days)}</span>
+                <ToolbarButton onClick={goToNextWeek} aria-label="Semaine suivante">
+                  <ChevronRight className="size-3.5" />
+                </ToolbarButton>
+              </div>
+              <ToolbarButton onClick={goToToday} aria-label="Revenir à aujourd'hui" size="sm">
+                Aujourd'hui
               </ToolbarButton>
             </div>
-            <ToolbarButton onClick={goToToday} aria-label="Revenir à aujourd'hui" size="sm">
-              Aujourd'hui
-            </ToolbarButton>
+            {selection && <p className="text-xs text-muted-foreground">Sélection : {formatSelection(selection)}</p>}
+            {viewMode === 'grid' ? (
+              <WeekGrid
+                events={events}
+                mode={hourMode}
+                days={days}
+                selection={selection}
+                onSelectionChange={handleSelectionChange}
+              />
+            ) : (
+              <WeekMinimal events={events} days={days} />
+            )}
           </div>
-          {selection && <p className="text-xs text-muted-foreground">Sélection : {formatSelection(selection)}</p>}
-          {viewMode === 'grid' ? (
-            <WeekGrid
-              events={events}
-              mode={hourMode}
-              days={days}
-              selection={selection}
-              onSelectionChange={handleSelectionChange}
-            />
-          ) : (
-            <WeekMinimal events={events} days={days} />
-          )}
-        </div>
-      ) : (
-        <p className="text-sm text-muted-foreground">Vue « {config.view} » à implémenter.</p>
-      )}
-      <EventFormModal open={isEventModalOpen} onOpenChange={handleEventModalOpenChange} selection={selection} />
-    </ModuleCard>
+        ) : (
+          <p className="text-sm text-muted-foreground">Vue « {config.view} » à implémenter.</p>
+        )}
+        <EventFormModal open={isEventModalOpen} onOpenChange={handleEventModalOpenChange} selection={selection} />
+      </ModuleCard>
+    </ModuleRadialTrigger>
   )
 }
