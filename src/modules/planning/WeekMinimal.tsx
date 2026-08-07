@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { cn } from '@/lib/utils'
-import { DAY_LABELS, isSameDay } from './date-utils'
+import { getDayLabel, isSameDay } from './date-utils'
 import type { CalendarEvent } from './types'
 
 interface WeekMinimalProps {
@@ -38,7 +38,7 @@ export function WeekMinimal({ events, days }: WeekMinimalProps) {
             key={i}
             className={cn('sticky top-0 z-10 border-b bg-card px-1 py-1 text-center', isSameDay(day, today) && 'bg-primary/10 font-semibold')}
           >
-            <div className="text-muted-foreground">{DAY_LABELS[i]}</div>
+            <div className="text-muted-foreground">{getDayLabel(day)}</div>
             <div>{day.getDate()}</div>
           </div>
         ))}

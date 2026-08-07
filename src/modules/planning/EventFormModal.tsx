@@ -51,7 +51,7 @@ export function EventFormModal({ open, onOpenChange, selection }: EventFormModal
     endDT.setHours(selection?.endHour ?? 10)
 
     setTitle('')
-    setAllDay(false)
+    setAllDay(selection?.allDay ?? false)
     setStartDate(toDateInputValue(startDT))
     setStartTime(toTimeInputValue(startDT.getHours()))
     setEndDate(toDateInputValue(endDT))

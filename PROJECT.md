@@ -20,11 +20,17 @@ couleur + style de header) depuis un menu de réglages ; reste du polish
 - **Tâches** / **Todo-list** — implémenté via un moteur `checklist` partagé
   (`src/modules/checklist/`) : texte libre, une ligne commençant par `-` est
   cochable/rayable au clic.
-- **Planning** — vue **semaine** implémentée (grille étendue / récap
-  compact, 5 ou 7 jours), création d'événement via modale
-  (`EventFormModal`), **import ponctuel de fichier `.ics`** (pas de
-  synchro live — voir `ics-import.ts`). Vues jour/mois du modèle initial
-  (`PlanningView = 'day' | 'week' | 'month'`) **pas encore construites**.
+- **Planning** — les trois vues (`PlanningView = 'day' | 'week' | 'month'`)
+  sont implémentées, accessibles via une bascule dans la barre d'outils du
+  widget (comme `hourMode`/`viewMode`/`daysCount`, du state runtime plutôt
+  qu'une config figée par instance — un seul widget planning existe sur le
+  canvas). Semaine : grille étendue / récap compact, 5 ou 7 jours. Jour :
+  réutilise les mêmes composants que semaine (`WeekGrid`/`WeekMinimal`) avec
+  un seul jour. Mois : nouveau composant `MonthGrid.tsx`, grille 6 semaines
+  fixe, mode étendu (titres dans la case) ou compact (indicateur nombre par
+  jour), clic sur une case = création d'événement journée entière. Création
+  d'événement via modale (`EventFormModal`), **import ponctuel de fichier
+  `.ics`** (pas de synchro live — voir `ics-import.ts`).
 - **Important** — implémenté pour les notes uniquement (agrégation par type,
   ouverture directe dans Notes). Pas encore branché sur planning/tâches.
 - **Drawer + Réglages des modules** (nouveau ce jalon) — panneau
@@ -74,7 +80,8 @@ global-hub/
     │   └── utils.ts              # helper cn() (shadcn)
     └── modules/                 # un dossier par module métier
         ├── planning/              # PlanningWidget, WeekGrid/WeekMinimal,
-        │                          # EventFormModal, ics-import, date-utils
+        │                          # MonthGrid, EventFormModal, ics-import,
+        │                          # date-utils
         ├── notes/                 # NotesWidget, NoteList
         ├── text-editor/           # moteur Tiptap partagé (notes + post-its)
         ├── post-its/              # PostItWidget (bloc), PostItNote (détaché)
@@ -141,6 +148,12 @@ volontairement petit et à une seule responsabilité).
   mais on ne s'appuie jamais sur `.where('important')`, on lit toute la
   table et on filtre en mémoire. Garder ce réflexe pour toute future source
   (events, post-its).
+- **Planning, vue mois** : `addMonths` (`date-utils.ts`) recale toujours au
+  1er du mois cible plutôt que de conserver le quantième courant (évite le
+  saut de mois que `setMonth` provoquerait sur les fins de mois, ex. 31
+  janvier + 1 mois → 3 mars). Conséquence assumée : `referenceDate` est
+  partagé entre les 3 vues (pas d'état séparé par vue) — naviguer en mois
+  puis rebasculer en jour/semaine atterrit donc sur le 1er du mois affiché.
 - **Storybook réutilise `vite.config.ts`** de l'app, qui inclut `VitePWA` —
   ça faisait planter `build-storybook` (précache workbox tentant d'inclure
   les bundles de Storybook lui-même). Fixé via un `viteFinal` dans
@@ -197,11 +210,16 @@ dit déjà.
 
 ## À affiner
 
-- Vues jour/mois du Planning (seule la semaine est construite).
 - Étendre "Important" au planning et aux tâches (actuellement notes
   seulement).
 - Todo-list : le module pourrait être simplifié (rien d'acté).
 - Suite du polish visuel général sur les 6 modules.
+- Planning, vue mois : pas de vue détaillée accessible au clic sur une case
+  au-delà des events déjà affichés (débordement `+N` en mode étendu).
+- Planning, vues jour/semaine : les événements `allDay` restent invisibles
+  (filtre `!e.allDay` dans `WeekGrid`/`WeekMinimal`, non touché lors de
+  l'ajout des vues jour/mois) — faute d'une zone "journée entière" dédiée
+  dans la grille horaire, écart volontaire non traité dans ce chantier.
 
 ---
 
