@@ -31,6 +31,7 @@ const inputClass = 'w-full rounded-md border bg-background px-2 py-1.5 text-sm o
 export function EventFormModal({ open, onOpenChange, selection }: EventFormModalProps) {
   const [title, setTitle] = useState('')
   const [allDay, setAllDay] = useState(false)
+  const [important, setImportant] = useState(false)
   const [startDate, setStartDate] = useState('')
   const [startTime, setStartTime] = useState('')
   const [endDate, setEndDate] = useState('')
@@ -52,6 +53,7 @@ export function EventFormModal({ open, onOpenChange, selection }: EventFormModal
 
     setTitle('')
     setAllDay(selection?.allDay ?? false)
+    setImportant(false)
     setStartDate(toDateInputValue(startDT))
     setStartTime(toTimeInputValue(startDT.getHours()))
     setEndDate(toDateInputValue(endDT))
@@ -79,7 +81,7 @@ export function EventFormModal({ open, onOpenChange, selection }: EventFormModal
       location: location.trim() || undefined,
       description: description.trim() || undefined,
       source: 'local',
-      important: false,
+      important,
     })
     onOpenChange(false)
   }
@@ -104,6 +106,11 @@ export function EventFormModal({ open, onOpenChange, selection }: EventFormModal
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} />
             Journée entière
+          </label>
+
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={important} onChange={(e) => setImportant(e.target.checked)} />
+            Marquer important
           </label>
 
           <div className="flex items-center gap-2">

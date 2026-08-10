@@ -29,10 +29,17 @@ couleur + style de header) depuis un menu de réglages ; reste du polish
   un seul jour. Mois : nouveau composant `MonthGrid.tsx`, grille 6 semaines
   fixe, mode étendu (titres dans la case) ou compact (indicateur nombre par
   jour), clic sur une case = création d'événement journée entière. Création
-  d'événement via modale (`EventFormModal`), **import ponctuel de fichier
-  `.ics`** (pas de synchro live — voir `ics-import.ts`).
-- **Important** — implémenté pour les notes uniquement (agrégation par type,
-  ouverture directe dans Notes). Pas encore branché sur planning/tâches.
+  d'événement via modale (`EventFormModal`, avec case "Marquer important"),
+  suppression au clic + confirmation (pas d'édition/détail), **import
+  ponctuel de fichier `.ics`** (pas de synchro live — voir `ics-import.ts`).
+- **Important** — module transverse couvrant les 5 sources : notes, tâches,
+  événements, post-its, todo-list. Deux mécanismes de navigation au clic
+  selon que la source a un widget persistant à faire basculer ou non :
+  notes/tâches/planning rejoignent le widget d'origine sur l'item précis
+  (`NavigableModule`/`requestOpen`, planning bascule en vue jour sur la date
+  de l'event) ; post-its et fiches todo-list détachés sont des nodes React
+  Flow autonomes sans widget "propre" — le clic recentre le canvas dessus
+  (`fitView`) à la place.
 - **Drawer + Réglages des modules** (nouveau ce jalon) — panneau
   afficher/masquer chaque module (et, pour Post-it/Todo-list, chaque
   instance détachée individuellement, avec masquage en cascade
@@ -154,6 +161,13 @@ volontairement petit et à une seule responsabilité).
   janvier + 1 mois → 3 mars). Conséquence assumée : `referenceDate` est
   partagé entre les 3 vues (pas d'état séparé par vue) — naviguer en mois
   puis rebasculer en jour/semaine atterrit donc sur le 1er du mois affiché.
+- **Navigation "Important" → post-it/fiche todo-list détachée** : passe par
+  `fitView({ nodes: [{ id }] })` (React Flow) plutôt que par
+  `requestOpen`/état interne, car ces nodes n'ont pas de widget parent
+  persistant à faire basculer (chaque node EST l'item). Si le node ciblé
+  n'est pas monté (masqué via le drawer), l'appel ne fait simplement rien —
+  même esprit que la limite déjà acceptée pour Notes/Tâches (pas de pan si
+  le widget est hors écran).
 - **Storybook réutilise `vite.config.ts`** de l'app, qui inclut `VitePWA` —
   ça faisait planter `build-storybook` (précache workbox tentant d'inclure
   les bundles de Storybook lui-même). Fixé via un `viteFinal` dans
@@ -210,16 +224,21 @@ dit déjà.
 
 ## À affiner
 
-- Étendre "Important" au planning et aux tâches (actuellement notes
-  seulement).
 - Todo-list : le module pourrait être simplifié (rien d'acté).
-- Suite du polish visuel général sur les 6 modules.
+- Suite du polish visuel général sur les 6 modules (notamment le langage
+  visuel du toggle "important" : glyphe `!` dans les listes vs. icône
+  `Star` sur les nodes canvas — deux conventions différentes, pas encore
+  réconciliées).
 - Planning, vue mois : pas de vue détaillée accessible au clic sur une case
   au-delà des events déjà affichés (débordement `+N` en mode étendu).
 - Planning, vues jour/semaine : les événements `allDay` restent invisibles
   (filtre `!e.allDay` dans `WeekGrid`/`WeekMinimal`, non touché lors de
   l'ajout des vues jour/mois) — faute d'une zone "journée entière" dédiée
   dans la grille horaire, écart volontaire non traité dans ce chantier.
+- Planning : un événement ne peut être que créé ou supprimé (clic +
+  confirmation) — pas de vue détail ni d'édition après coup (impossible de
+  revoir/modifier titre, horaires, lieu, description, ou le flag
+  `important`, réglable uniquement à la création via `EventFormModal`).
 
 ---
 

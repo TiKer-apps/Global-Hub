@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Trash2 } from 'lucide-react'
+import { Star, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { db } from '@/lib/db'
 import { ToolbarButton } from '@/modules/text-editor/ToolbarButton'
@@ -32,8 +32,19 @@ function TodoSheetNoteLoaded({ sheet }: { sheet: TodoSheet }) {
     db.todoSheets.delete(sheet.id)
   }
 
+  const handleToggleImportant = () => db.todoSheets.update(sheet.id, { important: !sheet.important })
+
   return (
     <div className="relative w-64">
+      <ToolbarButton
+        onClick={handleToggleImportant}
+        aria-label={sheet.important ? 'Retirer important' : 'Marquer important'}
+        aria-pressed={sheet.important}
+        size="icon-sm"
+        className="nodrag absolute -top-3 -left-3 z-10 rounded-full border bg-card shadow-md"
+      >
+        <Star className={cn('size-3.5', sheet.important && 'fill-amber-500 text-amber-500')} />
+      </ToolbarButton>
       <ToolbarButton
         onClick={handleDelete}
         aria-label="Supprimer la fiche"
