@@ -9,6 +9,7 @@ interface MonthGridProps {
   days: Date[] // 42 jours (getMonthGridDays) : 6 semaines pleines, bordées par les mois adjacents
   referenceDate: Date // pour griser les jours hors du mois courant
   onDayClick: (day: Date) => void
+  onEventClick: (event: CalendarEvent) => void
 }
 
 const MAX_TITLES = 3
@@ -29,7 +30,7 @@ function eventOccursOnDay(event: CalendarEvent, day: Date): boolean {
 // Pas d'état de drag ici (contrairement à WeekGrid) : un clic sur une case
 // produit directement une sélection finale journée entière, il n'y a pas de
 // plage horaire à affiner par glisser sur un axe qui n'existe pas.
-export function MonthGrid({ events, mode, days, referenceDate, onDayClick }: MonthGridProps) {
+export function MonthGrid({ events, mode, days, referenceDate, onDayClick, onEventClick }: MonthGridProps) {
   const today = useMemo(() => new Date(), [])
   const currentMonth = referenceDate.getMonth()
 
@@ -67,7 +68,16 @@ export function MonthGrid({ events, mode, days, referenceDate, onDayClick }: Mon
                   {dayEvents.slice(0, MAX_TITLES).map((event) => (
                     <div
                       key={event.id}
-                      className="truncate rounded-sm bg-green-200 px-1 py-0.5 text-[10px] text-green-900"
+                      // La case entière ouvre la création d'un event (clic sur
+                      // une zone vide) — sans stopPropagation, cliquer une
+                      // chip remonterait aussi ce clic à la case et ouvrirait
+                      // la modale de création en plus de celle d'édition.
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onEventClick(event)
+                      }}
+                      title="Voir l'événement"
+                      className="truncate rounded-sm bg-green-200 px-1 py-0.5 text-[10px] text-green-900 hover:ring-1 hover:ring-primary"
                       style={{ backgroundColor: event.color }}
                     >
                       {event.title}
