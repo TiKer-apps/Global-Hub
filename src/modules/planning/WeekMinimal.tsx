@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { cn } from '@/lib/utils'
+import { db } from '@/lib/db'
 import { getDayLabel, isSameDay } from './date-utils'
 import type { CalendarEvent } from './types'
 
@@ -50,7 +51,9 @@ export function WeekMinimal({ events, days }: WeekMinimalProps) {
               eventsByDay[dayIndex].map((event) => (
                 <div
                   key={event.id}
-                  className="rounded-sm bg-green-200 px-1 py-1 text-green-900"
+                  onClick={() => confirm(`Supprimer « ${event.title} » ?`) && db.events.delete(event.id)}
+                  title="Cliquer pour supprimer"
+                  className="cursor-pointer rounded-sm bg-green-200 px-1 py-1 text-green-900 hover:ring-1 hover:ring-red-500"
                   style={{ backgroundColor: event.color }}
                 >
                   <div className="truncate font-medium">{event.title}</div>

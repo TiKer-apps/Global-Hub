@@ -1,5 +1,6 @@
-import { useCallback, useMemo, useRef, useState, type ChangeEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
+import { useReactFlow } from '@xyflow/react'
 import {
   Briefcase,
   CalendarDays,
@@ -16,6 +17,7 @@ import {
 } from 'lucide-react'
 import { ModuleCard } from '@/components/module-card'
 import { useModuleHeaderClassName } from '@/canvas/module-theme'
+import { useModuleNavigation } from '@/canvas/module-navigation'
 import { useModuleStyleId } from '@/canvas/module-style'
 import { db } from '@/lib/db'
 import { ToolbarButton } from '@/modules/text-editor/ToolbarButton'
@@ -66,6 +68,25 @@ export function PlanningWidget({ config }: PlanningWidgetProps) {
     [view, referenceDate, daysCount],
   )
   const monthDays = useMemo(() => getMonthGridDays(referenceDate), [referenceDate])
+
+  // Un autre widget (Important) peut demander à afficher un événement
+  // précis : on bascule en vue jour sur sa date (la plus précise pour
+  // repérer un event isolé) et on recentre le canvas sur ce widget fixe
+  // (id `planning-week`, cf. HubCanvas) pour que le résultat soit visible
+  // même si le widget était hors écran.
+  const { request, consumeOpenRequest } = useModuleNavigation()
+  const { fitView } = useReactFlow()
+  useEffect(() => {
+    if (request?.module !== 'planning') return
+    db.events.get(request.id).then((event) => {
+      if (event) {
+        setReferenceDate(new Date(event.start))
+        setView('day')
+      }
+      fitView({ nodes: [{ id: 'planning-week' }], duration: 300, maxZoom: 1 })
+      consumeOpenRequest()
+    })
+  }, [request])
 
   // Une sélection de plage horaire finalisée dans WeekGrid ouvre directement
   // la modale, pré-remplie avec cette plage.

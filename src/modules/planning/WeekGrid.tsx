@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type MouseEvent as ReactMouseEvent } from 'react'
 import { cn } from '@/lib/utils'
+import { db } from '@/lib/db'
 import { getDayLabel, isSameDay } from './date-utils'
 import type { CalendarEvent, PlanningMode, TimeRangeSelection } from './types'
 
@@ -14,10 +15,9 @@ interface WeekGridProps {
 const HOUR_HEIGHT = 40 // px
 const GUTTER = '2.5rem'
 
-// Lecture seule pour l'instant pour les events eux-mêmes (pas encore de
-// création/déplacement au clic sur un event) — mais sélection d'une plage
-// horaire par glisser déjà active (cf. plus bas), en vue de la future modale
-// de création.
+// Pas d'édition/déplacement au clic sur un event (juste suppression, cf. le
+// bloc event plus bas) — mais sélection d'une plage horaire par glisser déjà
+// active (cf. plus bas), pour la modale de création.
 //
 // En-tête et grille dans UN SEUL conteneur scrollable (en-tête `sticky`)
 // plutôt que deux grids séparées : sinon la scrollbar du corps (qui prend de
@@ -186,7 +186,19 @@ export function WeekGrid({ events, mode, days, selection, onSelectionChange }: W
                 return (
                   <div
                     key={event.id}
-                    className="pointer-events-none absolute inset-x-0.5 overflow-hidden rounded-sm bg-green-200 px-1 py-0.5 text-[10px] text-green-900"
+                    // `stopPropagation` sur mousedown ET click : sans ça, le
+                    // clic traverse jusqu'à la cellule en dessous (l'event est
+                    // positionné par-dessus, pas dans le flux) et déclenche la
+                    // logique de sélection par glisser du parent — un simple
+                    // clic sur un event ouvrait donc la modale de CRÉATION
+                    // d'un nouvel event au lieu de cibler celui-ci.
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      if (confirm(`Supprimer « ${event.title} » ?`)) db.events.delete(event.id)
+                    }}
+                    title="Cliquer pour supprimer"
+                    className="absolute inset-x-0.5 cursor-pointer overflow-hidden rounded-sm bg-green-200 px-1 py-0.5 text-[10px] text-green-900 hover:ring-1 hover:ring-red-500"
                     style={{
                       top: clampedStart * HOUR_HEIGHT,
                       height: Math.max((clampedEnd - clampedStart) * HOUR_HEIGHT, 16),

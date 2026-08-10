@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
 
-export type NavigableModule = 'notes' | 'tasks'
+export type NavigableModule = 'notes' | 'tasks' | 'planning'
 
 interface OpenRequest {
   module: NavigableModule

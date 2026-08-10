@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { EditorContent } from '@tiptap/react'
-import { Trash2 } from 'lucide-react'
+import { Star, Trash2 } from 'lucide-react'
 import { db } from '@/lib/db'
 import { cn } from '@/lib/utils'
 import { ToolbarButton } from '@/modules/text-editor/ToolbarButton'
@@ -69,6 +69,8 @@ function PostItNoteLoaded({ postIt }: { postIt: PostIt }) {
     db.postIts.delete(postIt.id)
   }
 
+  const handleToggleImportant = () => db.postIts.update(postIt.id, { important: !postIt.important })
+
   return (
     <div ref={containerRef} className={cn('relative', active && 'nodrag')}>
       {active && (
@@ -79,9 +81,18 @@ function PostItNoteLoaded({ postIt }: { postIt: PostIt }) {
           setSpellCheck={setSpellCheck}
           className="nodrag absolute -top-14 left-1/2 z-10 w-max -translate-x-1/2 flex-nowrap rounded-md border bg-card px-1 py-1 shadow-md"
           extra={
-            <ToolbarButton onClick={handleDelete} aria-label="Supprimer le post-it">
-              <Trash2 className="size-3.5" />
-            </ToolbarButton>
+            <>
+              <ToolbarButton
+                onClick={handleToggleImportant}
+                aria-label={postIt.important ? 'Retirer important' : 'Marquer important'}
+                aria-pressed={postIt.important}
+              >
+                <Star className={cn('size-3.5', postIt.important && 'fill-amber-500 text-amber-500')} />
+              </ToolbarButton>
+              <ToolbarButton onClick={handleDelete} aria-label="Supprimer le post-it">
+                <Trash2 className="size-3.5" />
+              </ToolbarButton>
+            </>
           }
         />
       )}
@@ -91,6 +102,12 @@ function PostItNoteLoaded({ postIt }: { postIt: PostIt }) {
       >
         <EditorContent editor={editor} className="size-full" />
       </div>
+      {/* Indicateur passif : la toolbar (donc l'état "rempli" de l'étoile)
+          n'est visible qu'en édition, sans ça rien ne signale un post-it
+          important tant qu'on ne clique pas dessus. */}
+      {postIt.important && !active && (
+        <Star className="pointer-events-none absolute top-1 right-1 size-3.5 fill-amber-500 text-amber-500" />
+      )}
     </div>
   )
 }
