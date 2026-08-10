@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type MouseEvent as ReactMouseEvent } from 'react'
 import { cn } from '@/lib/utils'
-import { DAY_LABELS, isSameDay } from './date-utils'
+import { getDayLabel, isSameDay } from './date-utils'
 import type { CalendarEvent, PlanningMode, TimeRangeSelection } from './types'
 
 interface WeekGridProps {
@@ -124,7 +124,7 @@ export function WeekGrid({ events, mode, days, selection, onSelectionChange }: W
               isSameDay(day, today) && 'bg-primary/10 font-semibold',
             )}
           >
-            <div className="text-muted-foreground">{DAY_LABELS[i]}</div>
+            <div className="text-muted-foreground">{getDayLabel(day)}</div>
             <div>{day.getDate()}</div>
           </div>
         ))}

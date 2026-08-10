@@ -31,4 +31,5 @@ export interface TimeRangeSelection {
   day: Date
   startHour: number
   endHour: number
+  allDay?: boolean // vue mois : pas d'axe horaire, la case représente la journée entière
 }
