@@ -27,7 +27,7 @@ import { importIcsEvents } from './ics-import'
 import { MonthGrid } from './MonthGrid'
 import { WeekGrid } from './WeekGrid'
 import { WeekMinimal } from './WeekMinimal'
-import type { PlanningMode, PlanningView, PlanningWidgetConfig, TimeRangeSelection } from './types'
+import type { CalendarEvent, PlanningMode, PlanningView, PlanningWidgetConfig, TimeRangeSelection } from './types'
 
 const SELECTION_DATE_FORMAT = new Intl.DateTimeFormat('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })
 
@@ -56,6 +56,7 @@ export function PlanningWidget({ config }: PlanningWidgetProps) {
   const [referenceDate, setReferenceDate] = useState(() => new Date())
   const [importStatus, setImportStatus] = useState<string | null>(null)
   const [selection, setSelection] = useState<TimeRangeSelection | null>(null)
+  const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
   const [isEventModalOpen, setIsEventModalOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -97,12 +98,22 @@ export function PlanningWidget({ config }: PlanningWidgetProps) {
 
   const handleNewEventClick = () => {
     setSelection(null)
+    setEditingEvent(null)
     setIsEventModalOpen(true)
   }
 
+  const handleEventClick = useCallback((event: CalendarEvent) => {
+    setSelection(null)
+    setEditingEvent(event)
+    setIsEventModalOpen(true)
+  }, [])
+
   const handleEventModalOpenChange = (open: boolean) => {
     setIsEventModalOpen(open)
-    if (!open) setSelection(null)
+    if (!open) {
+      setSelection(null)
+      setEditingEvent(null)
+    }
   }
 
   const handleMonthDayClick = useCallback(
@@ -218,7 +229,14 @@ export function PlanningWidget({ config }: PlanningWidgetProps) {
         </div>
         {selection && <p className="text-xs text-muted-foreground">Sélection : {formatSelection(selection)}</p>}
         {view === 'month' ? (
-          <MonthGrid events={events} mode={hourMode} days={monthDays} referenceDate={referenceDate} onDayClick={handleMonthDayClick} />
+          <MonthGrid
+            events={events}
+            mode={hourMode}
+            days={monthDays}
+            referenceDate={referenceDate}
+            onDayClick={handleMonthDayClick}
+            onEventClick={handleEventClick}
+          />
         ) : viewMode === 'grid' ? (
           <WeekGrid
             events={events}
@@ -226,12 +244,18 @@ export function PlanningWidget({ config }: PlanningWidgetProps) {
             days={days}
             selection={selection}
             onSelectionChange={handleSelectionChange}
+            onEventClick={handleEventClick}
           />
         ) : (
-          <WeekMinimal events={events} days={days} />
+          <WeekMinimal events={events} days={days} onEventClick={handleEventClick} />
         )}
       </div>
-      <EventFormModal open={isEventModalOpen} onOpenChange={handleEventModalOpenChange} selection={selection} />
+      <EventFormModal
+        open={isEventModalOpen}
+        onOpenChange={handleEventModalOpenChange}
+        selection={selection}
+        event={editingEvent}
+      />
     </ModuleCard>
   )
 }

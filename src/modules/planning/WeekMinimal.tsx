@@ -1,12 +1,12 @@
 import { useMemo } from 'react'
 import { cn } from '@/lib/utils'
-import { db } from '@/lib/db'
 import { getDayLabel, isSameDay } from './date-utils'
 import type { CalendarEvent } from './types'
 
 interface WeekMinimalProps {
   events: CalendarEvent[]
   days: Date[]
+  onEventClick: (event: CalendarEvent) => void
 }
 
 function formatHour(d: Date) {
@@ -19,7 +19,7 @@ function formatHour(d: Date) {
 // s'il y en a plusieurs le même jour) avec juste la plage horaire en texte —
 // une case vide en pointillés si rien ce jour-là. Même technique d'en-tête
 // `sticky` que WeekGrid pour garder les colonnes alignées au scroll.
-export function WeekMinimal({ events, days }: WeekMinimalProps) {
+export function WeekMinimal({ events, days, onEventClick }: WeekMinimalProps) {
   // `today` : la vraie date du jour, pour le surlignage — indépendant de la
   // semaine affichée (`days`), qui peut être passée/future après navigation.
   const today = useMemo(() => new Date(), [])
@@ -51,9 +51,9 @@ export function WeekMinimal({ events, days }: WeekMinimalProps) {
               eventsByDay[dayIndex].map((event) => (
                 <div
                   key={event.id}
-                  onClick={() => confirm(`Supprimer « ${event.title} » ?`) && db.events.delete(event.id)}
-                  title="Cliquer pour supprimer"
-                  className="cursor-pointer rounded-sm bg-green-200 px-1 py-1 text-green-900 hover:ring-1 hover:ring-red-500"
+                  onClick={() => onEventClick(event)}
+                  title="Voir l'événement"
+                  className="cursor-pointer rounded-sm bg-green-200 px-1 py-1 text-green-900 hover:ring-1 hover:ring-primary"
                   style={{ backgroundColor: event.color }}
                 >
                   <div className="truncate font-medium">{event.title}</div>

@@ -28,10 +28,11 @@ couleur + style de header) depuis un menu de réglages ; reste du polish
   réutilise les mêmes composants que semaine (`WeekGrid`/`WeekMinimal`) avec
   un seul jour. Mois : nouveau composant `MonthGrid.tsx`, grille 6 semaines
   fixe, mode étendu (titres dans la case) ou compact (indicateur nombre par
-  jour), clic sur une case = création d'événement journée entière. Création
-  d'événement via modale (`EventFormModal`, avec case "Marquer important"),
-  suppression au clic + confirmation (pas d'édition/détail), **import
-  ponctuel de fichier `.ics`** (pas de synchro live — voir `ics-import.ts`).
+  jour), clic sur une case = création d'événement journée entière. Clic sur
+  un événement (grille/minimaliste/mois) ouvre sa modale de détail/édition
+  (`EventFormModal`, même composant que la création — prérempli, `update`
+  au lieu de `add`, bouton Supprimer intégré). **Import ponctuel de fichier
+  `.ics`** (pas de synchro live — voir `ics-import.ts`).
 - **Important** — module transverse couvrant les 5 sources : notes, tâches,
   événements, post-its, todo-list. Deux mécanismes de navigation au clic
   selon que la source a un widget persistant à faire basculer ou non :
@@ -235,10 +236,6 @@ dit déjà.
   (filtre `!e.allDay` dans `WeekGrid`/`WeekMinimal`, non touché lors de
   l'ajout des vues jour/mois) — faute d'une zone "journée entière" dédiée
   dans la grille horaire, écart volontaire non traité dans ce chantier.
-- Planning : un événement ne peut être que créé ou supprimé (clic +
-  confirmation) — pas de vue détail ni d'édition après coup (impossible de
-  revoir/modifier titre, horaires, lieu, description, ou le flag
-  `important`, réglable uniquement à la création via `EventFormModal`).
 
 ---
 
