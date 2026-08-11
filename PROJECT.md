@@ -4,6 +4,27 @@ Application personnelle d'organisation : une vue unique regroupant plusieurs
 modules (planning, notes, post-its, tâches, todo-list) sous forme de widgets
 disposés librement sur un canvas zoomable.
 
+## Statut — jalon du 2026-08-11
+
+Depuis le dernier jalon (2026-08-03), 3 PRs mergées sur `develop`
+(2026-08-07 → 2026-08-10) :
+
+- **Planning** — vues jour et mois construites (seule la semaine existait) ;
+  détail/édition d'un événement existant (clic sur un event, plus seulement
+  création/suppression).
+- **Important** — étendu au planning et aux post-its/todo-list détachés
+  (ne couvrait que les notes).
+- **Correction doc** : le bullet Tâches/Todo-list ci-dessous décrivait
+  encore l'ancien moteur `checklist` partagé — Tâches a en réalité été
+  refondu en liste + éditeur indépendant (même architecture que Notes) sans
+  que ce jalon-ci ne le documente ; le composant `ChecklistWidget` partagé
+  initial est aujourd'hui du code mort (`src/modules/checklist/ChecklistWidget.tsx`),
+  seul le type `ChecklistLine` reste partagé avec Todo-list.
+
+Le paragraphe "Statut — jalon du 2026-08-03" ci-dessous reste tel qu'écrit à
+l'époque (voir remarque ci-dessus sur le point Tâches/Todo-list, seul
+élément qui y est désormais inexact).
+
 ## Statut — jalon du 2026-08-03
 
 Six jours de développement itératif (17 commits, 2026-07-28 → 2026-08-03).
@@ -20,27 +41,13 @@ couleur + style de header) depuis un menu de réglages ; reste du polish
 - **Tâches** / **Todo-list** — implémenté via un moteur `checklist` partagé
   (`src/modules/checklist/`) : texte libre, une ligne commençant par `-` est
   cochable/rayable au clic.
-- **Planning** — les trois vues (`PlanningView = 'day' | 'week' | 'month'`)
-  sont implémentées, accessibles via une bascule dans la barre d'outils du
-  widget (comme `hourMode`/`viewMode`/`daysCount`, du state runtime plutôt
-  qu'une config figée par instance — un seul widget planning existe sur le
-  canvas). Semaine : grille étendue / récap compact, 5 ou 7 jours. Jour :
-  réutilise les mêmes composants que semaine (`WeekGrid`/`WeekMinimal`) avec
-  un seul jour. Mois : nouveau composant `MonthGrid.tsx`, grille 6 semaines
-  fixe, mode étendu (titres dans la case) ou compact (indicateur nombre par
-  jour), clic sur une case = création d'événement journée entière. Clic sur
-  un événement (grille/minimaliste/mois) ouvre sa modale de détail/édition
-  (`EventFormModal`, même composant que la création — prérempli, `update`
-  au lieu de `add`, bouton Supprimer intégré). **Import ponctuel de fichier
-  `.ics`** (pas de synchro live — voir `ics-import.ts`).
-- **Important** — module transverse couvrant les 5 sources : notes, tâches,
-  événements, post-its, todo-list. Deux mécanismes de navigation au clic
-  selon que la source a un widget persistant à faire basculer ou non :
-  notes/tâches/planning rejoignent le widget d'origine sur l'item précis
-  (`NavigableModule`/`requestOpen`, planning bascule en vue jour sur la date
-  de l'event) ; post-its et fiches todo-list détachés sont des nodes React
-  Flow autonomes sans widget "propre" — le clic recentre le canvas dessus
-  (`fitView`) à la place.
+- **Planning** — vue **semaine** implémentée (grille étendue / récap
+  compact, 5 ou 7 jours), création d'événement via modale
+  (`EventFormModal`), **import ponctuel de fichier `.ics`** (pas de
+  synchro live — voir `ics-import.ts`). Vues jour/mois du modèle initial
+  (`PlanningView = 'day' | 'week' | 'month'`) **pas encore construites**.
+- **Important** — implémenté pour les notes uniquement (agrégation par type,
+  ouverture directe dans Notes). Pas encore branché sur planning/tâches.
 - **Drawer + Réglages des modules** (nouveau ce jalon) — panneau
   afficher/masquer chaque module (et, pour Post-it/Todo-list, chaque
   instance détachée individuellement, avec masquage en cascade
@@ -225,6 +232,22 @@ dit déjà.
 
 ## À affiner
 
+- Planning, indication de provenance d'un événement — **le modèle est déjà
+  prêt** (`CalendarEvent.source: 'local' | 'google' | 'outlook'`, détecté
+  automatiquement à l'import via `detectSource()` dans `ics-import.ts`, cf.
+  PRODID du fichier `.ics`), seul l'affichage manque : rien ne distingue
+  aujourd'hui un event Outlook d'un event Gmail dans la grille. Piste
+  retenue : un accent visuel discret par source (ex. liseré coloré sur la
+  case, distinct du remplissage) pour ne pas entrer en collision avec la
+  couleur de type ci-dessous — canal visuel séparé (bordure vs fond).
+- Planning, type d'événement (cinéma, médical, travail...) — pas de champ
+  dédié aujourd'hui, seul `color` existe (jamais renseigné par l'UI
+  actuelle). Piste retenue : liste de types curatée dans `EventFormModal`
+  (même pattern que `theme-presets.ts`, déjà utilisé pour le thème des
+  modules) — chaque type a une couleur préréglée appliquée automatiquement
+  au choix, un seul contrôle (pas de sélecteur de couleur séparé). Nécessite
+  un nouveau champ `type?: string` sur `CalendarEvent` en plus du `color`
+  existant (qui devient dérivé du type plutôt que réglé à la main).
 - Todo-list : le module pourrait être simplifié (rien d'acté).
 - Suite du polish visuel général sur les 6 modules (notamment le langage
   visuel du toggle "important" : glyphe `!` dans les listes vs. icône
