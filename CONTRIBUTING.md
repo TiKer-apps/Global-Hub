@@ -107,6 +107,44 @@ seulement, puis demander si une vérification visuelle est souhaitée.
 Basculer vers une vérification systématique seulement si
 explicitement demandé (ex. "tu vas pouvoir tester toi-même").
 
+## Jalons de PROJECT.md : archiver, jamais écraser
+
+**Règle** : un nouveau jalon dans `PROJECT.md` s'ajoute en tant que
+nouvelle section "Statut — jalon du X" au-dessus des précédentes ; la
+section "Statut" du jalon qu'il remplace part telle quelle dans une
+section d'archive en bas du fichier (voir "Archive — jalon du..."),
+jamais écrasée ou réécrite en place.
+
+**Impact si non respecté** : le contenu exact d'un jalon passé
+(formulations, ce qui était encore "pas construit" à l'époque) est perdu
+dès qu'il est réécrit en place — seul un `git log` sur `PROJECT.md`
+permettrait de le retrouver, ce qui va à l'encontre du but du fichier
+(donner un état lisible sans creuser l'historique).
+
+**Comment l'appliquer** : avant de modifier la section "Statut" en tête
+de fichier, copier son contenu actuel tel quel dans une nouvelle section
+"Archive — jalon du <date du jalon remplacé>" en bas du fichier (à la
+suite des archives existantes), puis seulement écrire le nouveau
+"Statut" en tête. Ne jamais reformuler un jalon archivé après coup.
+
+## Branches par feature depuis `develop`
+
+**Règle** : chaque chantier vit sur sa propre branche (`feat/<nom-court>`)
+créée depuis `develop`, avec une PR vers `develop` à la fin. Jamais de
+travail direct sur `main` ni sur `develop`.
+
+**Impact si non respecté** : un chantier non isolé sur sa propre branche
+mélange son diff avec celui du chantier suivant, rendant la revue et un
+éventuel rollback ciblé impossibles. C'est aussi ce qui permet à deux
+chantiers de progresser en parallèle sans se marcher dessus (ex.
+`feat/plannin-view` et `feat/important-extend` ont touché les mêmes
+fichiers planning en parallèle — la divergence ne s'est réglée qu'au
+rebase, proprement, grâce à l'isolation par branche).
+
+**Comment l'appliquer** : `git checkout -b feat/<nom-court> develop`
+avant de commencer un nouveau chantier ; ouvrir la PR vers `develop` une
+fois terminé (jamais vers `main`, réservé aux releases).
+
 ## Discipline Git
 
 **Règle** : ne commit que sur demande explicite. Des commits petits,

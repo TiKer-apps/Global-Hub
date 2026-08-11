@@ -259,6 +259,10 @@ dit déjà.
   (filtre `!e.allDay` dans `WeekGrid`/`WeekMinimal`, non touché lors de
   l'ajout des vues jour/mois) — faute d'une zone "journée entière" dédiée
   dans la grille horaire, écart volontaire non traité dans ce chantier.
+- Nettoyage : `src/modules/checklist/ChecklistWidget.tsx` est du code mort
+  (Tâches a été refondu en liste + éditeur indépendant sans passer par ce
+  composant, seul le type `ChecklistLine` reste utilisé, par Todo-list) —
+  à supprimer, ou à réévaluer si un usage réel réapparaît.
 
 ---
 
