@@ -14,7 +14,11 @@ Depuis le dernier jalon (2026-08-03), 3 PRs mergées sur `develop`
   création/suppression) ; indication de provenance d'un événement — liseré
   coloré à gauche de la case (bleu Google / indigo Outlook / neutre local),
   `sourceBorderClass`/`sourceLabel` dans le nouveau `source-style.ts`,
-  appliqué aux 3 vues (`WeekGrid`/`WeekMinimal`/`MonthGrid`).
+  appliqué aux 3 vues (`WeekGrid`/`WeekMinimal`/`MonthGrid`) ; type
+  d'événement (Travail/Perso/Santé/Loisirs/Autre) via un nouveau
+  champ `CalendarEvent.type`, liste curatée dans `EventFormModal`
+  (`event-type-presets.ts`, même pattern que `theme-presets.ts`) — chaque
+  type pilote automatiquement `color`, un seul contrôle.
 - **Important** — étendu au planning et aux post-its/todo-list détachés
   (ne couvrait que les notes).
 - **Correction doc** : le bullet Tâches/Todo-list ci-dessous décrivait
@@ -235,14 +239,15 @@ dit déjà.
 
 ## À affiner
 
-- Planning, type d'événement (cinéma, médical, travail...) — pas de champ
-  dédié aujourd'hui, seul `color` existe (jamais renseigné par l'UI
-  actuelle). Piste retenue : liste de types curatée dans `EventFormModal`
-  (même pattern que `theme-presets.ts`, déjà utilisé pour le thème des
-  modules) — chaque type a une couleur préréglée appliquée automatiquement
-  au choix, un seul contrôle (pas de sélecteur de couleur séparé). Nécessite
-  un nouveau champ `type?: string` sur `CalendarEvent` en plus du `color`
-  existant (qui devient dérivé du type plutôt que réglé à la main).
+- **Internationalisation (i18n)** — priorité haute. Toutes les chaînes sont
+  aujourd'hui en français, en dur (JSX, `aria-label`, `placeholder`,
+  formats de date `Intl.DateTimeFormat('fr-FR', ...)`). Approche retenue :
+  `react-i18next`, infrastructure posée pour toute l'app (`src/i18n/`,
+  hook `useLanguage` dans `canvas/`, sélecteur FR/EN dans le Drawer) mais
+  traduction module par module — le module **Planning** en premier (le
+  plus gros, sert de gabarit), les 5 autres modules et l'UI transverse
+  (Drawer, réglages) dans des chantiers séparés ultérieurs. `date-utils.ts`
+  doit devenir locale-aware (locale en paramètre plutôt que codée en dur).
 - Todo-list : le module pourrait être simplifié (rien d'acté).
 - Suite du polish visuel général sur les 6 modules (notamment le langage
   visuel du toggle "important" : glyphe `!` dans les listes vs. icône
