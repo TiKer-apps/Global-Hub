@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type MouseEvent as ReactMouseEvent } from 'react'
 import { cn } from '@/lib/utils'
 import { getDayLabel, isSameDay } from './date-utils'
+import { sourceBorderClass, sourceLabel } from './source-style'
 import type { CalendarEvent, PlanningMode, TimeRangeSelection } from './types'
 
 interface WeekGridProps {
@@ -197,8 +198,11 @@ export function WeekGrid({ events, mode, days, selection, onSelectionChange, onE
                       e.stopPropagation()
                       onEventClick(event)
                     }}
-                    title="Voir l'événement"
-                    className="absolute inset-x-0.5 cursor-pointer overflow-hidden rounded-sm bg-green-200 px-1 py-0.5 text-[10px] text-green-900 hover:ring-1 hover:ring-primary"
+                    title={`Voir l'événement (${sourceLabel(event.source)})`}
+                    className={cn(
+                      'absolute inset-x-0.5 cursor-pointer overflow-hidden rounded-sm border-l-4 bg-green-200 px-1 py-0.5 text-[10px] text-green-900 hover:ring-1 hover:ring-primary',
+                      sourceBorderClass(event.source),
+                    )}
                     style={{
                       top: clampedStart * HOUR_HEIGHT,
                       height: Math.max((clampedEnd - clampedStart) * HOUR_HEIGHT, 16),

@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import { getDayLabel, isSameDay } from './date-utils'
+import { sourceBorderClass, sourceLabel } from './source-style'
 import type { CalendarEvent } from './types'
 
 interface WeekMinimalProps {
@@ -52,8 +53,11 @@ export function WeekMinimal({ events, days, onEventClick }: WeekMinimalProps) {
                 <div
                   key={event.id}
                   onClick={() => onEventClick(event)}
-                  title="Voir l'événement"
-                  className="cursor-pointer rounded-sm bg-green-200 px-1 py-1 text-green-900 hover:ring-1 hover:ring-primary"
+                  title={`Voir l'événement (${sourceLabel(event.source)})`}
+                  className={cn(
+                    'cursor-pointer rounded-sm border-l-4 bg-green-200 px-1 py-1 text-green-900 hover:ring-1 hover:ring-primary',
+                    sourceBorderClass(event.source),
+                  )}
                   style={{ backgroundColor: event.color }}
                 >
                   <div className="truncate font-medium">{event.title}</div>

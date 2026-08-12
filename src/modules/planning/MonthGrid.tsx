@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import { addDays, DAY_LABELS, isSameDay } from './date-utils'
+import { sourceBorderClass, sourceLabel } from './source-style'
 import type { CalendarEvent, PlanningMode } from './types'
 
 interface MonthGridProps {
@@ -76,8 +77,11 @@ export function MonthGrid({ events, mode, days, referenceDate, onDayClick, onEve
                         e.stopPropagation()
                         onEventClick(event)
                       }}
-                      title="Voir l'événement"
-                      className="truncate rounded-sm bg-green-200 px-1 py-0.5 text-[10px] text-green-900 hover:ring-1 hover:ring-primary"
+                      title={`Voir l'événement (${sourceLabel(event.source)})`}
+                      className={cn(
+                        'truncate rounded-sm border-l-4 bg-green-200 px-1 py-0.5 text-[10px] text-green-900 hover:ring-1 hover:ring-primary',
+                        sourceBorderClass(event.source),
+                      )}
                       style={{ backgroundColor: event.color }}
                     >
                       {event.title}
