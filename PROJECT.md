@@ -11,7 +11,10 @@ Depuis le dernier jalon (2026-08-03), 3 PRs mergées sur `develop`
 
 - **Planning** — vues jour et mois construites (seule la semaine existait) ;
   détail/édition d'un événement existant (clic sur un event, plus seulement
-  création/suppression).
+  création/suppression) ; indication de provenance d'un événement — liseré
+  coloré à gauche de la case (bleu Google / indigo Outlook / neutre local),
+  `sourceBorderClass`/`sourceLabel` dans le nouveau `source-style.ts`,
+  appliqué aux 3 vues (`WeekGrid`/`WeekMinimal`/`MonthGrid`).
 - **Important** — étendu au planning et aux post-its/todo-list détachés
   (ne couvrait que les notes).
 - **Correction doc** : le bullet Tâches/Todo-list ci-dessous décrivait
@@ -232,14 +235,6 @@ dit déjà.
 
 ## À affiner
 
-- Planning, indication de provenance d'un événement — **le modèle est déjà
-  prêt** (`CalendarEvent.source: 'local' | 'google' | 'outlook'`, détecté
-  automatiquement à l'import via `detectSource()` dans `ics-import.ts`, cf.
-  PRODID du fichier `.ics`), seul l'affichage manque : rien ne distingue
-  aujourd'hui un event Outlook d'un event Gmail dans la grille. Piste
-  retenue : un accent visuel discret par source (ex. liseré coloré sur la
-  case, distinct du remplissage) pour ne pas entrer en collision avec la
-  couleur de type ci-dessous — canal visuel séparé (bordure vs fond).
 - Planning, type d'événement (cinéma, médical, travail...) — pas de champ
   dédié aujourd'hui, seul `color` existe (jamais renseigné par l'UI
   actuelle). Piste retenue : liste de types curatée dans `EventFormModal`
