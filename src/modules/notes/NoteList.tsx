@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import type { Note } from './types'
 
@@ -8,12 +9,9 @@ interface NoteListProps {
 }
 
 export function NoteList({ notes, onSelect, onToggleImportant }: NoteListProps) {
+  const { t } = useTranslation()
   if (notes.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        Aucune note pour l'instant — clique sur « + » pour en créer une.
-      </p>
-    )
+    return <p className="text-sm text-muted-foreground">{t('notes.emptyList')}</p>
   }
 
   return (
@@ -34,11 +32,11 @@ export function NoteList({ notes, onSelect, onToggleImportant }: NoteListProps) 
             onClick={() => onSelect(note.id)}
             className="min-w-0 flex-1 truncate rounded-md px-2 py-1 text-left text-sm"
           >
-            {(note.title ?? '').trim() || 'Sans titre'}
+            {(note.title ?? '').trim() || t('common.noTitle')}
           </button>
           <button
             type="button"
-            aria-label={note.important ? 'Retirer important' : 'Marquer important'}
+            aria-label={t(note.important ? 'common.important.remove' : 'common.important.add')}
             aria-pressed={note.important}
             onClick={() => onToggleImportant(note.id, !note.important)}
             className={cn(

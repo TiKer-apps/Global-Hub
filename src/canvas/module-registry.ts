@@ -3,7 +3,10 @@ import type { HeaderStyle } from '@/components/module-card'
 
 export interface ModuleDefinition {
   id: string
-  label: string
+  // Clé de traduction (`common.moduleLabels.<id>`), résolue via `t()` au
+  // point de rendu (Drawer, modale de réglages) — même principe que
+  // `EventTypePreset.labelKey`.
+  labelKey: string
   icon: LucideIcon
   // Thème (cf. theme-presets.ts) utilisé tant que rien n'a été personnalisé
   // dans la modale de réglages (cf. module-theme.tsx).
@@ -24,13 +27,19 @@ export interface ModuleDefinition {
 // Todo-list — reflété ici (ordre du drawer) et dans `initialNodes` de
 // HubCanvas (agencement du board).
 export const MODULES: ModuleDefinition[] = [
-  { id: 'important-1', label: 'Important', icon: Star, defaultThemeId: 'orange-300', defaultStyleId: 'wave' },
-  { id: 'planning-week', label: 'Planning', icon: CalendarDays, defaultThemeId: 'green-600', defaultStyleId: 'wave' },
-  { id: 'notes-1', label: 'Notes', icon: FileText, defaultThemeId: 'blue-300', defaultStyleId: 'wave' },
-  { id: 'tasks-1', label: 'Tâches', icon: ListChecks, defaultThemeId: 'violet-500', defaultStyleId: 'wave' },
+  { id: 'important-1', labelKey: 'common.moduleLabels.important', icon: Star, defaultThemeId: 'orange-300', defaultStyleId: 'wave' },
+  {
+    id: 'planning-week',
+    labelKey: 'common.moduleLabels.planning',
+    icon: CalendarDays,
+    defaultThemeId: 'green-600',
+    defaultStyleId: 'wave',
+  },
+  { id: 'notes-1', labelKey: 'common.moduleLabels.notes', icon: FileText, defaultThemeId: 'blue-300', defaultStyleId: 'wave' },
+  { id: 'tasks-1', labelKey: 'common.moduleLabels.tasks', icon: ListChecks, defaultThemeId: 'violet-500', defaultStyleId: 'wave' },
   {
     id: 'post-it-1',
-    label: 'Post-it',
+    labelKey: 'common.moduleLabels.postIt',
     icon: StickyNote,
     defaultThemeId: 'yellow-400',
     defaultStyleId: 'wave',
@@ -38,7 +47,7 @@ export const MODULES: ModuleDefinition[] = [
   },
   {
     id: 'todo-1',
-    label: 'Todo-list',
+    labelKey: 'common.moduleLabels.todoList',
     icon: ListTodo,
     defaultThemeId: 'red-500',
     defaultStyleId: 'wave',

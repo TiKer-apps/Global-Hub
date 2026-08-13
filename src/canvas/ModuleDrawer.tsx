@@ -1,8 +1,11 @@
 import { useState } from 'react'
 import { Eye, EyeOff, PanelLeftOpen, Settings, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
+import { ToolbarButton } from '@/modules/text-editor/ToolbarButton'
 import type { PostIt } from '@/modules/post-its/types'
 import type { TodoSheet } from '@/modules/todo-list/types'
+import { useLanguage } from './language'
 import { ModuleSettingsModal } from './ModuleSettingsModal'
 import { MODULES, type ModuleDefinition } from './module-registry'
 import { useModuleHeaderClassName } from './module-theme'
@@ -20,14 +23,14 @@ interface Instance {
   preview: string
 }
 
-function stripHtml(html: string): string {
+function stripHtml(html: string, fallback: string): string {
   const text = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
-  return text || 'Vide'
+  return text || fallback
 }
 
-function previewForTodoSheet(sheet: TodoSheet): string {
+function previewForTodoSheet(sheet: TodoSheet, fallback: string): string {
   const first = sheet.lines.find((l) => l.text.trim() !== '')
-  return first ? first.text : 'Vide'
+  return first ? first.text : fallback
 }
 
 // Bouton flottant + panneau glissant listant les widgets fixes du board,
@@ -37,12 +40,14 @@ function previewForTodoSheet(sheet: TodoSheet): string {
 // pas de dépliage) de leurs instances détachées (post-its/fiches
 // individuels), même mécanisme de masquage que les modules eux-mêmes.
 export function ModuleDrawer({ hiddenModuleIds, onToggleModule, postIts, todoSheets }: ModuleDrawerProps) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const { language, setLanguage } = useLanguage()
 
   const instancesFor = (kind?: 'postIt' | 'todoSheet'): Instance[] => {
-    if (kind === 'postIt') return postIts.map((p) => ({ id: p.id, preview: stripHtml(p.html) }))
-    if (kind === 'todoSheet') return todoSheets.map((s) => ({ id: s.id, preview: previewForTodoSheet(s) }))
+    if (kind === 'postIt') return postIts.map((p) => ({ id: p.id, preview: stripHtml(p.html, t('common.empty')) }))
+    if (kind === 'todoSheet') return todoSheets.map((s) => ({ id: s.id, preview: previewForTodoSheet(s, t('common.empty')) }))
     return []
   }
 
@@ -51,7 +56,7 @@ export function ModuleDrawer({ hiddenModuleIds, onToggleModule, postIts, todoShe
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label="Ouvrir le menu des modules"
+        aria-label={t('common.openMenu')}
         className="fixed top-4 left-4 z-40 flex size-10 items-center justify-center rounded-lg border bg-card text-foreground shadow-md hover:bg-muted"
       >
         <PanelLeftOpen className="size-4" />
@@ -66,11 +71,11 @@ export function ModuleDrawer({ hiddenModuleIds, onToggleModule, postIts, todoShe
         )}
       >
         <div className="flex items-center justify-between p-4 pb-4">
-          <h2 className="text-sm font-semibold">Modules</h2>
+          <h2 className="text-sm font-semibold">{t('common.modulesTitle')}</h2>
           <button
             type="button"
             onClick={() => setOpen(false)}
-            aria-label="Fermer le menu"
+            aria-label={t('common.closeMenu')}
             className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             <X className="size-4" />
@@ -119,14 +124,22 @@ export function ModuleDrawer({ hiddenModuleIds, onToggleModule, postIts, todoShe
             })}
           </div>
         </div>
-        <div className="border-t p-4">
+        <div className="space-y-2 border-t p-4">
+          <div className="flex items-center justify-center gap-1">
+            <ToolbarButton active={language === 'fr'} size="sm" onClick={() => setLanguage('fr')} aria-label="Français">
+              FR
+            </ToolbarButton>
+            <ToolbarButton active={language === 'en'} size="sm" onClick={() => setLanguage('en')} aria-label="English">
+              EN
+            </ToolbarButton>
+          </div>
           <button
             type="button"
             onClick={() => setSettingsOpen(true)}
             className="flex w-full items-center justify-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm font-medium hover:bg-muted"
           >
             <Settings className="size-4" />
-            Réglages des modules
+            {t('common.settingsButton')}
           </button>
         </div>
       </div>
@@ -146,6 +159,7 @@ interface ModuleTileProps {
 // appeler le hook de thème par module (nombre de modules fixe, donc l'ordre
 // des hooks reste stable d'un rendu à l'autre).
 function ModuleTile({ module, isVisible, onToggle }: ModuleTileProps) {
+  const { t } = useTranslation()
   const Icon = module.icon
   const bgClass = extractBgClass(useModuleHeaderClassName(module.id, module.defaultThemeId))
 
@@ -174,7 +188,7 @@ function ModuleTile({ module, isVisible, onToggle }: ModuleTileProps) {
           )}
         </span>
       </div>
-      <span className="text-xs font-medium">{module.label}</span>
+      <span className="text-xs font-medium">{t(module.labelKey)}</span>
     </button>
   )
 }

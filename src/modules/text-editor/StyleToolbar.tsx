@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { Editor } from '@tiptap/core'
 import { ALargeSmall, Bold, Italic, SpellCheck } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { ToolbarButton } from './ToolbarButton'
 import { ToolbarPopover } from './ToolbarPopover'
@@ -22,25 +23,26 @@ interface StyleToolbarProps {
 // `extra` accueille des boutons propres à l'appelant (ex. suppression sur un
 // post-it détaché) sans que ce composant ait besoin de les connaître.
 export function StyleToolbar({ editor, editorState, spellCheck, setSpellCheck, extra, className }: StyleToolbarProps) {
+  const { t } = useTranslation()
   const activeColor = editorState.color ?? '#000000'
   const activeFont = TEXT_FONTS.find((f) => f.value === editorState.fontFamily) ?? TEXT_FONTS[0]
 
   return (
     <div className={cn('flex flex-wrap items-center gap-1', className)}>
-      <ToolbarButton active={editorState.bold} onClick={() => editor.chain().focus().toggleBold().run()} aria-label="Gras">
+      <ToolbarButton active={editorState.bold} onClick={() => editor.chain().focus().toggleBold().run()} aria-label={t('textEditor.bold')}>
         <Bold className="size-3.5" />
       </ToolbarButton>
       <ToolbarButton
         active={editorState.italic}
         onClick={() => editor.chain().focus().toggleItalic().run()}
-        aria-label="Italique"
+        aria-label={t('textEditor.italic')}
       >
         <Italic className="size-3.5" />
       </ToolbarButton>
 
       <ToolbarDivider />
 
-      <ToolbarPopover trigger={<ALargeSmall className="size-3.5" />} triggerLabel="Taille du texte">
+      <ToolbarPopover trigger={<ALargeSmall className="size-3.5" />} triggerLabel={t('textEditor.sizeLabel')}>
         {TEXT_SIZES.map((size) => (
           <ToolbarButton
             key={size.value}
@@ -54,7 +56,7 @@ export function StyleToolbar({ editor, editorState, spellCheck, setSpellCheck, e
       </ToolbarPopover>
 
       <ToolbarPopover
-        triggerLabel="Police du texte"
+        triggerLabel={t('textEditor.fontLabel')}
         trigger={
           <span className="text-xs font-medium leading-none" style={{ fontFamily: activeFont.fontFamily }}>
             Aa
@@ -67,7 +69,7 @@ export function StyleToolbar({ editor, editorState, spellCheck, setSpellCheck, e
             size="sm"
             active={editorState.fontFamily === f.value}
             onClick={() => editor.chain().focus().setFontFamily(f.fontFamily).run()}
-            aria-label={f.label}
+            aria-label={t(f.labelKey)}
             style={{ fontFamily: f.fontFamily }}
           >
             Aa
@@ -76,7 +78,7 @@ export function StyleToolbar({ editor, editorState, spellCheck, setSpellCheck, e
       </ToolbarPopover>
 
       <ToolbarPopover
-        triggerLabel="Couleur du texte"
+        triggerLabel={t('textEditor.colorLabel')}
         trigger={
           <>
             <span className="text-xs font-medium leading-none">A</span>
@@ -92,7 +94,7 @@ export function StyleToolbar({ editor, editorState, spellCheck, setSpellCheck, e
           <button
             key={color}
             type="button"
-            aria-label={`Couleur ${color}`}
+            aria-label={t('textEditor.color', { color })}
             onClick={() => editor.chain().focus().setColor(color).run()}
             className={cn(
               'size-5 rounded-full border border-black/10',
@@ -107,7 +109,7 @@ export function StyleToolbar({ editor, editorState, spellCheck, setSpellCheck, e
 
       <ToolbarButton
         onClick={() => setSpellCheck((v) => !v)}
-        aria-label={spellCheck ? 'Désactiver le correcteur orthographique' : 'Activer le correcteur orthographique'}
+        aria-label={t(spellCheck ? 'textEditor.spellCheckOn' : 'textEditor.spellCheckOff')}
         aria-pressed={spellCheck}
         className="relative"
       >

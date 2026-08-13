@@ -1,4 +1,5 @@
 import { Square } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 interface TaskPreviewProps {
   content: string
@@ -28,13 +29,14 @@ function parsePreviewLines(content: string): PreviewLine[] {
 // l'éditeur — les cases à cocher n'y sont pas interactives, cf. TasksWidget
 // pour l'édition (le clic/cochage arrivera dans un prochain passage).
 export function TaskPreview({ content }: TaskPreviewProps) {
+  const { t } = useTranslation()
   const lines = parsePreviewLines(content)
 
   return (
     <div className="space-y-1 rounded-md border bg-muted/30 p-3 text-sm">
-      <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Aperçu</p>
+      <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{t('tasks.previewTitle')}</p>
       {lines.length === 0 ? (
-        <p className="text-muted-foreground">Rien à afficher pour l'instant.</p>
+        <p className="text-muted-foreground">{t('tasks.previewEmpty')}</p>
       ) : (
         lines.map((line, i) => (
           <div key={i} className="flex items-center gap-2">

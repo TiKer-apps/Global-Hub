@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { EditorContent } from '@tiptap/react'
 import { Star, Trash2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { db } from '@/lib/db'
 import { cn } from '@/lib/utils'
 import { ToolbarButton } from '@/modules/text-editor/ToolbarButton'
@@ -28,6 +29,7 @@ export function PostItNote({ postItId }: PostItNoteProps) {
 // `nodrag` n'est posé que pendant l'édition (sinon on ne pourrait jamais le
 // déplacer en le saisissant directement, comme un vrai post-it).
 function PostItNoteLoaded({ postIt }: { postIt: PostIt }) {
+  const { t } = useTranslation()
   const [active, setActive] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const saveTimeout = useRef<ReturnType<typeof setTimeout>>(undefined)
@@ -43,7 +45,7 @@ function PostItNoteLoaded({ postIt }: { postIt: PostIt }) {
     postIt.html,
     handleTextChange,
     active,
-    'Post-it vide',
+    t('postIts.placeholderEmpty'),
   )
 
   useEffect(() => {
@@ -65,7 +67,7 @@ function PostItNoteLoaded({ postIt }: { postIt: PostIt }) {
   if (!editor || !editorState) return null
 
   const handleDelete = () => {
-    if (!confirm('Supprimer ce post-it ?')) return
+    if (!confirm(t('postIts.confirmDelete'))) return
     db.postIts.delete(postIt.id)
   }
 
@@ -84,12 +86,12 @@ function PostItNoteLoaded({ postIt }: { postIt: PostIt }) {
             <>
               <ToolbarButton
                 onClick={handleToggleImportant}
-                aria-label={postIt.important ? 'Retirer important' : 'Marquer important'}
+                aria-label={t(postIt.important ? 'common.important.remove' : 'common.important.add')}
                 aria-pressed={postIt.important}
               >
                 <Star className={cn('size-3.5', postIt.important && 'fill-amber-500 text-amber-500')} />
               </ToolbarButton>
-              <ToolbarButton onClick={handleDelete} aria-label="Supprimer le post-it">
+              <ToolbarButton onClick={handleDelete} aria-label={t('postIts.deletePostIt')}>
                 <Trash2 className="size-3.5" />
               </ToolbarButton>
             </>

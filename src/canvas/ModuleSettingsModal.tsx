@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { headerNotchPath, NOTCH_RADIUS } from '@/components/module-card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Tabs, TabsList, TabsPanel, TabsTab } from '@/components/ui/tabs'
@@ -30,17 +31,18 @@ interface ModuleSettingsModalProps {
 // réglages par module pourront s'ajouter ici plus tard, un onglet de plus
 // n'affecte pas les autres).
 export function ModuleSettingsModal({ open, onOpenChange }: ModuleSettingsModalProps) {
+  const { t } = useTranslation()
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[80vh] w-full max-w-2xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Réglages des modules</DialogTitle>
+          <DialogTitle>{t('common.settingsButton')}</DialogTitle>
         </DialogHeader>
         <Tabs defaultValue={MODULES[0].id}>
           <TabsList>
             {MODULES.map((module) => (
               <TabsTab key={module.id} value={module.id}>
-                {module.label}
+                {t(module.labelKey)}
               </TabsTab>
             ))}
           </TabsList>

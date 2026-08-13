@@ -1,0 +1,162 @@
+{
+  "common": {
+    "openMenu": "Ouvrir le menu des modules",
+    "closeMenu": "Fermer le menu",
+    "modulesTitle": "Modules",
+    "settingsButton": "Réglages des modules",
+    "empty": "Vide",
+    "noTitle": "Sans titre",
+    "loading": "Chargement…",
+    "sortBy": "Trier par",
+    "sortByCreated": "Date de création",
+    "sortByUpdated": "Date de modification",
+    "reverseSortOrder": "Inverser l'ordre du tri",
+    "important": {
+      "add": "Marquer important",
+      "remove": "Retirer important"
+    },
+    "moduleLabels": {
+      "important": "Important",
+      "planning": "Planning",
+      "notes": "Notes",
+      "tasks": "Tâches",
+      "postIt": "Post-it",
+      "todoList": "Todo-list"
+    }
+  },
+  "textEditor": {
+    "bold": "Gras",
+    "italic": "Italique",
+    "sizeLabel": "Taille du texte",
+    "fontLabel": "Police du texte",
+    "colorLabel": "Couleur du texte",
+    "color": "Couleur {{color}}",
+    "spellCheckOn": "Désactiver le correcteur orthographique",
+    "spellCheckOff": "Activer le correcteur orthographique",
+    "fonts": {
+      "sans": "Simple",
+      "handwritten": "Manuscrite",
+      "marker": "Feutre",
+      "typewriter": "Machine à écrire"
+    }
+  },
+  "notes": {
+    "title": "Notes",
+    "newNote": "Nouvelle note",
+    "backToList": "Retour à la liste",
+    "deleteNote": "Supprimer la note",
+    "saveNote": "Enregistrer la note",
+    "emptyList": "Aucune note pour l'instant — clique sur « + » pour en créer une.",
+    "titlePlaceholder": "Titre",
+    "createPostIt": "Créer un post-it à partir de cette note",
+    "confirmDelete": "Supprimer cette note ?"
+  },
+  "postIts": {
+    "title": "Post-it",
+    "placeholderDraft": "Clique pour écrire…",
+    "placeholderEmpty": "Post-it vide",
+    "detach": "Détacher",
+    "detachBlock": "Détacher le post-it",
+    "deletePostIt": "Supprimer le post-it",
+    "confirmDelete": "Supprimer ce post-it ?"
+  },
+  "tasks": {
+    "title": "Tâches",
+    "newTask": "Nouvelle tâche",
+    "deleteTask": "Supprimer la tâche",
+    "saveTask": "Enregistrer la tâche",
+    "emptyList": "Aucune tâche pour l'instant — clique sur « + » pour en créer une.",
+    "contentPlaceholder": "- item à cocher\nTexte simple",
+    "confirmDelete": "Supprimer cette tâche ?",
+    "previewTitle": "Aperçu",
+    "previewEmpty": "Rien à afficher pour l'instant."
+  },
+  "todoList": {
+    "title": "Todo-list",
+    "placeholderDraft": "Clique pour écrire…",
+    "detachSheet": "Détacher la fiche",
+    "deleteSheet": "Supprimer la fiche",
+    "confirmDelete": "Supprimer cette fiche ?"
+  },
+  "important": {
+    "title": "Important",
+    "empty": "Rien de marqué important pour l'instant.",
+    "sections": {
+      "notes": "Notes",
+      "tasks": "Tâches",
+      "events": "Événements",
+      "postIts": "Post-its",
+      "todoList": "Todo-list"
+    }
+  },
+  "planning": {
+    "title": "Planning — {{view}}",
+    "view": {
+      "day": "jour",
+      "week": "semaine",
+      "month": "mois"
+    },
+    "toolbar": {
+      "importIcs": "Importer un fichier .ics",
+      "newEvent": "Nouvel événement",
+      "viewDay": "Vue jour",
+      "viewWeek": "Vue semaine",
+      "viewMonth": "Vue mois",
+      "daysCountTo5": "Passer à 5 jours",
+      "daysCountTo7": "Passer à 7 jours",
+      "hourModeCompact": "Passer en horaires compacts (8h-19h)",
+      "hourModeExtended": "Passer en horaires étendus (00h-24h)",
+      "monthModeIndicator": "Afficher un indicateur au lieu des titres",
+      "monthModeTitles": "Afficher les titres des événements",
+      "viewModeMinimal": "Passer en mode minimaliste",
+      "viewModeGrid": "Passer en mode grille",
+      "today": "Aujourd'hui"
+    },
+    "nav": {
+      "previousDay": "Jour précédent",
+      "nextDay": "Jour suivant",
+      "previousWeek": "Semaine précédente",
+      "nextWeek": "Semaine suivante",
+      "previousMonth": "Mois précédent",
+      "nextMonth": "Mois suivant"
+    },
+    "selection": {
+      "allDay": "Journée entière, {{date}}",
+      "range": "{{start}}h–{{end}}h, {{date}}",
+      "label": "Sélection : {{value}}"
+    },
+    "importStatus_one": "{{count}} événement importé.",
+    "importStatus_other": "{{count}} événements importés.",
+    "event": {
+      "view": "Voir l'événement ({{source}})",
+      "delete": "Supprimer l'événement",
+      "confirmDelete": "Supprimer « {{title}} » ?"
+    },
+    "source": {
+      "local": "créé localement",
+      "google": "importé de Google",
+      "outlook": "importé d’Outlook"
+    },
+    "type": {
+      "none": "Aucun type",
+      "travail": "Travail",
+      "perso": "Perso",
+      "sante": "Santé",
+      "loisirs": "Loisirs",
+      "autre": "Autre"
+    },
+    "form": {
+      "titleCreate": "Nouvel événement",
+      "titleEdit": "Modifier l’événement",
+      "titlePlaceholder": "Titre",
+      "allDay": "Journée entière",
+      "important": "Marquer important",
+      "typeLabel": "Type",
+      "locationPlaceholder": "Lieu (optionnel)",
+      "descriptionPlaceholder": "Description (optionnel)",
+      "cancel": "Annuler",
+      "create": "Créer",
+      "save": "Enregistrer"
+    }
+  }
+}

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
+import { useTranslation } from 'react-i18next'
 import { ArrowDownNarrowWide, ArrowLeft, ArrowUpNarrowWide, Plus, Save, Trash2 } from 'lucide-react'
 import { ModuleCard } from '@/components/module-card'
 import { useModuleHeaderClassName } from '@/canvas/module-theme'
@@ -23,6 +24,7 @@ type SortDir = 'asc' | 'desc'
 // d'un aperçu en direct (TaskPreview) qui rend les lignes '-' en cases à
 // cocher, cf. TaskPreview.
 export function TasksWidget() {
+  const { t } = useTranslation()
   const headerClassName = useModuleHeaderClassName('tasks-1', 'violet-500')
   const headerStyle = useModuleStyleId('tasks-1', 'wave')
   const [view, setView] = useState<View>('list')
@@ -119,7 +121,7 @@ export function TasksWidget() {
 
   const handleDeleteCurrentTask = () => {
     if (!selectedId) return
-    if (!confirm('Supprimer cette tâche ?')) return
+    if (!confirm(t('tasks.confirmDelete'))) return
     db.tasks.delete(selectedId)
     setSelectedId(null)
     setView('list')
@@ -156,25 +158,25 @@ export function TasksWidget() {
   return (
     <ModuleCard
       className="w-80"
-      title="Tâches"
+      title={t('tasks.title')}
       headerClassName={headerClassName}
       variant={headerStyle}
       action={
         view === 'list' ? (
-          <ToolbarButton onClick={handleNewTask} aria-label="Nouvelle tâche">
+          <ToolbarButton onClick={handleNewTask} aria-label={t('tasks.newTask')}>
             <Plus className="size-3.5" />
           </ToolbarButton>
         ) : (
           <>
-            <ToolbarButton onClick={handleShowList} aria-label="Retour à la liste">
+            <ToolbarButton onClick={handleShowList} aria-label={t('notes.backToList')}>
               <ArrowLeft className="size-3.5" />
             </ToolbarButton>
             {selectedId ? (
-              <ToolbarButton onClick={handleDeleteCurrentTask} aria-label="Supprimer la tâche">
+              <ToolbarButton onClick={handleDeleteCurrentTask} aria-label={t('tasks.deleteTask')}>
                 <Trash2 className="size-3.5" />
               </ToolbarButton>
             ) : (
-              <ToolbarButton onClick={handleSaveDraft} disabled={!hasDraftContent} aria-label="Enregistrer la tâche">
+              <ToolbarButton onClick={handleSaveDraft} disabled={!hasDraftContent} aria-label={t('tasks.saveTask')}>
                 <Save className="size-3.5" />
               </ToolbarButton>
             )}
@@ -188,13 +190,13 @@ export function TasksWidget() {
             <select
               value={sortField}
               onChange={(e) => setSortField(e.target.value as SortField)}
-              aria-label="Trier par"
+              aria-label={t('common.sortBy')}
               className="h-7 rounded-md border bg-background px-1.5 text-xs"
             >
-              <option value="createdAt">Date de création</option>
-              <option value="updatedAt">Date de modification</option>
+              <option value="createdAt">{t('common.sortByCreated')}</option>
+              <option value="updatedAt">{t('common.sortByUpdated')}</option>
             </select>
-            <ToolbarButton onClick={toggleSortDir} aria-label="Inverser l'ordre du tri">
+            <ToolbarButton onClick={toggleSortDir} aria-label={t('common.reverseSortOrder')}>
               {sortDir === 'desc' ? (
                 <ArrowDownNarrowWide className="size-3.5" />
               ) : (
@@ -205,7 +207,7 @@ export function TasksWidget() {
           <TaskList tasks={tasks} onSelect={handleSelect} onToggleImportant={handleToggleImportant} />
         </div>
       ) : selectedId && selectedTask?.id !== selectedId ? (
-        <p className="text-sm text-muted-foreground">Chargement…</p>
+        <p className="text-sm text-muted-foreground">{t('common.loading')}</p>
       ) : (
         <div className="space-y-2">
           <input
@@ -214,14 +216,14 @@ export function TasksWidget() {
             autoComplete="off"
             defaultValue={title}
             onChange={(e) => handleTitleChange(e.target.value)}
-            placeholder="Titre"
+            placeholder={t('notes.titlePlaceholder')}
             className="w-full border-b bg-transparent px-1 pb-1.5 text-sm font-medium outline-none placeholder:font-normal placeholder:text-muted-foreground"
           />
           <textarea
             key={`content-${selectedId ?? 'draft'}`}
             defaultValue={content}
             onChange={(e) => handleContentChange(e.target.value)}
-            placeholder={'- item à cocher\nTexte simple'}
+            placeholder={t('tasks.contentPlaceholder')}
             rows={5}
             className="nodrag w-full resize-none rounded-md border bg-background p-2 text-sm outline-none placeholder:text-muted-foreground"
           />

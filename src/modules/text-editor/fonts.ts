@@ -4,9 +4,11 @@ export type TextFont = 'sans' | 'handwritten' | 'marker' | 'typewriter'
 // uniquement pour l'instant (pas de nouvelle dépendance webfont) — à
 // raffiner plus tard si besoin de vraies polices dédiées (ex.
 // @fontsource/caveat pour le manuscrit).
-export const TEXT_FONTS: { value: TextFont; label: string; fontFamily: string }[] = [
-  { value: 'sans', label: 'Simple', fontFamily: 'inherit' },
-  { value: 'handwritten', label: 'Manuscrite', fontFamily: "'Bradley Hand', 'Comic Sans MS', cursive" },
-  { value: 'marker', label: 'Feutre', fontFamily: "'Marker Felt', 'Segoe Print', 'Comic Sans MS', cursive" },
-  { value: 'typewriter', label: 'Machine à écrire', fontFamily: "'Courier New', monospace" },
+// `labelKey` (pas un libellé direct) : résolu via `t()` au point de rendu
+// (`StyleToolbar`), même principe que `EventTypePreset.labelKey`.
+export const TEXT_FONTS: { value: TextFont; labelKey: string; fontFamily: string }[] = [
+  { value: 'sans', labelKey: 'textEditor.fonts.sans', fontFamily: 'inherit' },
+  { value: 'handwritten', labelKey: 'textEditor.fonts.handwritten', fontFamily: "'Bradley Hand', 'Comic Sans MS', cursive" },
+  { value: 'marker', labelKey: 'textEditor.fonts.marker', fontFamily: "'Marker Felt', 'Segoe Print', 'Comic Sans MS', cursive" },
+  { value: 'typewriter', labelKey: 'textEditor.fonts.typewriter', fontFamily: "'Courier New', monospace" },
 ]

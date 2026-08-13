@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Trash2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -37,6 +38,7 @@ const inputClass = 'w-full rounded-md border bg-background px-2 py-1.5 text-sm o
 // basculer au jour suivant à 00h plutôt que de produire une heure invalide
 // "24:00").
 export function EventFormModal({ open, onOpenChange, selection, event }: EventFormModalProps) {
+  const { t } = useTranslation()
   const [title, setTitle] = useState('')
   const [allDay, setAllDay] = useState(false)
   const [important, setImportant] = useState(false)
@@ -133,7 +135,7 @@ export function EventFormModal({ open, onOpenChange, selection, event }: EventFo
 
   const handleDelete = async () => {
     if (!event) return
-    if (!confirm(`Supprimer « ${event.title} » ?`)) return
+    if (!confirm(t('planning.event.confirmDelete', { title: event.title }))) return
     await db.events.delete(event.id)
     onOpenChange(false)
   }
@@ -142,7 +144,7 @@ export function EventFormModal({ open, onOpenChange, selection, event }: EventFo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{event ? 'Modifier l’événement' : 'Nouvel événement'}</DialogTitle>
+          <DialogTitle>{t(event ? 'planning.form.titleEdit' : 'planning.form.titleCreate')}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-3">
           <input
@@ -150,26 +152,26 @@ export function EventFormModal({ open, onOpenChange, selection, event }: EventFo
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Titre"
+            placeholder={t('planning.form.titlePlaceholder')}
             required
             className={inputClass}
           />
 
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} />
-            Journée entière
+            {t('planning.form.allDay')}
           </label>
 
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={important} onChange={(e) => setImportant(e.target.checked)} />
-            Marquer important
+            {t('planning.form.important')}
           </label>
 
-          <select value={type} onChange={(e) => setType(e.target.value)} aria-label="Type" className={inputClass}>
-            <option value="">Aucun type</option>
+          <select value={type} onChange={(e) => setType(e.target.value)} aria-label={t('planning.form.typeLabel')} className={inputClass}>
+            <option value="">{t('planning.type.none')}</option>
             {EVENT_TYPE_PRESETS.map((preset) => (
               <option key={preset.id} value={preset.id}>
-                {preset.label}
+                {t(preset.labelKey)}
               </option>
             ))}
           </select>
@@ -215,13 +217,13 @@ export function EventFormModal({ open, onOpenChange, selection, event }: EventFo
             type="text"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            placeholder="Lieu (optionnel)"
+            placeholder={t('planning.form.locationPlaceholder')}
             className={inputClass}
           />
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Description (optionnel)"
+            placeholder={t('planning.form.descriptionPlaceholder')}
             rows={3}
             className={cn('resize-none', inputClass)}
           />
@@ -234,15 +236,15 @@ export function EventFormModal({ open, onOpenChange, selection, event }: EventFo
                 size="icon"
                 onClick={handleDelete}
                 className="mr-auto"
-                aria-label="Supprimer l'événement"
+                aria-label={t('planning.event.delete')}
               >
                 <Trash2 className="size-3.5" />
               </Button>
             )}
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-              Annuler
+              {t('planning.form.cancel')}
             </Button>
-            <Button type="submit">{event ? 'Enregistrer' : 'Créer'}</Button>
+            <Button type="submit">{t(event ? 'planning.form.save' : 'planning.form.create')}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

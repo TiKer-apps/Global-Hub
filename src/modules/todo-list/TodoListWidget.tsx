@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
+import { useTranslation } from 'react-i18next'
 import { useNodeId, useReactFlow } from '@xyflow/react'
 import { EditorContent } from '@tiptap/react'
 import { SquareArrowOutUpRight } from 'lucide-react'
@@ -41,6 +42,7 @@ function parseDraftLines(html: string): ChecklistLine[] {
 // post-it, la fiche détachée n'est plus éditable une fois créée : seul le
 // texte écrit ICI passe par l'éditeur riche.
 export function TodoListWidget() {
+  const { t } = useTranslation()
   const headerClassName = useModuleHeaderClassName('todo-1', 'red-500')
   const headerStyle = useModuleStyleId('todo-1', 'wave')
   const [draftHtml, setDraftHtml] = useState('')
@@ -52,7 +54,7 @@ export function TodoListWidget() {
     draftHtml,
     setDraftHtml,
     true,
-    'Clique pour écrire…',
+    t('todoList.placeholderDraft'),
   )
 
   const handleDetach = () => {
@@ -75,7 +77,7 @@ export function TodoListWidget() {
   }
 
   return (
-    <ModuleCard className="w-72" title="Todo-list" headerClassName={headerClassName} variant={headerStyle}>
+    <ModuleCard className="w-72" title={t('todoList.title')} headerClassName={headerClassName} variant={headerStyle}>
       <div className="flex flex-col items-center gap-2">
         {editor && editorState && (
           <StyleToolbar
@@ -89,9 +91,9 @@ export function TodoListWidget() {
         <TodoPaper>
           <EditorContent editor={editor} className="nodrag px-3" />
         </TodoPaper>
-        <ToolbarButton onClick={handleDetach} disabled={isEmptyHtml(draftHtml)} aria-label="Détacher la fiche" size="sm">
+        <ToolbarButton onClick={handleDetach} disabled={isEmptyHtml(draftHtml)} aria-label={t('todoList.detachSheet')} size="sm">
           <SquareArrowOutUpRight className="size-3.5" />
-          Détacher
+          {t('postIts.detach')}
         </ToolbarButton>
       </div>
     </ModuleCard>
