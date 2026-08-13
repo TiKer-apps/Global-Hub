@@ -6,19 +6,28 @@ disposés librement sur un canvas zoomable.
 
 ## Statut — jalon du 2026-08-11
 
-Depuis le dernier jalon (2026-08-03), 3 PRs mergées sur `develop`
-(2026-08-07 → 2026-08-10) :
+Depuis le dernier jalon (2026-08-03), 4 PRs mergées sur `develop`
+(2026-08-07 → 2026-08-13) :
 
 - **Planning** — vues jour et mois construites (seule la semaine existait) ;
   détail/édition d'un événement existant (clic sur un event, plus seulement
   création/suppression) ; indication de provenance d'un événement — liseré
   coloré à gauche de la case (bleu Google / indigo Outlook / neutre local),
-  `sourceBorderClass`/`sourceLabel` dans le nouveau `source-style.ts`,
+  `sourceBorderClass`/`sourceLabelKey` dans le nouveau `source-style.ts`,
   appliqué aux 3 vues (`WeekGrid`/`WeekMinimal`/`MonthGrid`) ; type
   d'événement (Travail/Perso/Santé/Loisirs/Autre) via un nouveau
   champ `CalendarEvent.type`, liste curatée dans `EventFormModal`
   (`event-type-presets.ts`, même pattern que `theme-presets.ts`) — chaque
-  type pilote automatiquement `color`, un seul contrôle.
+  type pilote automatiquement `color`, un seul contrôle ; module entièrement
+  traduit FR/EN (voir bullet Internationalisation ci-dessous).
+- **Internationalisation** — infrastructure `react-i18next` posée pour
+  toute l'app (`src/i18n/`, hook `useLanguage`, sélecteur FR/EN dans le
+  Drawer) ; **tous les modules traduits** (Planning, Notes, Post-its,
+  Tâches, Todo-list, Important) + le moteur d'édition riche partagé
+  (`StyleToolbar`, `fonts.ts`) et le Drawer. Reste en français : la modale
+  de réglages (`ModuleSettingsModal` — titres de section "Thème"/"Style du
+  header" et les 14 noms de couleur de `theme-presets.ts`), volontairement
+  hors périmètre (UI secondaire, moins prioritaire).
 - **Important** — étendu au planning et aux post-its/todo-list détachés
   (ne couvrait que les notes).
 - **Correction doc** : le bullet Tâches/Todo-list ci-dessous décrivait
@@ -239,15 +248,14 @@ dit déjà.
 
 ## À affiner
 
-- **Internationalisation (i18n)** — priorité haute. Toutes les chaînes sont
-  aujourd'hui en français, en dur (JSX, `aria-label`, `placeholder`,
-  formats de date `Intl.DateTimeFormat('fr-FR', ...)`). Approche retenue :
-  `react-i18next`, infrastructure posée pour toute l'app (`src/i18n/`,
-  hook `useLanguage` dans `canvas/`, sélecteur FR/EN dans le Drawer) mais
-  traduction module par module — le module **Planning** en premier (le
-  plus gros, sert de gabarit), les 5 autres modules et l'UI transverse
-  (Drawer, réglages) dans des chantiers séparés ultérieurs. `date-utils.ts`
-  doit devenir locale-aware (locale en paramètre plutôt que codée en dur).
+- **Internationalisation (i18n)** — reste : la modale de réglages
+  (`ModuleSettingsModal`) n'est pas traduite — titres "Thème (fond et texte
+  du titre)"/"Style du header", et les 14 noms de couleur de
+  `theme-presets.ts` (`Bleu`, `Jaune`...) + les 2 noms de style (`Vague`/
+  `Plein`) resteraient à convertir en clés (`labelKey`, même pattern que
+  `EventTypePreset`/`ModuleDefinition`) si on veut couvrir 100 % de l'UI.
+  Volontairement hors périmètre pour l'instant (UI secondaire, moins
+  prioritaire que le contenu des modules eux-mêmes, déjà tous traduits).
 - Todo-list : le module pourrait être simplifié (rien d'acté).
 - Suite du polish visuel général sur les 6 modules (notamment le langage
   visuel du toggle "important" : glyphe `!` dans les listes vs. icône

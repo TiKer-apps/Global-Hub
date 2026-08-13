@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import type { Task } from './types'
 
@@ -8,12 +9,9 @@ interface TaskListProps {
 }
 
 export function TaskList({ tasks, onSelect, onToggleImportant }: TaskListProps) {
+  const { t } = useTranslation()
   if (tasks.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        Aucune tâche pour l'instant — clique sur « + » pour en créer une.
-      </p>
-    )
+    return <p className="text-sm text-muted-foreground">{t('tasks.emptyList')}</p>
   }
 
   return (
@@ -34,11 +32,11 @@ export function TaskList({ tasks, onSelect, onToggleImportant }: TaskListProps) 
             onClick={() => onSelect(task.id)}
             className="min-w-0 flex-1 truncate rounded-md px-2 py-1 text-left text-sm"
           >
-            {(task.title ?? '').trim() || 'Sans titre'}
+            {(task.title ?? '').trim() || t('common.noTitle')}
           </button>
           <button
             type="button"
-            aria-label={task.important ? 'Retirer important' : 'Marquer important'}
+            aria-label={t(task.important ? 'common.important.remove' : 'common.important.add')}
             aria-pressed={task.important}
             onClick={() => onToggleImportant(task.id, !task.important)}
             className={cn(

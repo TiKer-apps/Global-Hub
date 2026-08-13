@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
+import { useTranslation } from 'react-i18next'
 import { useReactFlow } from '@xyflow/react'
 import { ModuleCard } from '@/components/module-card'
 import { db } from '@/lib/db'
@@ -16,8 +17,8 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   )
 }
 
-function stripHtml(html: string): string {
-  return new DOMParser().parseFromString(html, 'text/html').body.textContent?.trim() || 'Sans titre'
+function stripHtml(html: string, fallback: string): string {
+  return new DOMParser().parseFromString(html, 'text/html').body.textContent?.trim() || fallback
 }
 
 // IndexedDB n'accepte pas les booléens comme clé d'index valide (les
@@ -25,6 +26,7 @@ function stripHtml(html: string): string {
 // de l'index) : on lit toute la table et on filtre en mémoire plutôt que de
 // se fier à `.where('important')`, peu fiable sur un champ booléen.
 export function ImportantWidget() {
+  const { t } = useTranslation()
   const headerClassName = useModuleHeaderClassName('important-1', 'orange-300')
   const headerStyle = useModuleStyleId('important-1', 'wave')
   const importantNotes =
@@ -58,17 +60,17 @@ export function ImportantWidget() {
   return (
     <ModuleCard
       className="w-72"
-      title="Important"
+      title={t('important.title')}
       headerClassName={headerClassName}
       variant={headerStyle}
       contentClassName="space-y-3"
     >
       {!hasAny ? (
-        <p className="text-sm text-muted-foreground">Rien de marqué important pour l'instant.</p>
+        <p className="text-sm text-muted-foreground">{t('important.empty')}</p>
       ) : (
         <>
           {importantNotes.length > 0 && (
-            <Section title="Notes">
+            <Section title={t('important.sections.notes')}>
               <ul className="nowheel max-h-40 space-y-0.5 overflow-y-auto">
                 {importantNotes.map((note) => (
                   <li key={note.id}>
@@ -77,7 +79,7 @@ export function ImportantWidget() {
                       onClick={() => requestOpen('notes', note.id)}
                       className="w-full truncate rounded-md px-2 py-1 text-left text-sm hover:bg-muted"
                     >
-                      {(note.title ?? '').trim() || 'Sans titre'}
+                      {(note.title ?? '').trim() || t('common.noTitle')}
                     </button>
                   </li>
                 ))}
@@ -85,7 +87,7 @@ export function ImportantWidget() {
             </Section>
           )}
           {importantTasks.length > 0 && (
-            <Section title="Tâches">
+            <Section title={t('important.sections.tasks')}>
               <ul className="nowheel max-h-40 space-y-0.5 overflow-y-auto">
                 {importantTasks.map((task) => (
                   <li key={task.id}>
@@ -94,7 +96,7 @@ export function ImportantWidget() {
                       onClick={() => requestOpen('tasks', task.id)}
                       className="w-full truncate rounded-md px-2 py-1 text-left text-sm hover:bg-muted"
                     >
-                      {(task.title ?? '').trim() || 'Sans titre'}
+                      {(task.title ?? '').trim() || t('common.noTitle')}
                     </button>
                   </li>
                 ))}
@@ -102,7 +104,7 @@ export function ImportantWidget() {
             </Section>
           )}
           {importantEvents.length > 0 && (
-            <Section title="Événements">
+            <Section title={t('important.sections.events')}>
               <ul className="nowheel max-h-40 space-y-0.5 overflow-y-auto">
                 {importantEvents.map((event) => (
                   <li key={event.id}>
@@ -111,7 +113,7 @@ export function ImportantWidget() {
                       onClick={() => requestOpen('planning', event.id)}
                       className="w-full truncate rounded-md px-2 py-1 text-left text-sm hover:bg-muted"
                     >
-                      {event.title.trim() || 'Sans titre'}
+                      {event.title.trim() || t('common.noTitle')}
                     </button>
                   </li>
                 ))}
@@ -119,7 +121,7 @@ export function ImportantWidget() {
             </Section>
           )}
           {importantPostIts.length > 0 && (
-            <Section title="Post-its">
+            <Section title={t('important.sections.postIts')}>
               <ul className="nowheel max-h-40 space-y-0.5 overflow-y-auto">
                 {importantPostIts.map((postIt) => (
                   <li key={postIt.id}>
@@ -128,7 +130,7 @@ export function ImportantWidget() {
                       onClick={() => focusNode(postIt.id)}
                       className="w-full truncate rounded-md px-2 py-1 text-left text-sm hover:bg-muted"
                     >
-                      {stripHtml(postIt.html)}
+                      {stripHtml(postIt.html, t('common.noTitle'))}
                     </button>
                   </li>
                 ))}
@@ -136,7 +138,7 @@ export function ImportantWidget() {
             </Section>
           )}
           {importantTodoSheets.length > 0 && (
-            <Section title="Todo-list">
+            <Section title={t('important.sections.todoList')}>
               <ul className="nowheel max-h-40 space-y-0.5 overflow-y-auto">
                 {importantTodoSheets.map((sheet) => (
                   <li key={sheet.id}>
@@ -145,7 +147,7 @@ export function ImportantWidget() {
                       onClick={() => focusNode(sheet.id)}
                       className="w-full truncate rounded-md px-2 py-1 text-left text-sm hover:bg-muted"
                     >
-                      {sheet.lines[0]?.text.trim() || 'Sans titre'}
+                      {sheet.lines[0]?.text.trim() || t('common.noTitle')}
                     </button>
                   </li>
                 ))}

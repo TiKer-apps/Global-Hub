@@ -1,18 +1,28 @@
-export const DAY_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
+// Locale complète (BCP 47) attendue par `Intl.DateTimeFormat` à partir du
+// code de langue court tenu par i18next (`i18n.language`, 'fr'/'en').
+const INTL_LOCALES: Record<string, string> = { fr: 'fr-FR', en: 'en-US' }
 
-// Indexé sur `Date#getDay()` (0 = dimanche), contrairement à `DAY_LABELS`
-// (indexé sur une position dans une semaine lundi-first) — nécessaire pour
-// une vue jour unique, où il n'y a pas de tableau de 7 jours pour donner une
-// position implicite.
-const DAY_LABELS_BY_WEEKDAY = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam']
-
-export function getDayLabel(day: Date): string {
-  return DAY_LABELS_BY_WEEKDAY[day.getDay()]
+export function toIntlLocale(language: string): string {
+  return INTL_LOCALES[language] ?? INTL_LOCALES.fr
 }
 
-// Lundi comme premier jour de semaine (convention FR) : `getDay()` renvoie
-// 0 (dimanche) à 6 (samedi), `(day + 6) % 7` ramène ça à une distance depuis
-// le lundi le plus récent.
+// Calculé à la volée via `Intl` plutôt qu'un tableau de libellés en dur par
+// langue (avant l'i18n) — s'étend à toute langue future sans retoucher ce
+// fichier, la donnée vient du navigateur.
+export function getDayLabel(day: Date, language: string): string {
+  return new Intl.DateTimeFormat(toIntlLocale(language), { weekday: 'short' }).format(day)
+}
+
+// Étiquettes d'en-tête Lun-Dim pour la vue mois (`MonthGrid`) : mêmes
+// jours que `getWeekDays` (semaine de référence arbitraire, seul l'ordre
+// Lun→Dim compte), calculées dans la locale courante.
+export function getWeekDayHeaderLabels(language: string): string[] {
+  return getWeekDays(new Date()).map((day) => getDayLabel(day, language))
+}
+
+// Lundi comme premier jour de semaine (convention FR, gardée pour toutes
+// les langues supportées) : `getDay()` renvoie 0 (dimanche) à 6 (samedi),
+// `(day + 6) % 7` ramène ça à une distance depuis le lundi le plus récent.
 export function getWeekDays(reference: Date): Date[] {
   const diffToMonday = (reference.getDay() + 6) % 7
   const monday = new Date(reference)
@@ -53,20 +63,15 @@ export function isSameDay(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
 }
 
-const WEEK_RANGE_FORMAT = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' })
-
-export function formatWeekRange(days: Date[]): string {
-  return `${WEEK_RANGE_FORMAT.format(days[0])} – ${WEEK_RANGE_FORMAT.format(days[days.length - 1])}`
+export function formatWeekRange(days: Date[], language: string): string {
+  const format = new Intl.DateTimeFormat(toIntlLocale(language), { day: 'numeric', month: 'short' })
+  return `${format.format(days[0])} – ${format.format(days[days.length - 1])}`
 }
 
-const DAY_LABEL_FORMAT = new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
-
-export function formatDayLabel(day: Date): string {
-  return DAY_LABEL_FORMAT.format(day)
+export function formatDayLabel(day: Date, language: string): string {
+  return new Intl.DateTimeFormat(toIntlLocale(language), { weekday: 'long', day: 'numeric', month: 'long' }).format(day)
 }
 
-const MONTH_YEAR_FORMAT = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' })
-
-export function formatMonthYear(day: Date): string {
-  return MONTH_YEAR_FORMAT.format(day)
+export function formatMonthYear(day: Date, language: string): string {
+  return new Intl.DateTimeFormat(toIntlLocale(language), { month: 'long', year: 'numeric' }).format(day)
 }

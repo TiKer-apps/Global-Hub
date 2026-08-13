@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { getDayLabel, isSameDay } from './date-utils'
-import { sourceBorderClass, sourceLabel } from './source-style'
+import { sourceBorderClass, sourceLabelKey } from './source-style'
 import type { CalendarEvent } from './types'
 
 interface WeekMinimalProps {
@@ -21,6 +22,7 @@ function formatHour(d: Date) {
 // une case vide en pointillés si rien ce jour-là. Même technique d'en-tête
 // `sticky` que WeekGrid pour garder les colonnes alignées au scroll.
 export function WeekMinimal({ events, days, onEventClick }: WeekMinimalProps) {
+  const { t, i18n } = useTranslation()
   // `today` : la vraie date du jour, pour le surlignage — indépendant de la
   // semaine affichée (`days`), qui peut être passée/future après navigation.
   const today = useMemo(() => new Date(), [])
@@ -40,7 +42,7 @@ export function WeekMinimal({ events, days, onEventClick }: WeekMinimalProps) {
             key={i}
             className={cn('sticky top-0 z-10 border-b bg-card px-1 py-1 text-center', isSameDay(day, today) && 'bg-primary/10 font-semibold')}
           >
-            <div className="text-muted-foreground">{getDayLabel(day)}</div>
+            <div className="text-muted-foreground">{getDayLabel(day, i18n.language)}</div>
             <div>{day.getDate()}</div>
           </div>
         ))}
@@ -53,7 +55,7 @@ export function WeekMinimal({ events, days, onEventClick }: WeekMinimalProps) {
                 <div
                   key={event.id}
                   onClick={() => onEventClick(event)}
-                  title={`Voir l'événement (${sourceLabel(event.source)})`}
+                  title={t('planning.event.view', { source: t(sourceLabelKey(event.source)) })}
                   className={cn(
                     'cursor-pointer rounded-sm border-l-4 bg-green-200 px-1 py-1 text-green-900 hover:ring-1 hover:ring-primary',
                     sourceBorderClass(event.source),

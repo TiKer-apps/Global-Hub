@@ -15,12 +15,8 @@ export function sourceBorderClass(source: EventSource): string {
   return SOURCE_BORDER_CLASS[source]
 }
 
-const SOURCE_LABEL: Record<EventSource, string> = {
-  local: 'créé localement',
-  google: 'importé de Google',
-  outlook: 'importé d’Outlook',
-}
-
-export function sourceLabel(source: EventSource): string {
-  return SOURCE_LABEL[source]
+// Clé de traduction (`planning.source.<source>`), résolue via `t()` au
+// point de rendu — même principe que `EventTypePreset.labelKey`.
+export function sourceLabelKey(source: EventSource): string {
+  return `planning.source.${source}`
 }

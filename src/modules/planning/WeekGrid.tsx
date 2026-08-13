@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState, type MouseEvent as ReactMouseEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { getDayLabel, isSameDay } from './date-utils'
-import { sourceBorderClass, sourceLabel } from './source-style'
+import { sourceBorderClass, sourceLabelKey } from './source-style'
 import type { CalendarEvent, PlanningMode, TimeRangeSelection } from './types'
 
 interface WeekGridProps {
@@ -26,6 +27,7 @@ const GUTTER = '2.5rem'
 // pas — un seul grid = une seule source de vérité pour la largeur des
 // colonnes, plus de désalignement possible.
 export function WeekGrid({ events, mode, days, selection, onSelectionChange, onEventClick }: WeekGridProps) {
+  const { t, i18n } = useTranslation()
   // "compact" = heures de bureau condensées, "extended" = journée complète.
   const startHour = mode === 'compact' ? 8 : 0
   const endHour = mode === 'compact' ? 19 : 24
@@ -125,7 +127,7 @@ export function WeekGrid({ events, mode, days, selection, onSelectionChange, onE
               isSameDay(day, today) && 'bg-primary/10 font-semibold',
             )}
           >
-            <div className="text-muted-foreground">{getDayLabel(day)}</div>
+            <div className="text-muted-foreground">{getDayLabel(day, i18n.language)}</div>
             <div>{day.getDate()}</div>
           </div>
         ))}
@@ -198,7 +200,7 @@ export function WeekGrid({ events, mode, days, selection, onSelectionChange, onE
                       e.stopPropagation()
                       onEventClick(event)
                     }}
-                    title={`Voir l'événement (${sourceLabel(event.source)})`}
+                    title={t('planning.event.view', { source: t(sourceLabelKey(event.source)) })}
                     className={cn(
                       'absolute inset-x-0.5 cursor-pointer overflow-hidden rounded-sm border-l-4 bg-green-200 px-1 py-0.5 text-[10px] text-green-900 hover:ring-1 hover:ring-primary',
                       sourceBorderClass(event.source),

@@ -1,6 +1,9 @@
 export interface EventTypePreset {
   id: string
-  label: string
+  // Clé de traduction (`planning.type.<id>`), pas le libellé affiché
+  // directement — résolue via `t()` au point de rendu (`EventFormModal`),
+  // sinon la donnée elle-même serait figée dans une langue.
+  labelKey: string
   // Couleur CSS appliquée directement en style inline sur la case de
   // l'event (cf. `WeekGrid`/`WeekMinimal`/`MonthGrid`, `backgroundColor:
   // event.color`) — pas une classe Tailwind comme dans `theme-presets.ts`,
@@ -9,11 +12,11 @@ export interface EventTypePreset {
 }
 
 export const EVENT_TYPE_PRESETS: EventTypePreset[] = [
-  { id: 'travail', label: 'Travail', color: '#93c5fd' },
-  { id: 'perso', label: 'Perso', color: '#86efac' },
-  { id: 'sante', label: 'Santé', color: '#fca5a5' },
-  { id: 'loisirs', label: 'Loisirs', color: '#fdba74' },
-  { id: 'autre', label: 'Autre', color: '#d4d4d8' },
+  { id: 'travail', labelKey: 'planning.type.travail', color: '#93c5fd' },
+  { id: 'perso', labelKey: 'planning.type.perso', color: '#86efac' },
+  { id: 'sante', labelKey: 'planning.type.sante', color: '#fca5a5' },
+  { id: 'loisirs', labelKey: 'planning.type.loisirs', color: '#fdba74' },
+  { id: 'autre', labelKey: 'planning.type.autre', color: '#d4d4d8' },
 ]
 
 export function getEventTypePreset(id: string | undefined): EventTypePreset | undefined {

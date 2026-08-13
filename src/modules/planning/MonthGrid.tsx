@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
-import { addDays, DAY_LABELS, isSameDay } from './date-utils'
-import { sourceBorderClass, sourceLabel } from './source-style'
+import { addDays, getWeekDayHeaderLabels, isSameDay } from './date-utils'
+import { sourceBorderClass, sourceLabelKey } from './source-style'
 import type { CalendarEvent, PlanningMode } from './types'
 
 interface MonthGridProps {
@@ -32,8 +33,10 @@ function eventOccursOnDay(event: CalendarEvent, day: Date): boolean {
 // produit directement une sélection finale journée entière, il n'y a pas de
 // plage horaire à affiner par glisser sur un axe qui n'existe pas.
 export function MonthGrid({ events, mode, days, referenceDate, onDayClick, onEventClick }: MonthGridProps) {
+  const { t, i18n } = useTranslation()
   const today = useMemo(() => new Date(), [])
   const currentMonth = referenceDate.getMonth()
+  const weekDayLabels = useMemo(() => getWeekDayHeaderLabels(i18n.language), [i18n.language])
 
   const eventsByDay = useMemo(
     () => days.map((day) => events.filter((e) => eventOccursOnDay(e, day))),
@@ -43,8 +46,8 @@ export function MonthGrid({ events, mode, days, referenceDate, onDayClick, onEve
   return (
     <div className="nowheel max-h-96 overflow-y-auto text-xs">
       <div className="grid grid-cols-7">
-        {DAY_LABELS.map((label) => (
-          <div key={label} className="sticky top-0 z-10 border-b bg-card px-1 py-1 text-center text-muted-foreground">
+        {weekDayLabels.map((label, i) => (
+          <div key={i} className="sticky top-0 z-10 border-b bg-card px-1 py-1 text-center text-muted-foreground">
             {label}
           </div>
         ))}
@@ -77,7 +80,7 @@ export function MonthGrid({ events, mode, days, referenceDate, onDayClick, onEve
                         e.stopPropagation()
                         onEventClick(event)
                       }}
-                      title={`Voir l'événement (${sourceLabel(event.source)})`}
+                      title={t('planning.event.view', { source: t(sourceLabelKey(event.source)) })}
                       className={cn(
                         'truncate rounded-sm border-l-4 bg-green-200 px-1 py-0.5 text-[10px] text-green-900 hover:ring-1 hover:ring-primary',
                         sourceBorderClass(event.source),

@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import { useReactFlow } from '@xyflow/react'
 import {
   Briefcase,
@@ -21,7 +23,16 @@ import { useModuleNavigation } from '@/canvas/module-navigation'
 import { useModuleStyleId } from '@/canvas/module-style'
 import { db } from '@/lib/db'
 import { ToolbarButton } from '@/modules/text-editor/ToolbarButton'
-import { addDays, addMonths, formatDayLabel, formatMonthYear, formatWeekRange, getMonthGridDays, getWeekDays } from './date-utils'
+import {
+  addDays,
+  addMonths,
+  formatDayLabel,
+  formatMonthYear,
+  formatWeekRange,
+  getMonthGridDays,
+  getWeekDays,
+  toIntlLocale,
+} from './date-utils'
 import { EventFormModal } from './EventFormModal'
 import { importIcsEvents } from './ics-import'
 import { MonthGrid } from './MonthGrid'
@@ -29,11 +40,16 @@ import { WeekGrid } from './WeekGrid'
 import { WeekMinimal } from './WeekMinimal'
 import type { CalendarEvent, PlanningMode, PlanningView, PlanningWidgetConfig, TimeRangeSelection } from './types'
 
-const SELECTION_DATE_FORMAT = new Intl.DateTimeFormat('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })
-
-function formatSelection(selection: TimeRangeSelection): string {
-  if (selection.allDay) return `Journée entière, ${SELECTION_DATE_FORMAT.format(selection.day)}`
-  return `${String(selection.startHour).padStart(2, '0')}h–${String(selection.endHour).padStart(2, '0')}h, ${SELECTION_DATE_FORMAT.format(selection.day)}`
+function formatSelection(selection: TimeRangeSelection, language: string, t: TFunction): string {
+  const date = new Intl.DateTimeFormat(toIntlLocale(language), { weekday: 'short', day: 'numeric', month: 'short' }).format(
+    selection.day,
+  )
+  if (selection.allDay) return t('planning.selection.allDay', { date })
+  return t('planning.selection.range', {
+    start: String(selection.startHour).padStart(2, '0'),
+    end: String(selection.endHour).padStart(2, '0'),
+    date,
+  })
 }
 
 interface PlanningWidgetProps {
@@ -46,6 +62,7 @@ type ViewMode = 'grid' | 'minimal'
 // d'affichage propres à ce widget (choisies dans l'UI, pas figées par la
 // config du node) — `config` ne sert plus que de valeur initiale.
 export function PlanningWidget({ config }: PlanningWidgetProps) {
+  const { t, i18n } = useTranslation()
   const headerClassName = useModuleHeaderClassName('planning-week', 'green-600')
   const headerStyle = useModuleStyleId('planning-week', 'wave')
   const events = useLiveQuery(() => db.events.toArray(), []) ?? []
@@ -134,15 +151,23 @@ export function PlanningWidget({ config }: PlanningWidgetProps) {
     for (const file of files) {
       total += await importIcsEvents(await file.text())
     }
-    setImportStatus(`${total} événement${total > 1 ? 's' : ''} importé${total > 1 ? 's' : ''}.`)
+    setImportStatus(t('planning.importStatus', { count: total }))
     setTimeout(() => setImportStatus(null), 4000)
     e.target.value = ''
   }
 
   const navLabel =
-    view === 'day' ? formatDayLabel(referenceDate) : view === 'week' ? formatWeekRange(days) : formatMonthYear(referenceDate)
-  const previousLabel = view === 'day' ? 'Jour précédent' : view === 'week' ? 'Semaine précédente' : 'Mois précédent'
-  const nextLabel = view === 'day' ? 'Jour suivant' : view === 'week' ? 'Semaine suivante' : 'Mois suivant'
+    view === 'day'
+      ? formatDayLabel(referenceDate, i18n.language)
+      : view === 'week'
+        ? formatWeekRange(days, i18n.language)
+        : formatMonthYear(referenceDate, i18n.language)
+  const previousLabel = t(
+    view === 'day' ? 'planning.nav.previousDay' : view === 'week' ? 'planning.nav.previousWeek' : 'planning.nav.previousMonth',
+  )
+  const nextLabel = t(
+    view === 'day' ? 'planning.nav.nextDay' : view === 'week' ? 'planning.nav.nextWeek' : 'planning.nav.nextMonth',
+  )
 
   return (
     <ModuleCard
@@ -150,7 +175,7 @@ export function PlanningWidget({ config }: PlanningWidgetProps) {
       titleClassName="capitalize"
       headerClassName={headerClassName}
       variant={headerStyle}
-      title={`Planning — ${view}`}
+      title={t('planning.title', { view: t(`planning.view.${view}`) })}
       action={
         <>
           <input
@@ -161,25 +186,25 @@ export function PlanningWidget({ config }: PlanningWidgetProps) {
             onChange={handleFilesSelected}
             className="hidden"
           />
-          <ToolbarButton onClick={() => fileInputRef.current?.click()} aria-label="Importer un fichier .ics">
+          <ToolbarButton onClick={() => fileInputRef.current?.click()} aria-label={t('planning.toolbar.importIcs')}>
             <Upload className="size-3.5" />
           </ToolbarButton>
-          <ToolbarButton onClick={handleNewEventClick} aria-label="Nouvel événement">
+          <ToolbarButton onClick={handleNewEventClick} aria-label={t('planning.toolbar.newEvent')}>
             <Plus className="size-3.5" />
           </ToolbarButton>
-          <ToolbarButton active={view === 'day'} size="sm" onClick={() => setView('day')} aria-label="Vue jour">
-            Jour
+          <ToolbarButton active={view === 'day'} size="sm" onClick={() => setView('day')} aria-label={t('planning.toolbar.viewDay')}>
+            {t('planning.view.day')}
           </ToolbarButton>
-          <ToolbarButton active={view === 'week'} size="sm" onClick={() => setView('week')} aria-label="Vue semaine">
-            Semaine
+          <ToolbarButton active={view === 'week'} size="sm" onClick={() => setView('week')} aria-label={t('planning.toolbar.viewWeek')}>
+            {t('planning.view.week')}
           </ToolbarButton>
-          <ToolbarButton active={view === 'month'} size="sm" onClick={() => setView('month')} aria-label="Vue mois">
-            Mois
+          <ToolbarButton active={view === 'month'} size="sm" onClick={() => setView('month')} aria-label={t('planning.toolbar.viewMonth')}>
+            {t('planning.view.month')}
           </ToolbarButton>
           {view === 'week' && (
             <ToolbarButton
               onClick={() => setDaysCount((d) => (d === 7 ? 5 : 7))}
-              aria-label={daysCount === 7 ? 'Passer à 5 jours' : 'Passer à 7 jours'}
+              aria-label={t(daysCount === 7 ? 'planning.toolbar.daysCountTo5' : 'planning.toolbar.daysCountTo7')}
             >
               {daysCount === 7 ? <CalendarDays className="size-3.5" /> : <CalendarRange className="size-3.5" />}
             </ToolbarButton>
@@ -188,14 +213,14 @@ export function PlanningWidget({ config }: PlanningWidgetProps) {
             <ToolbarButton
               onClick={() => setHourMode((m) => (m === 'extended' ? 'compact' : 'extended'))}
               disabled={viewMode === 'minimal'}
-              aria-label={hourMode === 'extended' ? 'Passer en horaires compacts (8h-19h)' : 'Passer en horaires étendus (00h-24h)'}
+              aria-label={t(hourMode === 'extended' ? 'planning.toolbar.hourModeCompact' : 'planning.toolbar.hourModeExtended')}
             >
               {hourMode === 'extended' ? <Clock className="size-3.5" /> : <Briefcase className="size-3.5" />}
             </ToolbarButton>
           ) : (
             <ToolbarButton
               onClick={() => setHourMode((m) => (m === 'extended' ? 'compact' : 'extended'))}
-              aria-label={hourMode === 'extended' ? 'Afficher un indicateur au lieu des titres' : 'Afficher les titres des événements'}
+              aria-label={t(hourMode === 'extended' ? 'planning.toolbar.monthModeIndicator' : 'planning.toolbar.monthModeTitles')}
             >
               {hourMode === 'extended' ? <List className="size-3.5" /> : <Dot className="size-3.5" />}
             </ToolbarButton>
@@ -203,7 +228,7 @@ export function PlanningWidget({ config }: PlanningWidgetProps) {
           {view !== 'month' && (
             <ToolbarButton
               onClick={() => setViewMode((v) => (v === 'grid' ? 'minimal' : 'grid'))}
-              aria-label={viewMode === 'grid' ? 'Passer en mode minimaliste' : 'Passer en mode grille'}
+              aria-label={t(viewMode === 'grid' ? 'planning.toolbar.viewModeMinimal' : 'planning.toolbar.viewModeGrid')}
             >
               {viewMode === 'grid' ? <Rows3 className="size-3.5" /> : <LayoutGrid className="size-3.5" />}
             </ToolbarButton>
@@ -223,11 +248,15 @@ export function PlanningWidget({ config }: PlanningWidgetProps) {
               <ChevronRight className="size-3.5" />
             </ToolbarButton>
           </div>
-          <ToolbarButton onClick={goToToday} aria-label="Revenir à aujourd'hui" size="sm">
-            Aujourd'hui
+          <ToolbarButton onClick={goToToday} aria-label={t('planning.toolbar.today')} size="sm">
+            {t('planning.toolbar.today')}
           </ToolbarButton>
         </div>
-        {selection && <p className="text-xs text-muted-foreground">Sélection : {formatSelection(selection)}</p>}
+        {selection && (
+          <p className="text-xs text-muted-foreground">
+            {t('planning.selection.label', { value: formatSelection(selection, i18n.language, t) })}
+          </p>
+        )}
         {view === 'month' ? (
           <MonthGrid
             events={events}

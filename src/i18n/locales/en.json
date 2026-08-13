@@ -1,0 +1,162 @@
+{
+  "common": {
+    "openMenu": "Open the modules menu",
+    "closeMenu": "Close the menu",
+    "modulesTitle": "Modules",
+    "settingsButton": "Module settings",
+    "empty": "Empty",
+    "noTitle": "Untitled",
+    "loading": "Loading…",
+    "sortBy": "Sort by",
+    "sortByCreated": "Creation date",
+    "sortByUpdated": "Last modified",
+    "reverseSortOrder": "Reverse sort order",
+    "important": {
+      "add": "Mark as important",
+      "remove": "Unmark as important"
+    },
+    "moduleLabels": {
+      "important": "Important",
+      "planning": "Planning",
+      "notes": "Notes",
+      "tasks": "Tasks",
+      "postIt": "Post-it",
+      "todoList": "Todo-list"
+    }
+  },
+  "textEditor": {
+    "bold": "Bold",
+    "italic": "Italic",
+    "sizeLabel": "Text size",
+    "fontLabel": "Font",
+    "colorLabel": "Text color",
+    "color": "Color {{color}}",
+    "spellCheckOn": "Disable spell check",
+    "spellCheckOff": "Enable spell check",
+    "fonts": {
+      "sans": "Simple",
+      "handwritten": "Handwritten",
+      "marker": "Marker",
+      "typewriter": "Typewriter"
+    }
+  },
+  "notes": {
+    "title": "Notes",
+    "newNote": "New note",
+    "backToList": "Back to list",
+    "deleteNote": "Delete note",
+    "saveNote": "Save note",
+    "emptyList": "No notes yet — click “+” to create one.",
+    "titlePlaceholder": "Title",
+    "createPostIt": "Create a post-it from this note",
+    "confirmDelete": "Delete this note?"
+  },
+  "postIts": {
+    "title": "Post-it",
+    "placeholderDraft": "Click to write…",
+    "placeholderEmpty": "Empty post-it",
+    "detach": "Detach",
+    "detachBlock": "Detach the post-it",
+    "deletePostIt": "Delete post-it",
+    "confirmDelete": "Delete this post-it?"
+  },
+  "tasks": {
+    "title": "Tasks",
+    "newTask": "New task",
+    "deleteTask": "Delete task",
+    "saveTask": "Save task",
+    "emptyList": "No tasks yet — click “+” to create one.",
+    "contentPlaceholder": "- checkable item\nPlain text",
+    "confirmDelete": "Delete this task?",
+    "previewTitle": "Preview",
+    "previewEmpty": "Nothing to show yet."
+  },
+  "todoList": {
+    "title": "Todo-list",
+    "placeholderDraft": "Click to write…",
+    "detachSheet": "Detach the sheet",
+    "deleteSheet": "Delete sheet",
+    "confirmDelete": "Delete this sheet?"
+  },
+  "important": {
+    "title": "Important",
+    "empty": "Nothing marked important yet.",
+    "sections": {
+      "notes": "Notes",
+      "tasks": "Tasks",
+      "events": "Events",
+      "postIts": "Post-its",
+      "todoList": "Todo-list"
+    }
+  },
+  "planning": {
+    "title": "Planning — {{view}}",
+    "view": {
+      "day": "day",
+      "week": "week",
+      "month": "month"
+    },
+    "toolbar": {
+      "importIcs": "Import an .ics file",
+      "newEvent": "New event",
+      "viewDay": "Day view",
+      "viewWeek": "Week view",
+      "viewMonth": "Month view",
+      "daysCountTo5": "Switch to 5 days",
+      "daysCountTo7": "Switch to 7 days",
+      "hourModeCompact": "Switch to compact hours (8am-7pm)",
+      "hourModeExtended": "Switch to extended hours (12am-12am)",
+      "monthModeIndicator": "Show an indicator instead of titles",
+      "monthModeTitles": "Show event titles",
+      "viewModeMinimal": "Switch to minimal mode",
+      "viewModeGrid": "Switch to grid mode",
+      "today": "Today"
+    },
+    "nav": {
+      "previousDay": "Previous day",
+      "nextDay": "Next day",
+      "previousWeek": "Previous week",
+      "nextWeek": "Next week",
+      "previousMonth": "Previous month",
+      "nextMonth": "Next month"
+    },
+    "selection": {
+      "allDay": "All day, {{date}}",
+      "range": "{{start}}–{{end}}, {{date}}",
+      "label": "Selection: {{value}}"
+    },
+    "importStatus_one": "{{count}} event imported.",
+    "importStatus_other": "{{count}} events imported.",
+    "event": {
+      "view": "View event ({{source}})",
+      "delete": "Delete event",
+      "confirmDelete": "Delete “{{title}}”?"
+    },
+    "source": {
+      "local": "created locally",
+      "google": "imported from Google",
+      "outlook": "imported from Outlook"
+    },
+    "type": {
+      "none": "No type",
+      "travail": "Work",
+      "perso": "Personal",
+      "sante": "Health",
+      "loisirs": "Leisure",
+      "autre": "Other"
+    },
+    "form": {
+      "titleCreate": "New event",
+      "titleEdit": "Edit event",
+      "titlePlaceholder": "Title",
+      "allDay": "All day",
+      "important": "Mark as important",
+      "typeLabel": "Type",
+      "locationPlaceholder": "Location (optional)",
+      "descriptionPlaceholder": "Description (optional)",
+      "cancel": "Cancel",
+      "create": "Create",
+      "save": "Save"
+    }
+  }
+}

@@ -5,6 +5,10 @@ import type { Preview } from '@storybook/react-vite'
 // (important-surface, placeholder Tiptap) n'existaient pas du tout dans son
 // iframe — d'où les composants qui rendaient sans styles ou cassés.
 import '../src/index.css'
+// Même raison que l'import CSS ci-dessus : sans ça, `useTranslation()`
+// plante dans l'iframe Storybook (i18next jamais initialisé) dès qu'une
+// story rend un composant qui l'utilise.
+import '../src/i18n'
 
 const preview: Preview = {
   parameters: {

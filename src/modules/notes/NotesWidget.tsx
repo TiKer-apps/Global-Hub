@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
+import { useTranslation } from 'react-i18next'
 import { useNodeId, useReactFlow } from '@xyflow/react'
 import { ArrowDownNarrowWide, ArrowLeft, ArrowUpNarrowWide, Plus, Save, Sticker, Trash2 } from 'lucide-react'
 import { ModuleCard } from '@/components/module-card'
@@ -19,6 +20,7 @@ type SortField = 'createdAt' | 'updatedAt'
 type SortDir = 'asc' | 'desc'
 
 export function NotesWidget() {
+  const { t } = useTranslation()
   const headerClassName = useModuleHeaderClassName('notes-1', 'blue-300')
   const headerStyle = useModuleStyleId('notes-1', 'wave')
   const [view, setView] = useState<View>('list')
@@ -127,7 +129,7 @@ export function NotesWidget() {
   // n'a de sens que là — rien à supprimer depuis un brouillon non enregistré).
   const handleDeleteCurrentNote = () => {
     if (!selectedId) return
-    if (!confirm('Supprimer cette note ?')) return
+    if (!confirm(t('notes.confirmDelete'))) return
     db.notes.delete(selectedId)
     setSelectedId(null)
     setView('list')
@@ -175,25 +177,25 @@ export function NotesWidget() {
   return (
     <ModuleCard
       className="w-80"
-      title="Notes"
+      title={t('notes.title')}
       headerClassName={headerClassName}
       variant={headerStyle}
       action={
         view === 'list' ? (
-          <ToolbarButton onClick={handleNewNote} aria-label="Nouvelle note">
+          <ToolbarButton onClick={handleNewNote} aria-label={t('notes.newNote')}>
             <Plus className="size-3.5" />
           </ToolbarButton>
         ) : (
           <>
-            <ToolbarButton onClick={handleShowList} aria-label="Retour à la liste">
+            <ToolbarButton onClick={handleShowList} aria-label={t('notes.backToList')}>
               <ArrowLeft className="size-3.5" />
             </ToolbarButton>
             {selectedId ? (
-              <ToolbarButton onClick={handleDeleteCurrentNote} aria-label="Supprimer la note">
+              <ToolbarButton onClick={handleDeleteCurrentNote} aria-label={t('notes.deleteNote')}>
                 <Trash2 className="size-3.5" />
               </ToolbarButton>
             ) : (
-              <ToolbarButton onClick={handleSaveDraft} disabled={!hasDraftContent} aria-label="Enregistrer la note">
+              <ToolbarButton onClick={handleSaveDraft} disabled={!hasDraftContent} aria-label={t('notes.saveNote')}>
                 <Save className="size-3.5" />
               </ToolbarButton>
             )}
@@ -207,13 +209,13 @@ export function NotesWidget() {
             <select
               value={sortField}
               onChange={(e) => setSortField(e.target.value as SortField)}
-              aria-label="Trier par"
+              aria-label={t('common.sortBy')}
               className="h-7 rounded-md border bg-background px-1.5 text-xs"
             >
-              <option value="createdAt">Date de création</option>
-              <option value="updatedAt">Date de modification</option>
+              <option value="createdAt">{t('common.sortByCreated')}</option>
+              <option value="updatedAt">{t('common.sortByUpdated')}</option>
             </select>
-            <ToolbarButton onClick={toggleSortDir} aria-label="Inverser l'ordre du tri">
+            <ToolbarButton onClick={toggleSortDir} aria-label={t('common.reverseSortOrder')}>
               {sortDir === 'desc' ? (
                 <ArrowDownNarrowWide className="size-3.5" />
               ) : (
@@ -224,7 +226,7 @@ export function NotesWidget() {
           <NoteList notes={notes} onSelect={handleSelect} onToggleImportant={handleToggleImportant} />
         </div>
       ) : selectedId && selectedNote?.id !== selectedId ? (
-        <p className="text-sm text-muted-foreground">Chargement…</p>
+        <p className="text-sm text-muted-foreground">{t('common.loading')}</p>
       ) : (
         <div className="space-y-2">
           <div className="flex items-center gap-1 border-b pb-1.5">
@@ -234,13 +236,13 @@ export function NotesWidget() {
               autoComplete="off"
               defaultValue={title}
               onChange={(e) => handleTitleChange(e.target.value)}
-              placeholder="Titre"
+              placeholder={t('notes.titlePlaceholder')}
               className="min-w-0 flex-1 bg-transparent px-1 text-sm font-medium outline-none placeholder:text-muted-foreground placeholder:font-normal"
             />
             <ToolbarButton
               onClick={handleCreatePostIt}
               disabled={!content || content === '<p></p>'}
-              aria-label="Créer un post-it à partir de cette note"
+              aria-label={t('notes.createPostIt')}
             >
               <Sticker className="size-3.5" />
             </ToolbarButton>

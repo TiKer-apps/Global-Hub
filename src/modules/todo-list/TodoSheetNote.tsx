@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Star, Trash2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { db } from '@/lib/db'
 import { ToolbarButton } from '@/modules/text-editor/ToolbarButton'
@@ -21,6 +22,7 @@ export function TodoSheetNote({ sheetId }: TodoSheetNoteProps) {
 }
 
 function TodoSheetNoteLoaded({ sheet }: { sheet: TodoSheet }) {
+  const { t } = useTranslation()
   const handleToggleLine = (lineId: string) => {
     db.todoSheets.update(sheet.id, {
       lines: sheet.lines.map((line) => (line.id === lineId ? { ...line, done: !line.done } : line)),
@@ -28,7 +30,7 @@ function TodoSheetNoteLoaded({ sheet }: { sheet: TodoSheet }) {
   }
 
   const handleDelete = () => {
-    if (!confirm('Supprimer cette fiche ?')) return
+    if (!confirm(t('todoList.confirmDelete'))) return
     db.todoSheets.delete(sheet.id)
   }
 
@@ -38,7 +40,7 @@ function TodoSheetNoteLoaded({ sheet }: { sheet: TodoSheet }) {
     <div className="relative w-64">
       <ToolbarButton
         onClick={handleToggleImportant}
-        aria-label={sheet.important ? 'Retirer important' : 'Marquer important'}
+        aria-label={t(sheet.important ? 'common.important.remove' : 'common.important.add')}
         aria-pressed={sheet.important}
         size="icon-sm"
         className="nodrag absolute -top-3 -left-3 z-10 rounded-full border bg-card shadow-md"
@@ -47,7 +49,7 @@ function TodoSheetNoteLoaded({ sheet }: { sheet: TodoSheet }) {
       </ToolbarButton>
       <ToolbarButton
         onClick={handleDelete}
-        aria-label="Supprimer la fiche"
+        aria-label={t('todoList.deleteSheet')}
         size="icon-sm"
         className="nodrag absolute -top-3 -right-3 z-10 rounded-full border bg-card shadow-md"
       >
