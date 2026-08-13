@@ -11,6 +11,7 @@ export interface CalendarEvent extends Importable {
   description?: string
   location?: string
   color?: string
+  type?: string // id d'un EventTypePreset (event-type-presets.ts), pilote `color`
   source: EventSource
   externalId?: string // id côté source externe, pour dédup à l'import
   recurrence?: string // RRULE, champ réservé — non géré en v1

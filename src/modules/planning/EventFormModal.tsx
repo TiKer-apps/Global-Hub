@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { db } from '@/lib/db'
+import { EVENT_TYPE_PRESETS, getEventTypePreset } from './event-type-presets'
 import type { CalendarEvent, TimeRangeSelection } from './types'
 
 interface EventFormModalProps {
@@ -39,6 +40,7 @@ export function EventFormModal({ open, onOpenChange, selection, event }: EventFo
   const [title, setTitle] = useState('')
   const [allDay, setAllDay] = useState(false)
   const [important, setImportant] = useState(false)
+  const [type, setType] = useState('')
   const [startDate, setStartDate] = useState('')
   const [startTime, setStartTime] = useState('')
   const [endDate, setEndDate] = useState('')
@@ -60,6 +62,7 @@ export function EventFormModal({ open, onOpenChange, selection, event }: EventFo
       setTitle(event.title)
       setAllDay(event.allDay)
       setImportant(event.important)
+      setType(event.type ?? '')
       setStartDate(toDateInputValue(startDT))
       setStartTime(toTimeInputValue(startDT.getHours()))
       setEndDate(toDateInputValue(endDT))
@@ -82,6 +85,7 @@ export function EventFormModal({ open, onOpenChange, selection, event }: EventFo
     setTitle('')
     setAllDay(selection?.allDay ?? false)
     setImportant(false)
+    setType('')
     setStartDate(toDateInputValue(startDT))
     setStartTime(toTimeInputValue(startDT.getHours()))
     setEndDate(toDateInputValue(endDT))
@@ -100,6 +104,13 @@ export function EventFormModal({ open, onOpenChange, selection, event }: EventFo
     // .ics) : la date de fin choisie doit rester incluse dans l'événement.
     if (allDay) end.setDate(end.getDate() + 1)
 
+    // `color` dérive du type choisi — sauf "Aucun type" (`type` vide), où on
+    // garde la couleur existante de l'event telle quelle plutôt que de
+    // l'écraser à `undefined` (utile si elle a été réglée autrement qu'un
+    // type, ex. une future intégration d'import qui la fixerait elle-même).
+    const preset = getEventTypePreset(type || undefined)
+    const color = preset?.color ?? event?.color
+
     const patch = {
       title: title.trim(),
       start: start.toISOString(),
@@ -108,6 +119,8 @@ export function EventFormModal({ open, onOpenChange, selection, event }: EventFo
       location: location.trim() || undefined,
       description: description.trim() || undefined,
       important,
+      type: type || undefined,
+      color,
     }
 
     if (event) {
@@ -151,6 +164,15 @@ export function EventFormModal({ open, onOpenChange, selection, event }: EventFo
             <input type="checkbox" checked={important} onChange={(e) => setImportant(e.target.checked)} />
             Marquer important
           </label>
+
+          <select value={type} onChange={(e) => setType(e.target.value)} aria-label="Type" className={inputClass}>
+            <option value="">Aucun type</option>
+            {EVENT_TYPE_PRESETS.map((preset) => (
+              <option key={preset.id} value={preset.id}>
+                {preset.label}
+              </option>
+            ))}
+          </select>
 
           <div className="flex items-center gap-2">
             <input
