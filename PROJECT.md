@@ -248,6 +248,15 @@ dit déjà.
 
 ## À affiner
 
+- **Tests unitaires** — priorité haute. Aucun test unitaire à ce jour
+  (`*.test.ts`) — seules 5 stories Storybook existent
+  (`module-card`, `dialog`, `popover`, `tabs`, `RichTextEditor`), qui ne
+  vérifient qu'un rendu sans erreur, pas la logique métier. Candidats les
+  plus utiles en premier (fonctions pures, déjà isolées, bugs déjà
+  rencontrés par le passé dessus) : `date-utils.ts` (calculs de semaine/
+  mois, `getMonthGridDays`, `addMonths` qui recale au 1er), `ics-import.ts`
+  (`parseIcs`/`detectSource`, format `.ics` fragile par nature),
+  `event-type-presets.ts`/`source-style.ts` (résolution des clés i18n).
 - **Internationalisation (i18n)** — reste : la modale de réglages
   (`ModuleSettingsModal`) n'est pas traduite — titres "Thème (fond et texte
   du titre)"/"Style du header", et les 14 noms de couleur de
