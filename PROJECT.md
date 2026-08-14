@@ -4,22 +4,21 @@ Application personnelle d'organisation : une vue unique regroupant plusieurs
 modules (planning, notes, post-its, tâches, todo-list) sous forme de widgets
 disposés librement sur un canvas zoomable.
 
-## Statut — jalon du 2026-08-11
+## Statut — jalon du 2026-08-14
 
-Depuis le dernier jalon (2026-08-03), 4 PRs mergées sur `develop`
-(2026-08-07 → 2026-08-13) :
+Depuis le dernier jalon (2026-08-11), 3 PRs mergées sur `develop`
+(2026-08-12 → 2026-08-13), plus le chantier tests unitaires ci-dessous
+(2026-08-14, branche `feat/unit-tests` — pas encore mergée au moment de ce
+jalon) :
 
-- **Planning** — vues jour et mois construites (seule la semaine existait) ;
-  détail/édition d'un événement existant (clic sur un event, plus seulement
-  création/suppression) ; indication de provenance d'un événement — liseré
-  coloré à gauche de la case (bleu Google / indigo Outlook / neutre local),
+- **Planning** — indication de provenance d'un événement : liseré coloré à
+  gauche de la case (bleu Google / indigo Outlook / neutre local),
   `sourceBorderClass`/`sourceLabelKey` dans le nouveau `source-style.ts`,
   appliqué aux 3 vues (`WeekGrid`/`WeekMinimal`/`MonthGrid`) ; type
   d'événement (Travail/Perso/Santé/Loisirs/Autre) via un nouveau
   champ `CalendarEvent.type`, liste curatée dans `EventFormModal`
   (`event-type-presets.ts`, même pattern que `theme-presets.ts`) — chaque
-  type pilote automatiquement `color`, un seul contrôle ; module entièrement
-  traduit FR/EN (voir bullet Internationalisation ci-dessous).
+  type pilote automatiquement `color`, un seul contrôle.
 - **Internationalisation** — infrastructure `react-i18next` posée pour
   toute l'app (`src/i18n/`, hook `useLanguage`, sélecteur FR/EN dans le
   Drawer) ; **tous les modules traduits** (Planning, Notes, Post-its,
@@ -28,6 +27,40 @@ Depuis le dernier jalon (2026-08-03), 4 PRs mergées sur `develop`
   de réglages (`ModuleSettingsModal` — titres de section "Thème"/"Style du
   header" et les 14 noms de couleur de `theme-presets.ts`), volontairement
   hors périmètre (UI secondaire, moins prioritaire).
+- **Tests unitaires** — infrastructure posée : `vite.config.ts` déclare 3
+  projets Vitest (`storybook` existant, `unit` nouveau pour la logique pure
+  en Node, `component` nouveau pour des tests de composants React classiques
+  en navigateur) + `npm run test:coverage` (`@vitest/coverage-v8`, déjà en
+  dépendance mais jamais câblé jusque-là). Logique pure couverte en premier
+  (`date-utils.ts`, `ics-import.ts`, `event-type-presets.ts`,
+  `source-style.ts`). Convention Page Object Model introduite pour les tests
+  de composants (`Component.pom.ts` à côté de `Component.test.tsx`) —
+  `TaskList.pom.ts`/`TaskList.test.tsx` sert de gabarit pour la suite.
+  ⚠️ Playwright doit avoir ses navigateurs installés localement
+  (`npx playwright install chromium`) — pas fait par `npm install`, sans ça
+  `npm run test`/`test:coverage` échouent au démarrage (`storybook` et
+  `component` tournent tous deux en navigateur headless).
+  ⚠️ Le rapport texte de `test:coverage` a un bug d'affichage constaté :
+  certains fichiers pourtant bien testés (ex. `date-utils.ts`, 100 % réel)
+  disparaissent du tableau récapitulatif imprimé dans le terminal — les
+  données sont correctes dans le rapport HTML (`coverage/index.html`),
+  c'est un souci d'agrégation du reporter texte entre projets, pas un vrai
+  trou de couverture. Vérifier dans le HTML en cas de doute plutôt que de
+  se fier au tableau terminal seul.
+
+Le paragraphe "Statut — jalon du 2026-08-11" ci-dessous reste tel qu'écrit à
+l'époque.
+
+---
+
+## Statut — jalon du 2026-08-11
+
+Depuis le dernier jalon (2026-08-03), 3 PRs mergées sur `develop`
+(2026-08-07 → 2026-08-10) :
+
+- **Planning** — vues jour et mois construites (seule la semaine existait) ;
+  détail/édition d'un événement existant (clic sur un event, plus seulement
+  création/suppression).
 - **Important** — étendu au planning et aux post-its/todo-list détachés
   (ne couvrait que les notes).
 - **Correction doc** : le bullet Tâches/Todo-list ci-dessous décrivait
@@ -248,15 +281,14 @@ dit déjà.
 
 ## À affiner
 
-- **Tests unitaires** — priorité haute. Aucun test unitaire à ce jour
-  (`*.test.ts`) — seules 5 stories Storybook existent
-  (`module-card`, `dialog`, `popover`, `tabs`, `RichTextEditor`), qui ne
-  vérifient qu'un rendu sans erreur, pas la logique métier. Candidats les
-  plus utiles en premier (fonctions pures, déjà isolées, bugs déjà
-  rencontrés par le passé dessus) : `date-utils.ts` (calculs de semaine/
-  mois, `getMonthGridDays`, `addMonths` qui recale au 1er), `ics-import.ts`
-  (`parseIcs`/`detectSource`, format `.ics` fragile par nature),
-  `event-type-presets.ts`/`source-style.ts` (résolution des clés i18n).
+- **Tests unitaires** — priorité haute, prévu pour la prochaine MR.
+  Couverture actuelle ~21 % de lignes (`npm run test:coverage`) — objectif
+  **au moins 80 %**. Infra posée + logique pure du module Planning couverte
+  (voir Statut). Reste à étendre aux autres modules — candidats utiles :
+  `TaskPreview.tsx`/`parsePreviewLines` (parsing `-` en item cochable), les
+  hooks/contexts `canvas/` (`module-theme.tsx`, `module-navigation.tsx`),
+  et des tests `component`/POM pour les widgets avec de vraies interactions
+  (`NotesWidget`, `EventFormModal`).
 - **Internationalisation (i18n)** — reste : la modale de réglages
   (`ModuleSettingsModal`) n'est pas traduite — titres "Thème (fond et texte
   du titre)"/"Style du header", et les 14 noms de couleur de
