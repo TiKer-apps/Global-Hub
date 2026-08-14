@@ -27,15 +27,19 @@ jalon) :
   de réglages (`ModuleSettingsModal` — titres de section "Thème"/"Style du
   header" et les 14 noms de couleur de `theme-presets.ts`), volontairement
   hors périmètre (UI secondaire, moins prioritaire).
-- **Tests unitaires** — infrastructure posée : `vite.config.ts` déclare 3
-  projets Vitest (`storybook` existant, `unit` nouveau pour la logique pure
-  en Node, `component` nouveau pour des tests de composants React classiques
-  en navigateur) + `npm run test:coverage` (`@vitest/coverage-v8`, déjà en
-  dépendance mais jamais câblé jusque-là). Logique pure couverte en premier
-  (`date-utils.ts`, `ics-import.ts`, `event-type-presets.ts`,
-  `source-style.ts`). Convention Page Object Model introduite pour les tests
-  de composants (`Component.pom.ts` à côté de `Component.test.tsx`) —
-  `TaskList.pom.ts`/`TaskList.test.tsx` sert de gabarit pour la suite.
+- **Tests unitaires** — infrastructure posée (`vite.config.ts` : 3 projets
+  Vitest — `storybook` existant, `unit` pour la logique pure en Node,
+  `component` pour des tests de composants React classiques en navigateur —
+  + `npm run test:coverage`) **et objectif de couverture atteint** : 80 %
+  statements / 82 % lignes (parti de ~21 %), 170 tests. Quasiment tous les
+  modules couverts (widgets Notes/Tâches/Post-its/Todo-list/Important/
+  Planning, hooks `canvas/`, `ModuleDrawer`) ; `ModuleSettingsModal` couvert
+  par ricochet (rendu par `ModuleDrawer`) sans fichier de test dédié.
+  Convention Page Object Model pour les tests de composants
+  (`Component.pom.ts` à côté de `Component.test.tsx`) — `TaskList.pom.ts`/
+  `TaskList.test.tsx` sert de gabarit. Toujours à 0 % : `App.tsx`/
+  `HubCanvas.tsx` (bloqué, cf. gotcha ci-dessous), `checklist/ChecklistWidget.tsx`
+  (code mort, cf. "À affiner" — à supprimer plutôt qu'à tester).
   ⚠️ Playwright doit avoir ses navigateurs installés localement
   (`npx playwright install chromium`) — pas fait par `npm install`, sans ça
   `npm run test`/`test:coverage` échouent au démarrage (`storybook` et
@@ -47,6 +51,39 @@ jalon) :
   c'est un souci d'agrégation du reporter texte entre projets, pas un vrai
   trou de couverture. Vérifier dans le HTML en cas de doute plutôt que de
   se fier au tableau terminal seul.
+  ⚠️ **Rendre un composant qui utilise une icône `lucide-react`, un
+  composant `@base-ui/react` (`Button`/`Dialog`/`Popover`/`Tabs`) ou plus
+  généralement un hook contextuel, dans le projet `component`, pouvait
+  planter avec `Cannot read properties of null (reading 'useContext'/...)`**
+  — deux copies distinctes de React chargées (l'app + celle découverte "à
+  la volée" par le pré-bundling Vite quand un nouveau test touche une
+  dépendance pour la première fois). Fixé par `resolve.dedupe: ['react',
+  'react-dom']` **et** en listant explicitement dans `optimizeDeps.include`
+  chaque sous-chemin `@base-ui/react/*` réellement importé (le nom de
+  paquet nu ne suffit pas, chaque sous-chemin est son propre point d'entrée
+  pour l'optimizer) — si un nouveau composant `components/ui/*` apparaît
+  avec un nouveau sous-chemin `@base-ui/react`, l'ajouter à cette liste
+  plutôt que de laisser Vite le découvrir tout seul en cours de run.
+  ⚠️ `@testing-library/react` ne s'auto-configure pas ici (pas de
+  `globals: true` dans la config Vitest, les tests importent `describe`/
+  `it`/`afterEach` explicitement) : `src/test/setup-component.ts`
+  (`setupFiles` du projet `component`) doit donc appeler `cleanup()`
+  manuellement après chaque test (sinon le DOM d'un test précédent reste
+  monté et fait échouer les `getByRole`/`getByText` suivants avec "multiple
+  elements found"), importer `@testing-library/jest-dom/vitest` (matchers
+  `toBeInTheDocument`/`toBeDisabled`/... — présents à l'exécution sans lui,
+  mais `tsc` échoue sans les types qu'il apporte), et réinitialiser tout
+  état global partagé entre fichiers de test : la base Dexie (même
+  singleton `db` que l'app, polyfillée en mémoire via `fake-indexeddb/auto`
+  plutôt que de mocker `useLiveQuery` à la main — le comportement réactif
+  de Dexie reste donc réel) et la langue i18next (un test qui bascule en
+  anglais, ex. le sélecteur du Drawer, la laisserait sinon active pour tous
+  les tests suivants qui s'exécutent après dans le même run).
+  ⚠️ **`App.tsx`/`HubCanvas.tsx` restent non testés : leur rendu bloque
+  indéfiniment** dans le projet `component` (React Flow, probablement une
+  boucle de mesure de layout en environnement headless/zéro-taille) — pas
+  élucidé plus avant faute de temps, à creuser avant de s'y attaquer plutôt
+  que de re-essayer un `render()` direct.
 
 Le paragraphe "Statut — jalon du 2026-08-11" ci-dessous reste tel qu'écrit à
 l'époque.
@@ -281,14 +318,15 @@ dit déjà.
 
 ## À affiner
 
-- **Tests unitaires** — priorité haute, prévu pour la prochaine MR.
-  Couverture actuelle ~21 % de lignes (`npm run test:coverage`) — objectif
-  **au moins 80 %**. Infra posée + logique pure du module Planning couverte
-  (voir Statut). Reste à étendre aux autres modules — candidats utiles :
-  `TaskPreview.tsx`/`parsePreviewLines` (parsing `-` en item cochable), les
-  hooks/contexts `canvas/` (`module-theme.tsx`, `module-navigation.tsx`),
-  et des tests `component`/POM pour les widgets avec de vraies interactions
-  (`NotesWidget`, `EventFormModal`).
+- **Tests unitaires** — objectif 80 % atteint (voir Statut). Reste à 0 % :
+  `App.tsx`/`HubCanvas.tsx` (cf. gotcha ci-dessous — pas juste "pas encore
+  fait", un vrai blocage technique à lever), `ModuleSettingsModal.tsx`
+  (couvert à 90 % par ricochet via le test `ModuleDrawer`, pas de fichier
+  dédié), `checklist/ChecklistWidget.tsx` (code mort, cf. bullet plus bas —
+  à supprimer plutôt qu'à tester). Reste aussi à faire monter les branches
+  (74 %) et fonctions (73 %), en retard sur les lignes (82 %) — surtout des
+  cas d'erreur/branches secondaires non exercés dans les widgets déjà
+  couverts, pas des fichiers entiers à zéro.
 - **Internationalisation (i18n)** — reste : la modale de réglages
   (`ModuleSettingsModal`) n'est pas traduite — titres "Thème (fond et texte
   du titre)"/"Style du header", et les 14 noms de couleur de

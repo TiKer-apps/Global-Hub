@@ -29,7 +29,14 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src')
-    }
+    },
+    // Sans ça, le projet `component` (browser, @testing-library/react)
+    // pouvait charger une deuxième copie de React distincte de celle
+    // utilisée par l'app — un composant avec un hook contextuel (ex. une
+    // icône `lucide-react`, qui utilise son propre Context React) plante
+    // alors avec `Cannot read properties of null (reading 'useContext')`,
+    // le Context ayant été créé par l'autre copie.
+    dedupe: ['react', 'react-dom']
   },
   // `aria-query` (CJS, requis en transitif par @storybook/addon-vitest via
   // @testing-library/dom) fait planter le pré-bundling par défaut : Vite ne
@@ -38,7 +45,28 @@ export default defineConfig({
   // bien. Le forcer dans optimizeDeps fait passer ce module par l'analyse
   // CJS->ESM d'esbuild en amont, qui gère correctement l'interop.
   optimizeDeps: {
-    include: ['aria-query', 'lz-string', 'pretty-format'],
+    // `aria-query`/`lz-string`/`pretty-format` : cf. commentaire plus haut
+    // (interop CJS->ESM). Le reste : dépendances partagées par beaucoup de
+    // composants (`@base-ui/react` sous `components/ui/*`, `@xyflow/react`
+    // pour le canvas) — sans les lister ici, Vite les découvre "à la volée"
+    // au premier test qui les touche et se ré-optimise en cours de run, ce
+    // qui peut charger transitoirement deux copies de React et planter
+    // (`Cannot read properties of null` dans un hook interne).
+    include: [
+      'aria-query',
+      'lz-string',
+      'pretty-format',
+      '@xyflow/react',
+      // Chaque sous-chemin de `@base-ui/react` compte comme un "point
+      // d'entrée" séparé pour l'optimizer Vite — lister le paquet nu ne
+      // suffit pas, sinon les sous-chemins non encore vus sont découverts
+      // "à la volée" au premier test qui les importe (cf. commentaire
+      // au-dessus sur le risque de double copie de React).
+      '@base-ui/react/dialog',
+      '@base-ui/react/popover',
+      '@base-ui/react/button',
+      '@base-ui/react/tabs',
+    ],
   },
   test: {
     // Trois projets aux besoins différents plutôt qu'un seul : la config
@@ -83,6 +111,7 @@ export default defineConfig({
         test: {
           name: 'component',
           include: ['src/**/*.test.tsx'],
+          setupFiles: ['src/test/setup-component.ts'],
           browser: {
             enabled: true,
             headless: true,
@@ -98,7 +127,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'html'],
       include: ['src/**/*.{ts,tsx}'],
-      exclude: ['src/**/*.stories.tsx', 'src/**/*.test.{ts,tsx}', 'src/**/*.pom.ts', 'src/main.tsx', 'src/i18n/**'],
+      exclude: ['src/**/*.stories.tsx', 'src/**/*.test.{ts,tsx}', 'src/**/*.pom.ts', 'src/main.tsx', 'src/i18n/**', 'src/test/**'],
     },
   }
 });
