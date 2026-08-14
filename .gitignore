@@ -26,6 +26,8 @@ dist-ssr
 *storybook.log
 storybook-static
 coverage
+.vitest-attachments
+__screenshots__
 
 # Claude Code local settings (machine-specific)
 .claude/settings.local.json
