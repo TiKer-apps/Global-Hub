@@ -41,25 +41,64 @@ export default defineConfig({
     include: ['aria-query', 'lz-string', 'pretty-format'],
   },
   test: {
-    projects: [{
-      extends: true,
-      plugins: [
-      // The plugin will run tests for the stories defined in your Storybook config
-      // See options at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon#storybooktest
-      storybookTest({
-        configDir: path.join(dirname, '.storybook')
-      })],
-      test: {
-        name: 'storybook',
-        browser: {
-          enabled: true,
-          headless: true,
-          provider: playwright({}),
-          instances: [{
-            browser: 'chromium'
-          }]
+    // Trois projets aux besoins différents plutôt qu'un seul : la config
+    // storybook ci-dessous est bornée aux stories par `storybookTest`
+    // lui-même (pas de conflit avec les `include` des deux autres).
+    projects: [
+      {
+        extends: true,
+        plugins: [
+        // The plugin will run tests for the stories defined in your Storybook config
+        // See options at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon#storybooktest
+        storybookTest({
+          configDir: path.join(dirname, '.storybook')
+        })],
+        test: {
+          name: 'storybook',
+          browser: {
+            enabled: true,
+            headless: true,
+            provider: playwright({}),
+            instances: [{
+              browser: 'chromium'
+            }]
+          }
         }
-      }
-    }]
+      },
+      // Logique pure (date-utils, ics-import...) : pas besoin d'un vrai
+      // navigateur, Node suffit et c'est nettement plus rapide.
+      {
+        extends: true,
+        test: {
+          name: 'unit',
+          environment: 'node',
+          include: ['src/**/*.test.ts'],
+        },
+      },
+      // Composants React : même navigateur (Playwright/Chromium) que le
+      // projet storybook, pour un comportement de rendu identique — mais des
+      // `.test.tsx` classiques (render + POM), pas des stories.
+      {
+        extends: true,
+        test: {
+          name: 'component',
+          include: ['src/**/*.test.tsx'],
+          browser: {
+            enabled: true,
+            headless: true,
+            provider: playwright({}),
+            instances: [{
+              browser: 'chromium'
+            }]
+          }
+        },
+      },
+    ],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html'],
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/**/*.stories.tsx', 'src/**/*.test.{ts,tsx}', 'src/**/*.pom.ts', 'src/main.tsx', 'src/i18n/**'],
+    },
   }
 });

@@ -107,25 +107,26 @@ seulement, puis demander si une vérification visuelle est souhaitée.
 Basculer vers une vérification systématique seulement si
 explicitement demandé (ex. "tu vas pouvoir tester toi-même").
 
-## Jalons de PROJECT.md : archiver, jamais écraser
+## Jalons de PROJECT.md : empiler, jamais écraser
 
-**Règle** : un nouveau jalon dans `PROJECT.md` s'ajoute en tant que
-nouvelle section "Statut — jalon du X" au-dessus des précédentes ; la
-section "Statut" du jalon qu'il remplace part telle quelle dans une
-section d'archive en bas du fichier (voir "Archive — jalon du..."),
-jamais écrasée ou réécrite en place.
+**Règle** : un nouveau jalon ne décrit que le delta depuis le précédent
+(pas un résumé cumulatif) et s'ajoute comme nouvelle section
+"Statut — jalon du X" au-dessus des autres — la pile entière de jalons
+passés reste en dessous, chacun sous son propre titre "Statut — jalon du
+Y", jamais fusionnée ni réécrite en place. Pas de section "Archive"
+séparée : l'ordre (plus récent en premier) et les dates suffisent à
+signaler ce qui est historique, un wrapper dédié n'ajouterait rien.
 
 **Impact si non respecté** : le contenu exact d'un jalon passé
 (formulations, ce qui était encore "pas construit" à l'époque) est perdu
-dès qu'il est réécrit en place — seul un `git log` sur `PROJECT.md`
-permettrait de le retrouver, ce qui va à l'encontre du but du fichier
-(donner un état lisible sans creuser l'historique).
+dès qu'il est réécrit ou fusionné en place — seul un `git log` sur
+`PROJECT.md` permettrait de le retrouver, ce qui va à l'encontre du but
+du fichier (donner un état lisible sans creuser l'historique).
 
-**Comment l'appliquer** : avant de modifier la section "Statut" en tête
-de fichier, copier son contenu actuel tel quel dans une nouvelle section
-"Archive — jalon du <date du jalon remplacé>" en bas du fichier (à la
-suite des archives existantes), puis seulement écrire le nouveau
-"Statut" en tête. Ne jamais reformuler un jalon archivé après coup.
+**Comment l'appliquer** : avant d'ajouter du contenu à un jalon déjà
+écrit, se demander s'il s'agit bien du jalon en cours ou si un nouveau
+jalon devrait être ouvert à la place. Ne jamais reformuler un jalon déjà
+clos après coup — seulement en ajouter un nouveau au-dessus.
 
 ## Branches par feature depuis `develop`
 
