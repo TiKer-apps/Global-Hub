@@ -327,6 +327,19 @@ dit déjà.
   (74 %) et fonctions (73 %), en retard sur les lignes (82 %) — surtout des
   cas d'erreur/branches secondaires non exercés dans les widgets déjà
   couverts, pas des fichiers entiers à zéro.
+- **Tests end-to-end** — pas encore de chantier dédié. Contrairement aux
+  tests composants actuels (qui montent chaque widget en isolation), un
+  vrai E2E piloterait l'app buildée dans un navigateur réel et couvrirait
+  ce qu'aucun test actuel ne teste : le parcours complet dans `App.tsx`/
+  `HubCanvas.tsx` (canvas React Flow, drag & drop de widgets, persistance
+  après reload) — la zone même du blocage "Reste à 0 %" ci-dessus, donc un
+  moyen de contourner ce hang plutôt que de le déboguer en isolation.
+  Nécessiterait une config Playwright séparée (`playwright.config.ts`,
+  distincte du mode navigateur de Vitest) tournant contre `npm run dev`/
+  preview. Priorité suggérée : après le nettoyage de `ChecklistWidget.tsx`
+  (code mort, bullet plus bas) et avant le polish visuel — c'est le seul
+  point de cette liste qui couvre un risque réel non testé, le reste est
+  du confort.
 - **Internationalisation (i18n)** — reste : la modale de réglages
   (`ModuleSettingsModal`) n'est pas traduite — titres "Thème (fond et texte
   du titre)"/"Style du header", et les 14 noms de couleur de
