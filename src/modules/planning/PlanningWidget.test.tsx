@@ -70,6 +70,44 @@ describe('PlanningWidget', () => {
     expect(await screen.findByDisplayValue('Point équipe')).toBeInTheDocument()
   })
 
+  it('opens the creation modal when clicking an empty day in month view', async () => {
+    const user = renderPlanning()
+    await user.click(screen.getByRole('button', { name: 'Vue mois' }))
+
+    const now = new Date()
+    const emptyDay = new Date(now.getFullYear(), now.getMonth(), 15)
+    const cell = document.querySelector(`[data-date="${emptyDay.toISOString().slice(0, 10)}"]`) as HTMLElement
+    await user.click(cell)
+
+    expect(await screen.findByText('Nouvel événement', { selector: 'h2, [role=heading]' })).toBeInTheDocument()
+  })
+
+  it('opens the day-detail modal for a day with an existing event, then edits it from there', async () => {
+    const now = new Date()
+    const eventDay = new Date(now.getFullYear(), now.getMonth(), 20)
+    const nextDay = new Date(eventDay)
+    nextDay.setDate(nextDay.getDate() + 1)
+    await db.events.add({
+      id: 'event-1',
+      title: 'Anniversaire',
+      start: eventDay.toISOString(),
+      end: nextDay.toISOString(), // fin exclusive, convention allDay
+      allDay: true,
+      source: 'local',
+      important: false,
+    })
+
+    const user = renderPlanning()
+    await user.click(screen.getByRole('button', { name: 'Vue mois' }))
+
+    const cell = document.querySelector(`[data-date="${eventDay.toISOString().slice(0, 10)}"]`) as HTMLElement
+    await user.click(cell)
+
+    await user.click(await screen.findByRole('button', { name: /Anniversaire/ }))
+
+    expect(await screen.findByDisplayValue('Anniversaire')).toBeInTheDocument()
+  })
+
   it('imports events from an uploaded .ics file and shows a pluralized status message', async () => {
     const user = renderPlanning()
     const ics = `BEGIN:VCALENDAR

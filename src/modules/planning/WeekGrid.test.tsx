@@ -87,7 +87,7 @@ describe('WeekGrid', () => {
     expect(onSelectionChange).not.toHaveBeenCalled()
   })
 
-  it('does not render an all-day event on the hourly grid', () => {
+  it('renders an all-day event in the dedicated all-day row, not positioned on the hourly grid', () => {
     render(
       <WeekGrid
         events={[makeEvent({ allDay: true })]}
@@ -98,6 +98,10 @@ describe('WeekGrid', () => {
         onEventClick={vi.fn()}
       />,
     )
-    expect(screen.queryByText('Réunion')).toBeNull()
+    const chip = screen.getByText('Réunion')
+    expect(chip).toBeInTheDocument()
+    // Contrairement aux chips horaires, la rangée allDay ne positionne pas
+    // ses chips en absolu (pas de `top`/`height` calculés en heures).
+    expect(chip.style.top).toBe('')
   })
 })

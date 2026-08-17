@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
-import { addDays, getWeekDayHeaderLabels, isSameDay } from './date-utils'
+import { eventOccursOnDay, getWeekDayHeaderLabels, isSameDay } from './date-utils'
 import { sourceBorderClass, sourceLabelKey } from './source-style'
 import type { CalendarEvent, PlanningMode } from './types'
 
@@ -15,19 +15,6 @@ interface MonthGridProps {
 }
 
 const MAX_TITLES = 3
-
-// Chevauchement `[event.start, event.end)` avec `[jour 00h, jour+1 00h)`
-// plutôt qu'un simple `isSameDay(start, day)` : un event `allDay` multi-jours
-// (fin exclusive, même convention que l'import .ics) doit apparaître sur
-// chaque jour qu'il couvre, pas seulement son jour de départ.
-function eventOccursOnDay(event: CalendarEvent, day: Date): boolean {
-  const dayStart = new Date(day)
-  dayStart.setHours(0, 0, 0, 0)
-  const dayEnd = addDays(dayStart, 1)
-  const start = new Date(event.start)
-  const end = new Date(event.end)
-  return start < dayEnd && end > dayStart
-}
 
 // Pas d'état de drag ici (contrairement à WeekGrid) : un clic sur une case
 // produit directement une sélection finale journée entière, il n'y a pas de
@@ -59,6 +46,10 @@ export function MonthGrid({ events, mode, days, referenceDate, onDayClick, onEve
           return (
             <div
               key={i}
+              // Cible fiable pour les tests : le libellé (quantième) seul se
+              // répète dans la grille (jours des mois adjacents), une date
+              // ISO complète non.
+              data-date={day.toISOString().slice(0, 10)}
               onClick={() => onDayClick(day)}
               className={cn(
                 'flex min-h-16 cursor-pointer flex-col gap-0.5 border-b border-l p-1 select-none hover:bg-muted',

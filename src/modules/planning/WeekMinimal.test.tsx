@@ -51,8 +51,9 @@ describe('WeekMinimal', () => {
     expect(onEventClick).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ id: 'event-1' }))
   })
 
-  it('excludes all-day events', () => {
+  it('renders an all-day event with a dedicated label instead of a time range', () => {
     render(<WeekMinimal events={[makeEvent({ allDay: true })]} days={days} onEventClick={vi.fn()} />)
-    expect(screen.queryByText('Réunion')).toBeNull()
+    expect(screen.getByText('Réunion')).toBeInTheDocument()
+    expect(screen.getByText('Réunion').parentElement?.textContent).toContain('Journée entière')
   })
 })
