@@ -4,6 +4,41 @@ Application personnelle d'organisation : une vue unique regroupant plusieurs
 modules (planning, notes, post-its, tâches, todo-list) sous forme de widgets
 disposés librement sur un canvas zoomable.
 
+## Statut — jalon du 2026-08-17
+
+Depuis le dernier jalon (2026-08-14), 1 PR mergée sur `develop` (tests
+coverage), plus le nettoyage et le chantier E2E ci-dessous (branche
+`feat/e2e-tests` — pas encore mergée au moment de ce jalon) :
+
+- **Nettoyage** — `src/modules/checklist/ChecklistWidget.tsx` (code mort
+  identifié depuis le jalon du 08-11) supprimé, commit direct sur
+  `develop` (dérogation ponctuelle à la convention branche-par-chantier,
+  changement d'une ligne sans risque). `types.ts` du module conservé
+  (`ChecklistLine`/`ChecklistWidgetData` toujours utilisés par Todo-list).
+- **Tests end-to-end** — infrastructure posée avec `@playwright/test`
+  (config séparée de `vite.config.ts`, `playwright.config.ts` +
+  `e2e/*.spec.ts`, script `npm run test:e2e`) : un vrai navigateur piloté
+  contre l'app servie par `npm run dev`, plutôt qu'un composant monté en
+  isolation. Contourne (sans le résoudre) le blocage connu de
+  `App.tsx`/`HubCanvas.tsx` en environnement de test isolé — `hub.spec.ts`
+  est le premier test qui rend réellement l'arbre complet de l'app.
+  4 scénarios pour ce premier jalon : rendu des 6 widgets, création d'un
+  événement planning via la modale, création d'une note avec sauvegarde
+  réelle (debounce non mocké), drag d'un post-it détaché + persistance
+  après un vrai `page.reload()`. Ce dernier scénario vérifie la position
+  directement dans IndexedDB (table `postIts` de la base `global-hub`,
+  requêtée via l'API native `indexedDB` dans `page.evaluate`) plutôt que
+  par comparaison de coordonnées écran : `fitView` (React Flow) recalcule
+  zoom/pan au montage à partir des positions de tous les nodes, donc le
+  viewport après reload peut différer de celui d'avant le drag même si la
+  position logique du post-it n'a pas bougé — comparer des pixels écran
+  entre les deux aurait été un test fragile pour la mauvaise raison.
+  Portée volontairement resserrée à 4 scénarios critiques (pas une
+  couverture exhaustive module par module, déjà faite par l'unitaire/
+  composant) ; pas de Page Object Model pour ce premier lot (cf.
+  CONTRIBUTING.md "pas d'abstraction prématurée" — à introduire si de
+  nouveaux scénarios rendent les specs redondantes).
+
 ## Statut — jalon du 2026-08-14
 
 Depuis le dernier jalon (2026-08-11), 3 PRs mergées sur `develop`
@@ -327,19 +362,15 @@ dit déjà.
   (74 %) et fonctions (73 %), en retard sur les lignes (82 %) — surtout des
   cas d'erreur/branches secondaires non exercés dans les widgets déjà
   couverts, pas des fichiers entiers à zéro.
-- **Tests end-to-end** — pas encore de chantier dédié. Contrairement aux
-  tests composants actuels (qui montent chaque widget en isolation), un
-  vrai E2E piloterait l'app buildée dans un navigateur réel et couvrirait
-  ce qu'aucun test actuel ne teste : le parcours complet dans `App.tsx`/
-  `HubCanvas.tsx` (canvas React Flow, drag & drop de widgets, persistance
-  après reload) — la zone même du blocage "Reste à 0 %" ci-dessus, donc un
-  moyen de contourner ce hang plutôt que de le déboguer en isolation.
-  Nécessiterait une config Playwright séparée (`playwright.config.ts`,
-  distincte du mode navigateur de Vitest) tournant contre `npm run dev`/
-  preview. Priorité suggérée : après le nettoyage de `ChecklistWidget.tsx`
-  (code mort, bullet plus bas) et avant le polish visuel — c'est le seul
-  point de cette liste qui couvre un risque réel non testé, le reste est
-  du confort.
+- **Tests end-to-end** — infrastructure posée (voir Statut) : 4 scénarios
+  critiques (rendu du board, création d'événement, création de note,
+  drag + persistance post-reload d'un post-it). Reste : pas de couverture
+  E2E pour Post-it/Todo-list/Tâches/Important en tant que tels (seul un
+  chemin post-it sert de véhicule au test de persistance), pas de scénario
+  multi-widgets (ex. masquer/afficher via le Drawer), pas de CI pour les
+  lancer automatiquement (repo sans pipeline CI pour l'instant, `npm run
+  test:e2e` reste manuel). À enrichir si un bug réel émerge dans une zone
+  non couverte plutôt que d'ajouter des scénarios par anticipation.
 - **Internationalisation (i18n)** — reste : la modale de réglages
   (`ModuleSettingsModal`) n'est pas traduite — titres "Thème (fond et texte
   du titre)"/"Style du header", et les 14 noms de couleur de

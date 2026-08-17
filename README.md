@@ -83,6 +83,22 @@ paquet CJS transitif (`aria-query`, `lz-string`, `pretty-format`...), c'est
 que le pré-bundling Vite ne l'a pas détecté — l'ajouter à
 `optimizeDeps.include` dans `vite.config.ts` (cf. `PROJECT.md`, "Gotchas").
 
+### Tests end-to-end
+
+```bash
+npm run test:e2e
+```
+
+Config séparée (`playwright.config.ts`, specs dans `e2e/`) — un vrai
+navigateur piloté contre l'app servie par `npm run dev` (démarré
+automatiquement), pas un composant monté en isolation dans un DOM de test
+comme les 3 projets Vitest ci-dessus. Couvre ce qu'aucun test `component`
+ne peut couvrir : le rendu complet de `App.tsx`/`HubCanvas.tsx` (bloqué en
+environnement de test isolé, cf. `PROJECT.md`) et les parcours qui
+survivent à un vrai `page.reload()`. Volontairement séparé de `npm run
+test` (plus lent, à lancer à la demande). Même prérequis navigateur que
+les tests Vitest (`npx playwright install chromium`).
+
 ## Lint
 
 ```bash
