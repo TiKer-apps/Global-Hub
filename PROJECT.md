@@ -4,7 +4,34 @@ Application personnelle d'organisation : une vue unique regroupant plusieurs
 modules (planning, notes, post-its, tâches, todo-list) sous forme de widgets
 disposés librement sur un canvas zoomable.
 
-## Statut — jalon du 2026-08-17
+## Statut — jalon du 2026-08-17 (Planning : allDay + détail de jour)
+
+Depuis le jalon précédent (E2E, même date), 1 PR mergée sur `develop`
+(tests end-to-end), plus le chantier ci-dessous (branche
+`feat/planning-allday-daydetail` — pas encore mergée au moment de ce
+jalon), qui traite les deux premiers points de "À affiner" (les plus
+prioritaires, de vrais trous fonctionnels) :
+
+- **Événements `allDay` visibles en vues jour/semaine** — `WeekGrid.tsx`
+  et `WeekMinimal.tsx` filtraient `!e.allDay`, faisant disparaître ces
+  événements de ces deux vues (visibles seulement en vue mois). Ajout
+  d'une rangée dédiée dans `WeekGrid` (au-dessus de la grille horaire) et
+  d'une section dédiée par jour dans `WeekMinimal` (label "Journée
+  entière" à la place de la plage horaire). `eventOccursOnDay` (logique de
+  chevauchement `[event.start, event.end)` × jour, gérant les allDay
+  multi-jours) extraite de `MonthGrid.tsx` vers `date-utils.ts` — 3 usages
+  réels (`MonthGrid`, `WeekGrid`, `WeekMinimal`) justifiaient la
+  factorisation.
+- **Vue mois : détail d'un jour chargé** — cliquer une case avec
+  débordement (`+N`) ouvrait directement la création d'un nouvel
+  événement, sans moyen de voir la liste complète. Nouveau
+  `DayDetailModal.tsx` : un jour avec au moins un événement ouvre
+  désormais ce détail (liste triée allDay-puis-horaire, clic sur un
+  événement → édition, bouton "+" → création) ; un jour vide garde le
+  chemin rapide existant (création directe). Aucune nouvelle clé i18n
+  (réutilise les clés `planning.form.*`/`planning.toolbar.*` existantes).
+
+## Statut — jalon du 2026-08-17 (tests end-to-end)
 
 Depuis le dernier jalon (2026-08-14), 1 PR mergée sur `develop` (tests
 coverage), plus le nettoyage et le chantier E2E ci-dessous (branche
@@ -384,12 +411,12 @@ dit déjà.
   visuel du toggle "important" : glyphe `!` dans les listes vs. icône
   `Star` sur les nodes canvas — deux conventions différentes, pas encore
   réconciliées).
-- Planning, vue mois : pas de vue détaillée accessible au clic sur une case
-  au-delà des events déjà affichés (débordement `+N` en mode étendu).
-- Planning, vues jour/semaine : les événements `allDay` restent invisibles
-  (filtre `!e.allDay` dans `WeekGrid`/`WeekMinimal`, non touché lors de
-  l'ajout des vues jour/mois) — faute d'une zone "journée entière" dédiée
-  dans la grille horaire, écart volontaire non traité dans ce chantier.
+- ~~Planning, vue mois : pas de vue détaillée au clic sur une case au-delà
+  du débordement `+N`~~ fait le 2026-08-17 : `DayDetailModal.tsx` (voir
+  Statut).
+- ~~Planning, vues jour/semaine : événements `allDay` invisibles~~ fait le
+  2026-08-17 : rangée/section dédiée dans `WeekGrid`/`WeekMinimal` (voir
+  Statut).
 - ~~Nettoyage `ChecklistWidget.tsx`~~ fait le 2026-08-17 : composant mort
   supprimé (`src/modules/checklist/`), `types.ts` conservé (`ChecklistLine`/
   `ChecklistWidgetData` toujours utilisés par Todo-list/Tâches).

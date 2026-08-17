@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type MouseEvent as ReactMouseEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
-import { getDayLabel, isSameDay } from './date-utils'
+import { eventOccursOnDay, getDayLabel, isSameDay } from './date-utils'
 import { sourceBorderClass, sourceLabelKey } from './source-style'
 import type { CalendarEvent, PlanningMode, TimeRangeSelection } from './types'
 
@@ -41,6 +41,11 @@ export function WeekGrid({ events, mode, days, selection, onSelectionChange, onE
     () => days.map((day) => events.filter((e) => !e.allDay && isSameDay(new Date(e.start), day))),
     [events, days],
   )
+  const allDayEventsByDay = useMemo(
+    () => days.map((day) => events.filter((e) => e.allDay && eventOccursOnDay(e, day))),
+    [events, days],
+  )
+  const hasAllDayEvents = allDayEventsByDay.some((dayEvents) => dayEvents.length > 0)
 
   // Glisser pour sélectionner une plage horaire (comme Outlook/Google
   // Calendar) : le jour reste celui où le glisser a commencé même si la
@@ -131,6 +136,33 @@ export function WeekGrid({ events, mode, days, selection, onSelectionChange, onE
             <div>{day.getDate()}</div>
           </div>
         ))}
+
+        {hasAllDayEvents && (
+          <>
+            <div className="border-b" />
+            {days.map((_, dayIndex) => (
+              <div key={`allday-${dayIndex}`} className="flex flex-col gap-0.5 border-b border-l p-0.5">
+                {allDayEventsByDay[dayIndex].map((event) => (
+                  <div
+                    key={event.id}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onEventClick(event)
+                    }}
+                    title={t('planning.event.view', { source: t(sourceLabelKey(event.source)) })}
+                    className={cn(
+                      'cursor-pointer truncate rounded-sm border-l-4 bg-green-200 px-1 py-0.5 text-[10px] text-green-900 hover:ring-1 hover:ring-primary',
+                      sourceBorderClass(event.source),
+                    )}
+                    style={{ backgroundColor: event.color }}
+                  >
+                    {event.title}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </>
+        )}
 
         <div>
           {hours.map((h) => (

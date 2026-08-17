@@ -26,6 +26,7 @@ import { ToolbarButton } from '@/modules/text-editor/ToolbarButton'
 import {
   addDays,
   addMonths,
+  eventOccursOnDay,
   formatDayLabel,
   formatMonthYear,
   formatWeekRange,
@@ -33,6 +34,7 @@ import {
   getWeekDays,
   toIntlLocale,
 } from './date-utils'
+import { DayDetailModal } from './DayDetailModal'
 import { EventFormModal } from './EventFormModal'
 import { importIcsEvents } from './ics-import'
 import { MonthGrid } from './MonthGrid'
@@ -75,6 +77,7 @@ export function PlanningWidget({ config }: PlanningWidgetProps) {
   const [selection, setSelection] = useState<TimeRangeSelection | null>(null)
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
   const [isEventModalOpen, setIsEventModalOpen] = useState(false)
+  const [dayDetailDate, setDayDetailDate] = useState<Date | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Vue mois recalée au 1er du mois par `addMonths` : si on navigue en mois
@@ -133,10 +136,39 @@ export function PlanningWidget({ config }: PlanningWidgetProps) {
     }
   }
 
+  // Une case déjà chargée (au moins un event ce jour-là) ouvre le détail du
+  // jour plutôt que la création directe — c'est aussi le seul moyen de voir
+  // les events au-delà des `MAX_TITLES` premiers titres affichés par
+  // MonthGrid (clic sur le badge "+N", qui remonte au clic de la case).
+  // Une case vide garde le chemin rapide existant (création immédiate).
   const handleMonthDayClick = useCallback(
-    (day: Date) => handleSelectionChange({ day, startHour: 0, endHour: 24, allDay: true }),
-    [handleSelectionChange],
+    (day: Date) => {
+      const hasEvents = events.some((e) => eventOccursOnDay(e, day))
+      if (hasEvents) setDayDetailDate(day)
+      else handleSelectionChange({ day, startHour: 0, endHour: 24, allDay: true })
+    },
+    [events, handleSelectionChange],
   )
+
+  const dayDetailEvents = useMemo(() => {
+    if (!dayDetailDate) return []
+    return events
+      .filter((e) => eventOccursOnDay(e, dayDetailDate))
+      .sort((a, b) =>
+        a.allDay === b.allDay ? new Date(a.start).getTime() - new Date(b.start).getTime() : a.allDay ? -1 : 1,
+      )
+  }, [events, dayDetailDate])
+
+  const handleDayDetailEventClick = (event: CalendarEvent) => {
+    setDayDetailDate(null)
+    handleEventClick(event)
+  }
+
+  const handleDayDetailCreateEvent = () => {
+    const day = dayDetailDate
+    setDayDetailDate(null)
+    if (day) handleSelectionChange({ day, startHour: 0, endHour: 24, allDay: true })
+  }
 
   const goToPrevious = () =>
     setReferenceDate((d) => (view === 'day' ? addDays(d, -1) : view === 'week' ? addDays(d, -7) : addMonths(d, -1)))
@@ -284,6 +316,14 @@ export function PlanningWidget({ config }: PlanningWidgetProps) {
         onOpenChange={handleEventModalOpenChange}
         selection={selection}
         event={editingEvent}
+      />
+      <DayDetailModal
+        open={dayDetailDate !== null}
+        onOpenChange={(open) => !open && setDayDetailDate(null)}
+        day={dayDetailDate}
+        events={dayDetailEvents}
+        onEventClick={handleDayDetailEventClick}
+        onCreateEvent={handleDayDetailCreateEvent}
       />
     </ModuleCard>
   )

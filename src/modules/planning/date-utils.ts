@@ -1,3 +1,5 @@
+import type { CalendarEvent } from './types'
+
 // Locale complète (BCP 47) attendue par `Intl.DateTimeFormat` à partir du
 // code de langue court tenu par i18next (`i18n.language`, 'fr'/'en').
 const INTL_LOCALES: Record<string, string> = { fr: 'fr-FR', en: 'en-US' }
@@ -61,6 +63,19 @@ export function addMonths(date: Date, amount: number): Date {
 
 export function isSameDay(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
+}
+
+// Chevauchement `[event.start, event.end)` avec `[jour 00h, jour+1 00h)`
+// plutôt qu'un simple `isSameDay(start, day)` : un event `allDay` multi-jours
+// (fin exclusive, même convention que l'import .ics) doit apparaître sur
+// chaque jour qu'il couvre, pas seulement son jour de départ.
+export function eventOccursOnDay(event: CalendarEvent, day: Date): boolean {
+  const dayStart = new Date(day)
+  dayStart.setHours(0, 0, 0, 0)
+  const dayEnd = addDays(dayStart, 1)
+  const start = new Date(event.start)
+  const end = new Date(event.end)
+  return start < dayEnd && end > dayStart
 }
 
 export function formatWeekRange(days: Date[], language: string): string {
