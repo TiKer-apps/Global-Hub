@@ -322,8 +322,8 @@ dit déjà.
   `App.tsx`/`HubCanvas.tsx` (cf. gotcha ci-dessous — pas juste "pas encore
   fait", un vrai blocage technique à lever), `ModuleSettingsModal.tsx`
   (couvert à 90 % par ricochet via le test `ModuleDrawer`, pas de fichier
-  dédié), `checklist/ChecklistWidget.tsx` (code mort, cf. bullet plus bas —
-  à supprimer plutôt qu'à tester). Reste aussi à faire monter les branches
+  dédié) — `checklist/ChecklistWidget.tsx` supprimé depuis (code mort, voir
+  plus bas), donc plus concerné. Reste aussi à faire monter les branches
   (74 %) et fonctions (73 %), en retard sur les lignes (82 %) — surtout des
   cas d'erreur/branches secondaires non exercés dans les widgets déjà
   couverts, pas des fichiers entiers à zéro.
@@ -359,10 +359,9 @@ dit déjà.
   (filtre `!e.allDay` dans `WeekGrid`/`WeekMinimal`, non touché lors de
   l'ajout des vues jour/mois) — faute d'une zone "journée entière" dédiée
   dans la grille horaire, écart volontaire non traité dans ce chantier.
-- Nettoyage : `src/modules/checklist/ChecklistWidget.tsx` est du code mort
-  (Tâches a été refondu en liste + éditeur indépendant sans passer par ce
-  composant, seul le type `ChecklistLine` reste utilisé, par Todo-list) —
-  à supprimer, ou à réévaluer si un usage réel réapparaît.
+- ~~Nettoyage `ChecklistWidget.tsx`~~ fait le 2026-08-17 : composant mort
+  supprimé (`src/modules/checklist/`), `types.ts` conservé (`ChecklistLine`/
+  `ChecklistWidgetData` toujours utilisés par Todo-list/Tâches).
 
 ---
 
