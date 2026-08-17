@@ -16,7 +16,7 @@ describe('THEME_PRESETS', () => {
 
 describe('getPreset', () => {
   it('finds a preset by id', () => {
-    expect(getPreset('blue-300')).toMatchObject({ id: 'blue-300', label: 'Bleu' })
+    expect(getPreset('blue-300')).toMatchObject({ id: 'blue-300', labelKey: 'moduleSettings.themes.blue-300' })
   })
 
   it('returns undefined for an unknown id', () => {

@@ -24,6 +24,30 @@
       "todoList": "Todo-list"
     }
   },
+  "moduleSettings": {
+    "themeTitle": "Thème (fond et texte du titre)",
+    "styleTitle": "Style du header",
+    "themes": {
+      "blue-300": "Bleu",
+      "yellow-400": "Jaune",
+      "orange-300": "Orange",
+      "violet-500": "Violet",
+      "red-500": "Rouge",
+      "green-600": "Vert",
+      "pink-400": "Rose",
+      "teal-500": "Sarcelle",
+      "indigo-500": "Indigo",
+      "slate-600": "Ardoise",
+      "amber-300": "Ambre",
+      "sky-400": "Ciel",
+      "emerald-500": "Émeraude",
+      "cyan-500": "Cyan"
+    },
+    "styles": {
+      "wave": "Vague",
+      "flat": "Plein"
+    }
+  },
   "textEditor": {
     "bold": "Gras",
     "italic": "Italique",

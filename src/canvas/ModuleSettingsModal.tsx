@@ -59,12 +59,13 @@ export function ModuleSettingsModal({ open, onOpenChange }: ModuleSettingsModalP
 }
 
 function ModuleThemePicker({ module }: { module: ModuleDefinition }) {
+  const { t } = useTranslation()
   const currentThemeId = useModuleThemeId(module.id, module.defaultThemeId)
   const setThemeId = useSetModuleTheme()
 
   return (
     <div>
-      <h3 className="mb-3 text-sm font-medium">Thème (fond et texte du titre)</h3>
+      <h3 className="mb-3 text-sm font-medium">{t('moduleSettings.themeTitle')}</h3>
       <div className="grid grid-cols-4 gap-3 sm:grid-cols-5">
         {THEME_PRESETS.map((preset) => {
           const isSelected = preset.id === currentThemeId
@@ -88,7 +89,7 @@ function ModuleThemePicker({ module }: { module: ModuleDefinition }) {
               >
                 Aa
               </div>
-              <span className="text-xs">{preset.label}</span>
+              <span className="text-xs">{t(preset.labelKey)}</span>
             </button>
           )
         })}
@@ -98,13 +99,14 @@ function ModuleThemePicker({ module }: { module: ModuleDefinition }) {
 }
 
 function ModuleStylePicker({ module }: { module: ModuleDefinition }) {
+  const { t } = useTranslation()
   const currentStyleId = useModuleStyleId(module.id, module.defaultStyleId)
   const setStyleId = useSetModuleStyle()
   const bgClass = extractBgClass(useModuleHeaderClassName(module.id, module.defaultThemeId))
 
   return (
     <div>
-      <h3 className="mb-3 text-sm font-medium">Style du header</h3>
+      <h3 className="mb-3 text-sm font-medium">{t('moduleSettings.styleTitle')}</h3>
       <div className="grid grid-cols-4 gap-3 sm:grid-cols-5">
         {HEADER_STYLE_OPTIONS.map((option) => {
           const isSelected = option.id === currentStyleId
@@ -133,7 +135,7 @@ function ModuleStylePicker({ module }: { module: ModuleDefinition }) {
                   </svg>
                 )}
               </div>
-              <span className="text-xs">{option.label}</span>
+              <span className="text-xs">{t(option.labelKey)}</span>
             </button>
           )
         })}
