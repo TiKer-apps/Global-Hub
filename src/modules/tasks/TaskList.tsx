@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { Star } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Task } from './types'
 
@@ -40,13 +41,11 @@ export function TaskList({ tasks, onSelect, onToggleImportant }: TaskListProps) 
             aria-pressed={task.important}
             onClick={() => onToggleImportant(task.id, !task.important)}
             className={cn(
-              'mr-1 shrink-0 text-sm font-bold',
-              task.important
-                ? 'flex size-5 items-center justify-center rounded bg-white text-amber-500'
-                : 'rounded-md px-2 py-1 text-muted-foreground/30',
+              'mr-1 flex size-5 shrink-0 items-center justify-center rounded',
+              task.important ? 'bg-white' : 'text-muted-foreground/30 hover:text-muted-foreground',
             )}
           >
-            !
+            <Star className={cn('size-3.5', task.important && 'fill-amber-500 text-amber-500')} />
           </button>
         </li>
       ))}

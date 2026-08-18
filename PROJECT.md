@@ -4,6 +4,22 @@ Application personnelle d'organisation : une vue unique regroupant plusieurs
 modules (planning, notes, post-its, tâches, todo-list) sous forme de widgets
 disposés librement sur un canvas zoomable.
 
+## Statut — jalon du 2026-08-18 (icône "important" unifiée)
+
+Depuis le dernier jalon, 1 chantier en cours (branche
+`feat/important-icon-consistency` — pas encore mergée au moment de ce
+jalon) qui traite le dernier point de "À affiner" restant de ce type
+(incohérence visuelle) :
+
+- **Toggle "important" unifié sur l'icône `Star`** — `NoteList.tsx` et
+  `TaskList.tsx` utilisaient un glyphe texte `!` tandis que
+  `PostItNote.tsx`/`TodoSheetNote.tsx` (post-its/fiches détachés) et le
+  module Important lui-même (`module-registry.ts`) utilisaient déjà
+  l'icône `lucide-react` `Star` — deux conventions différentes pour la
+  même action. `NoteList`/`TaskList` convertis sur `Star` (même style
+  `fill-amber-500 text-amber-500` quand actif que sur les nodes détachés),
+  le glyphe `!` disparaît de l'app.
+
 ## Statut — jalon du 2026-08-17 (Planning : allDay + détail de jour)
 
 Depuis le jalon précédent (E2E, même date), 1 PR mergée sur `develop`
@@ -407,10 +423,8 @@ dit déjà.
   Volontairement hors périmètre pour l'instant (UI secondaire, moins
   prioritaire que le contenu des modules eux-mêmes, déjà tous traduits).
 - Todo-list : le module pourrait être simplifié (rien d'acté).
-- Suite du polish visuel général sur les 6 modules (notamment le langage
-  visuel du toggle "important" : glyphe `!` dans les listes vs. icône
-  `Star` sur les nodes canvas — deux conventions différentes, pas encore
-  réconciliées).
+- ~~Toggle "important" : glyphe `!` vs icône `Star`~~ fait le 2026-08-18
+  (voir Statut) — `Star` partout.
 - ~~Planning, vue mois : pas de vue détaillée au clic sur une case au-delà
   du débordement `+N`~~ fait le 2026-08-17 : `DayDetailModal.tsx` (voir
   Statut).
