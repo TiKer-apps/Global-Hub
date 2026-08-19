@@ -24,7 +24,11 @@ function TabsTab({ className, ...props }: TabsPrimitive.Tab.Props) {
     <TabsPrimitive.Tab
       data-slot="tabs-tab"
       className={cn(
-        "inline-flex h-full flex-1 items-center justify-center gap-1.5 rounded-md px-3 text-sm font-medium whitespace-nowrap text-muted-foreground outline-none transition-colors data-active:bg-card data-active:text-foreground data-active:shadow-sm",
+        // `text-neutral-600` plutôt que `text-muted-foreground` (#737373,
+        // 4.34:1 sur le `bg-muted` #f5f5f5 de TabsList — sous le seuil
+        // WCAG AA 4.5:1, cf. audit accessibilité du 2026-08-19) : seul
+        // usage de `Tabs` dans l'app à ce jour, sûr de resserrer ici.
+        "inline-flex h-full flex-1 items-center justify-center gap-1.5 rounded-md px-3 text-sm font-medium whitespace-nowrap text-neutral-600 outline-none transition-colors data-active:bg-card data-active:text-foreground data-active:shadow-sm",
         className
       )}
       {...props}

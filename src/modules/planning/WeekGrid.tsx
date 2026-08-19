@@ -119,8 +119,12 @@ export function WeekGrid({ events, mode, days, selection, onSelectionChange, onE
 
   const columns = `${GUTTER} repeat(${days.length}, 1fr)`
 
+  // `tabIndex={0}` : rend la zone scrollable elle-même joignable/défilable
+  // au clavier indépendamment de son contenu (un calendrier sans événement
+  // n'aurait sinon aucun descendant focusable), cf. audit accessibilité du
+  // 2026-08-19.
   return (
-    <div className="nowheel max-h-96 overflow-y-auto text-xs">
+    <div className="nowheel max-h-96 overflow-y-auto text-xs" tabIndex={0}>
       <div className="grid" style={{ gridTemplateColumns: columns }}>
         <div className="sticky top-0 z-10 border-b bg-card" />
         {days.map((day, i) => (
@@ -132,7 +136,13 @@ export function WeekGrid({ events, mode, days, selection, onSelectionChange, onE
               isSameDay(day, today) && 'bg-primary/10 font-semibold',
             )}
           >
-            <div className="text-muted-foreground">{getDayLabel(day, i18n.language)}</div>
+            {/* `text-foreground` sur le jour surligné : `text-muted-foreground`
+                seul tombait sous le contraste WCAG AA une fois posé sur
+                `bg-primary/10` (3.86:1 mesuré), cf. audit accessibilité du
+                2026-08-19. */}
+            <div className={cn(isSameDay(day, today) ? 'text-foreground' : 'text-muted-foreground')}>
+              {getDayLabel(day, i18n.language)}
+            </div>
             <div>{day.getDate()}</div>
           </div>
         ))}
@@ -143,21 +153,22 @@ export function WeekGrid({ events, mode, days, selection, onSelectionChange, onE
             {days.map((_, dayIndex) => (
               <div key={`allday-${dayIndex}`} className="flex flex-col gap-0.5 border-b border-l p-0.5">
                 {allDayEventsByDay[dayIndex].map((event) => (
-                  <div
+                  <button
                     key={event.id}
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation()
                       onEventClick(event)
                     }}
                     title={t('planning.event.view', { source: t(sourceLabelKey(event.source)) })}
                     className={cn(
-                      'cursor-pointer truncate rounded-sm border-l-4 bg-green-200 px-1 py-0.5 text-[10px] text-green-900 hover:ring-1 hover:ring-primary',
+                      'block w-full truncate rounded-sm border-l-4 bg-green-200 px-1 py-0.5 text-left text-[10px] text-green-900 hover:ring-1 hover:ring-primary',
                       sourceBorderClass(event.source),
                     )}
                     style={{ backgroundColor: event.color }}
                   >
                     {event.title}
-                  </div>
+                  </button>
                 ))}
               </div>
             ))}
@@ -219,8 +230,9 @@ export function WeekGrid({ events, mode, days, selection, onSelectionChange, onE
                 const clampedStart = Math.max(rawStart, 0)
                 const clampedEnd = Math.min(rawEnd, hours.length)
                 return (
-                  <div
+                  <button
                     key={event.id}
+                    type="button"
                     // `stopPropagation` sur mousedown ET click : sans ça, le
                     // clic traverse jusqu'à la cellule en dessous (l'event est
                     // positionné par-dessus, pas dans le flux) et déclenche la
@@ -234,7 +246,7 @@ export function WeekGrid({ events, mode, days, selection, onSelectionChange, onE
                     }}
                     title={t('planning.event.view', { source: t(sourceLabelKey(event.source)) })}
                     className={cn(
-                      'absolute inset-x-0.5 cursor-pointer overflow-hidden rounded-sm border-l-4 bg-green-200 px-1 py-0.5 text-[10px] text-green-900 hover:ring-1 hover:ring-primary',
+                      'absolute inset-x-0.5 block overflow-hidden rounded-sm border-l-4 bg-green-200 px-1 py-0.5 text-left text-[10px] text-green-900 hover:ring-1 hover:ring-primary',
                       sourceBorderClass(event.source),
                     )}
                     style={{
@@ -244,7 +256,7 @@ export function WeekGrid({ events, mode, days, selection, onSelectionChange, onE
                     }}
                   >
                     {event.title}
-                  </div>
+                  </button>
                 )
               })}
             </div>

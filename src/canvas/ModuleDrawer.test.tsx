@@ -61,7 +61,7 @@ describe('ModuleDrawer', () => {
     await user.click(screen.getByRole('button', { name: 'Fermer le menu' }))
 
     // Le panneau reste monté (transition CSS) mais visuellement hors écran.
-    expect(screen.getByText('Modules').closest('div.fixed')).toHaveClass('-translate-x-full')
+    expect(screen.getByText('Modules').closest('nav')).toHaveClass('-translate-x-full')
   })
 
   it('toggles a module on click', async () => {

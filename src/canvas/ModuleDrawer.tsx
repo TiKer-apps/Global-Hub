@@ -64,7 +64,8 @@ export function ModuleDrawer({ hiddenModuleIds, onToggleModule, postIts, todoShe
 
       {open && <div className="fixed inset-0 z-40 bg-black/20" onClick={() => setOpen(false)} />}
 
-      <div
+      <nav
+        aria-label={t('common.modulesTitle')}
         className={cn(
           'fixed top-0 left-0 z-50 flex h-full w-72 flex-col border-r bg-card shadow-lg transition-transform duration-200',
           open ? 'translate-x-0' : '-translate-x-full',
@@ -142,7 +143,7 @@ export function ModuleDrawer({ hiddenModuleIds, onToggleModule, postIts, todoShe
             {t('common.settingsButton')}
           </button>
         </div>
-      </div>
+      </nav>
 
       <ModuleSettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
     </>

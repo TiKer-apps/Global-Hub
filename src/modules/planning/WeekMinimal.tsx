@@ -39,14 +39,20 @@ export function WeekMinimal({ events, days, onEventClick }: WeekMinimalProps) {
   const columns = `repeat(${days.length}, 1fr)`
 
   return (
-    <div className="nowheel max-h-96 overflow-y-auto text-xs">
+    // `tabIndex={0}` : cf. WeekGrid.tsx, même correctif (audit
+    // accessibilité du 2026-08-19).
+    <div className="nowheel max-h-96 overflow-y-auto text-xs" tabIndex={0}>
       <div className="grid gap-1" style={{ gridTemplateColumns: columns }}>
         {days.map((day, i) => (
           <div
             key={i}
             className={cn('sticky top-0 z-10 border-b bg-card px-1 py-1 text-center', isSameDay(day, today) && 'bg-primary/10 font-semibold')}
           >
-            <div className="text-muted-foreground">{getDayLabel(day, i18n.language)}</div>
+            {/* `text-foreground` sur le jour surligné : cf. WeekGrid.tsx,
+                même correctif contraste (audit accessibilité 2026-08-19). */}
+            <div className={cn(isSameDay(day, today) ? 'text-foreground' : 'text-muted-foreground')}>
+              {getDayLabel(day, i18n.language)}
+            </div>
             <div>{day.getDate()}</div>
           </div>
         ))}
@@ -57,27 +63,29 @@ export function WeekMinimal({ events, days, onEventClick }: WeekMinimalProps) {
             ) : (
               <>
                 {allDayEventsByDay[dayIndex].map((event) => (
-                  <div
+                  <button
                     key={event.id}
+                    type="button"
                     onClick={() => onEventClick(event)}
                     title={t('planning.event.view', { source: t(sourceLabelKey(event.source)) })}
                     className={cn(
-                      'cursor-pointer rounded-sm border-l-4 bg-green-200 px-1 py-1 text-green-900 hover:ring-1 hover:ring-primary',
+                      'block w-full rounded-sm border-l-4 bg-green-200 px-1 py-1 text-left text-green-900 hover:ring-1 hover:ring-primary',
                       sourceBorderClass(event.source),
                     )}
                     style={{ backgroundColor: event.color }}
                   >
                     <div className="truncate font-medium">{event.title}</div>
                     <div className="text-[10px] opacity-80">{t('planning.form.allDay')}</div>
-                  </div>
+                  </button>
                 ))}
                 {timedEventsByDay[dayIndex].map((event) => (
-                  <div
+                  <button
                     key={event.id}
+                    type="button"
                     onClick={() => onEventClick(event)}
                     title={t('planning.event.view', { source: t(sourceLabelKey(event.source)) })}
                     className={cn(
-                      'cursor-pointer rounded-sm border-l-4 bg-green-200 px-1 py-1 text-green-900 hover:ring-1 hover:ring-primary',
+                      'block w-full rounded-sm border-l-4 bg-green-200 px-1 py-1 text-left text-green-900 hover:ring-1 hover:ring-primary',
                       sourceBorderClass(event.source),
                     )}
                     style={{ backgroundColor: event.color }}
@@ -86,7 +94,7 @@ export function WeekMinimal({ events, days, onEventClick }: WeekMinimalProps) {
                     <div className="text-[10px] opacity-80">
                       {formatHour(new Date(event.start))} – {formatHour(new Date(event.end))}
                     </div>
-                  </div>
+                  </button>
                 ))}
               </>
             )}

@@ -34,7 +34,7 @@ export function DayDetailModal({ open, onOpenChange, day, events, onEventClick, 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent closeLabel={t('common.close')}>
         <DialogHeader>
           <DialogTitle className="capitalize">{day ? formatDayLabel(day, i18n.language) : ''}</DialogTitle>
         </DialogHeader>

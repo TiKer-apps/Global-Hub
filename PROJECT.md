@@ -5,6 +5,59 @@ modules (planning, notes, post-its, tâches, todo-list) sous forme de widgets.
 Sur grand écran, disposés librement sur un canvas zoomable ; sous 768px, en
 liste empilée (voir jalon "version mobile").
 
+## Statut — jalon du 2026-08-19 (corrections accessibilité)
+
+Depuis le jalon précédent (audit, même date), 1 chantier en cours
+(branche `feat/a11y-fixes` — pas encore mergée au moment de ce jalon) :
+correction des 7 constats de l'audit du 2026-08-19, vérifiée par re-scan
+`@axe-core/playwright` (0 violation restante sur toutes les surfaces
+auditées) plutôt qu'à la seule lecture du code.
+
+- **Dialogs** (`components/ui/dialog.tsx`, un seul fichier pour toute
+  l'app) — `DialogClose` a désormais un nom accessible (`closeLabel`
+  requis sur `DialogContent`, `t('common.close')` chez les 3 appelants).
+  Retour de focus après fermeture (`Escape`) : `finalFocus={true}` seul
+  ne suffisait pas (mesuré, toujours `<body>`) — un `Context` interne à
+  `dialog.tsx` capture l'élément actif à l'ouverture et le redonne à la
+  fermeture, sans changement chez les appelants (ces dialogs sont tous
+  pilotés en externe, sans `<DialogTrigger>`, donc le défaut de Base UI
+  ne s'appliquait pas).
+- **`EventFormModal.tsx`** — les 4 inputs date/heure (début/fin) ont
+  désormais un `aria-label` (`planning.form.startDateLabel`/etc.).
+- **Contrastes** — l'aperçu "Aa" des 14 couleurs de thème
+  (`ModuleSettingsModal.tsx`) a un badge semi-transparent derrière le
+  texte, dont la couleur (clair/sombre) s'adapte à celle du texte du
+  preset (un badge sombre aurait aggravé le problème sur les presets à
+  texte déjà noir, ex. jaune/ambre — bug intermédiaire détecté puis
+  corrigé par re-scan). Onglets inactifs de cette modale
+  (`components/ui/tabs.tsx`) : `text-neutral-600` remplace
+  `text-muted-foreground` (4.34:1 → sous le seuil), seul usage de `Tabs`
+  dans l'app à ce jour. Libellé du jour surligné "aujourd'hui"
+  (`WeekGrid.tsx`/`WeekMinimal.tsx`) : `text-foreground` au lieu de
+  `text-muted-foreground` sur `bg-primary/10`.
+- **Événements de planning opérables au clavier** — les chips
+  (`WeekGrid`/`WeekMinimal`/`MonthGrid`) sont devenus des `<button>`
+  plutôt que des `<div onClick>` — ni focusables ni activables au
+  clavier auparavant. Corrige aussi, par ricochet, la violation
+  `scrollable-region-focusable` de leur conteneur (qui a alors un
+  descendant focusable) — mais seulement quand des événements existent :
+  `tabIndex={0}` ajouté directement sur les 3 conteneurs `.max-h-96`
+  pour couvrir aussi le cas d'un calendrier vide (bug intermédiaire,
+  détecté par re-scan sur une base de test vide).
+- **Landmark du drawer** — `ModuleDrawer.tsx` : le panneau devient un
+  `<nav aria-label="Modules">`. Effet de bord découvert par re-scan :
+  une fois un premier landmark posé sur la page, axe exige une structure
+  complète (un `<main>`, un `<h1>`) — sans ça, tout le contenu hors du
+  nouveau `<nav>` se retrouve signalé comme "hors landmark", pire qu'avant
+  ce correctif isolé. `HubCanvas.tsx`/`MobileHub.tsx` ont donc chacun
+  gagné un `<h1 className="sr-only">Global Hub</h1>` et un `<main>`
+  autour de leur contenu — le `h1` doit être fils du `main`, pas
+  seulement voisin (encore un bug intermédiaire attrapé par re-scan).
+- Nouveau `e2e/a11y.spec.ts` (permanent, contrairement au script jetable
+  de l'audit) : 0 violation attendue sur le board desktop, mobile, la
+  modale de création d'événement, la modale de réglages, + le test de
+  retour de focus — régression pour ces 7 points à l'avenir.
+
 ## Statut — jalon du 2026-08-18 (version mobile)
 
 Depuis le dernier jalon, 1 chantier en cours (branche `feat/mobile-layout`
@@ -541,12 +594,13 @@ dit déjà.
 
 ## À affiner
 
-- **Accessibilité** — audit fait (voir Statut, 2026-08-19), aucune
-  correction encore appliquée. 7 constats classés par sévérité, deux
-  critiques à traiter en priorité (bouton de fermeture des dialogs sans
-  nom accessible, champs date/heure sans label dans `EventFormModal`) —
-  chacun se corrige en un seul fichier mais touche toute l'app par
-  ricochet.
+- ~~Accessibilité : 7 constats de l'audit~~ tous corrigés le 2026-08-19
+  (voir Statut) — vérifiés par re-scan axe (0 violation) + régression
+  permanente `e2e/a11y.spec.ts`. Pas couvert par cet audit ni ce chantier
+  (à traiter séparément si besoin) : navigation clavier complète au-delà
+  des dialogs, test avec un vrai lecteur d'écran (VoiceOver/NVDA), la
+  sélection de plage horaire par glisser-souris dans `WeekGrid` (déjà
+  identifiée non tactile/non clavier lors du chantier mobile).
 - **Tests unitaires** — objectif 80 % atteint (voir Statut). Reste à 0 % :
   `App.tsx`/`HubCanvas.tsx` (cf. gotcha ci-dessous — pas juste "pas encore
   fait", un vrai blocage technique à lever), `ModuleSettingsModal.tsx`

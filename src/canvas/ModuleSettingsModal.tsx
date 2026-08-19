@@ -34,7 +34,7 @@ export function ModuleSettingsModal({ open, onOpenChange }: ModuleSettingsModalP
   const { t } = useTranslation()
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[80vh] w-full max-w-2xl overflow-y-auto">
+      <DialogContent className="max-h-[80vh] w-full max-w-2xl overflow-y-auto" closeLabel={t('common.close')}>
         <DialogHeader>
           <DialogTitle>{t('common.settingsButton')}</DialogTitle>
         </DialogHeader>
@@ -87,7 +87,20 @@ function ModuleThemePicker({ module }: { module: ModuleDefinition }) {
                   preset.headerClassName,
                 )}
               >
-                Aa
+                {/* Fond semi-transparent seulement autour du texte, pas sur
+                    les couleurs elles-mêmes (réutilisées ailleurs sur les
+                    vrais headers de module) : plusieurs des 14 couleurs ne
+                    passent pas le contraste WCAG AA en blanc/noir plein
+                    (jusqu'à 1.7:1 mesuré), cf. audit accessibilité du
+                    2026-08-19. Couleur du badge opposée à celle du texte du
+                    preset (`text-black` → badge clair, `text-white` →
+                    badge sombre) : un badge sombre sur du texte déjà noir
+                    (ex. jaune/ambre) aggraverait le problème au lieu de le
+                    résoudre.
+                */}
+                <span className={cn('rounded px-1.5', preset.headerClassName.includes('text-black') ? 'bg-white/80' : 'bg-black/80')}>
+                  Aa
+                </span>
               </div>
               <span className="text-xs">{t(preset.labelKey)}</span>
             </button>
