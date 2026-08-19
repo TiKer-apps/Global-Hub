@@ -46,6 +46,14 @@ prioritaires, de vrais trous fonctionnels) :
   événement → édition, bouton "+" → création) ; un jour vide garde le
   chemin rapide existant (création directe). Aucune nouvelle clé i18n
   (réutilise les clés `planning.form.*`/`planning.toolbar.*` existantes).
+- **`ModuleSettingsModal` traduite** — dernier point non traduit de l'app
+  (voir "À affiner" des jalons précédents). Titres de section ("Thème
+  (fond et texte du titre)"/"Style du header") et les 14 noms de couleur
+  de `theme-presets.ts` + les 2 noms de style de `module-style.tsx`
+  convertis en `labelKey` résolues via `t()`, même pattern que
+  `EventTypePreset`/`ModuleDefinition` (nouveau namespace i18n
+  `moduleSettings.*` dans `fr.json`/`en.json`). 100 % de l'UI de l'app est
+  désormais traduite.
 
 ## Statut — jalon du 2026-08-17 (tests end-to-end)
 
@@ -414,14 +422,8 @@ dit déjà.
   lancer automatiquement (repo sans pipeline CI pour l'instant, `npm run
   test:e2e` reste manuel). À enrichir si un bug réel émerge dans une zone
   non couverte plutôt que d'ajouter des scénarios par anticipation.
-- **Internationalisation (i18n)** — reste : la modale de réglages
-  (`ModuleSettingsModal`) n'est pas traduite — titres "Thème (fond et texte
-  du titre)"/"Style du header", et les 14 noms de couleur de
-  `theme-presets.ts` (`Bleu`, `Jaune`...) + les 2 noms de style (`Vague`/
-  `Plein`) resteraient à convertir en clés (`labelKey`, même pattern que
-  `EventTypePreset`/`ModuleDefinition`) si on veut couvrir 100 % de l'UI.
-  Volontairement hors périmètre pour l'instant (UI secondaire, moins
-  prioritaire que le contenu des modules eux-mêmes, déjà tous traduits).
+- ~~Internationalisation (i18n) : `ModuleSettingsModal` non traduite~~ fait
+  le 2026-08-17 (voir Statut) — 100 % de l'UI est désormais traduite.
 - Todo-list : le module pourrait être simplifié (rien d'acté).
 - ~~Toggle "important" : glyphe `!` vs icône `Star`~~ fait le 2026-08-18
   (voir Statut) — `Star` partout.

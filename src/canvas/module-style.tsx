@@ -3,9 +3,12 @@ import type { HeaderStyle } from '@/components/module-card'
 
 const STORAGE_KEY = 'global-hub:module-styles'
 
-export const HEADER_STYLE_OPTIONS: { id: HeaderStyle; label: string }[] = [
-  { id: 'wave', label: 'Vague' },
-  { id: 'flat', label: 'Plein' },
+// `labelKey` (`moduleSettings.styles.<id>`), pas le libellé affiché
+// directement — résolue via `t()` au point de rendu (`ModuleSettingsModal`),
+// même pattern que `ThemePreset.labelKey`.
+export const HEADER_STYLE_OPTIONS: { id: HeaderStyle; labelKey: string }[] = [
+  { id: 'wave', labelKey: 'moduleSettings.styles.wave' },
+  { id: 'flat', labelKey: 'moduleSettings.styles.flat' },
 ]
 
 type StyleMap = Record<string, HeaderStyle>
