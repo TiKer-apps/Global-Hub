@@ -12,29 +12,21 @@ import {
 import '@xyflow/react/dist/style.css'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/lib/db'
-import { PlanningWidget } from '@/modules/planning/PlanningWidget'
-import { NotesWidget } from '@/modules/notes/NotesWidget'
-import { PostItWidget } from '@/modules/post-its/PostItWidget'
 import { PostItNote } from '@/modules/post-its/PostItNote'
-import { TasksWidget } from '@/modules/tasks/TasksWidget'
-import { TodoListWidget } from '@/modules/todo-list/TodoListWidget'
 import { TodoSheetNote } from '@/modules/todo-list/TodoSheetNote'
-import { ImportantWidget } from '@/modules/important/ImportantWidget'
 import { ModuleDrawer } from './ModuleDrawer'
-import { MODULES } from './module-registry'
 import { ModuleNavigationProvider } from './module-navigation'
 import { ModuleStyleProvider } from './module-style'
 import { ModuleThemeProvider } from './module-theme'
+import { useModuleVisibility } from './module-visibility'
+import { WIDGET_COMPONENTS } from './widget-components'
 
+// `type` = id du module : chaque module fixe n'a qu'une seule instance, pas
+// besoin d'une chaîne de "type" séparée de son id (cf. widget-components.tsx).
 const nodeTypes: NodeTypes = {
-  planning: () => <PlanningWidget config={{ view: 'week', mode: 'extended' }} />,
-  notes: NotesWidget,
-  postIt: PostItWidget,
+  ...WIDGET_COMPONENTS,
   postItNote: ({ id }) => <PostItNote postItId={id} />,
-  tasks: () => <TasksWidget />,
-  todoList: () => <TodoListWidget />,
   todoSheetNote: ({ id }) => <TodoSheetNote sheetId={id} />,
-  important: ImportantWidget,
 }
 
 // Agencement qui reflète l'ordre de priorité voulu (cf. module-registry.ts) :
@@ -42,12 +34,12 @@ const nodeTypes: NodeTypes = {
 // que les autres widgets — décalé pour ne pas chevaucher Important), Notes
 // puis Tâches ensuite, enfin Post-it puis Todo-list (rangée 2).
 const initialNodes: Node[] = [
-  { id: 'important-1', type: 'important', position: { x: 0, y: 0 }, data: {} },
-  { id: 'planning-week', type: 'planning', position: { x: 320, y: 0 }, data: {} },
-  { id: 'notes-1', type: 'notes', position: { x: 0, y: 560 }, data: {} },
-  { id: 'tasks-1', type: 'tasks', position: { x: 360, y: 560 }, data: {} },
-  { id: 'post-it-1', type: 'postIt', position: { x: 720, y: 560 }, data: {} },
-  { id: 'todo-1', type: 'todoList', position: { x: 1000, y: 560 }, data: {} },
+  { id: 'important-1', type: 'important-1', position: { x: 0, y: 0 }, data: {} },
+  { id: 'planning-week', type: 'planning-week', position: { x: 320, y: 0 }, data: {} },
+  { id: 'notes-1', type: 'notes-1', position: { x: 0, y: 560 }, data: {} },
+  { id: 'tasks-1', type: 'tasks-1', position: { x: 360, y: 560 }, data: {} },
+  { id: 'post-it-1', type: 'post-it-1', position: { x: 720, y: 560 }, data: {} },
+  { id: 'todo-1', type: 'todo-1', position: { x: 1000, y: 560 }, data: {} },
 ]
 
 export function HubCanvas() {
@@ -68,36 +60,10 @@ export function HubCanvas() {
   // Nodes masqués via le drawer (cf. ModuleDrawer) — widgets fixes ou
   // post-its/fiches détachés individuels, même mécanisme pour les deux (le
   // filtre ci-dessous ne fait aucune distinction). Juste retirés du rendu,
-  // pas de suppression ni de persistance : rouvrir un node masqué le refait
-  // apparaître à sa position d'origine.
-  //
-  // Masquer/afficher Post-it ou Todo-list masque/affiche aussi ses instances
-  // détachées — mais cliquer une instance individuelle ne touche jamais au
-  // module ni à ses autres instances (asymétrique, cf. demande utilisateur).
-  const [hiddenModuleIds, setHiddenModuleIds] = useState<Set<string>>(new Set())
-  const toggleModule = useCallback(
-    (id: string) => {
-      setHiddenModuleIds((prev) => {
-        const next = new Set(prev)
-        const willHide = !next.has(id)
-
-        const module = MODULES.find((m) => m.id === id)
-        const childIds =
-          module?.instanceKind === 'postIt'
-            ? postIts.map((p) => p.id)
-            : module?.instanceKind === 'todoSheet'
-              ? todoSheets.map((s) => s.id)
-              : []
-
-        for (const targetId of [id, ...childIds]) {
-          if (willHide) next.add(targetId)
-          else next.delete(targetId)
-        }
-        return next
-      })
-    },
-    [postIts, todoSheets],
-  )
+  // pas de suppression : rouvrir un node masqué le refait apparaître à sa
+  // position d'origine. Persisté + partagé avec le layout mobile, voir
+  // module-visibility.ts.
+  const { hiddenModuleIds, toggleModule } = useModuleVisibility(postIts, todoSheets)
   const visibleNodes = useMemo(() => nodes.filter((n) => !hiddenModuleIds.has(n.id)), [nodes, hiddenModuleIds])
 
   useEffect(() => {

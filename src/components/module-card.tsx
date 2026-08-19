@@ -112,11 +112,24 @@ export function ModuleCard({
             <path d={headerNotchPath(shape.w, shape.h, shape.tw, NOTCH_RADIUS)} className="fill-card" />
           </svg>
         )}
-        <div className="relative flex h-10 items-center">
+        {/* `min-w-0` : `CardHeader` est en `display:grid` — sans ça, sa
+            piste de grille s'agrandit pour accueillir la largeur naturelle
+            (non contrainte) de cette rangée plutôt que de se limiter à la
+            largeur réelle du header, ce qui faisait déborder les derniers
+            boutons d'action hors du `Card` (overflow-hidden) sans le
+            moindre indice visuel — même famille de piège que le `min-w-0`
+            du titre ci-dessous, un niveau plus haut. */}
+        <div className="relative flex h-10 min-w-0 items-center">
           <CardTitle
             ref={titleRef}
             className={cn(
-              'relative z-10 flex h-full items-center pl-4',
+              // `min-w-0` + `truncate` : sans ça, un header à beaucoup de
+              // boutons d'action (ex. la toolbar de PlanningWidget) comprime
+              // le titre sur un écran étroit (mobile) et son texte wrap sur
+              // plusieurs lignes, débordant du cadre `h-10` — un flex item
+              // sans `min-w-0` ne descend jamais sous la largeur de son
+              // contenu, `truncate` seul n'aurait donc aucun effet ici.
+              'relative z-10 flex h-full min-w-0 items-center truncate pl-4',
               isWave ? [headerClassName, 'bg-transparent', 'pr-4'] : 'pr-2',
               titleClassName,
             )}
@@ -125,11 +138,27 @@ export function ModuleCard({
           </CardTitle>
           <div
             className={cn(
-              'nodrag relative z-10 flex h-full flex-1 items-center justify-end gap-1 pr-4',
+              'relative z-10 flex h-full min-w-0 flex-1 items-center justify-end pr-4',
               isWave && 'text-foreground',
             )}
           >
-            {action}
+            {/* Wrapper de scroll dédié plutôt qu'un `overflow-x-auto` posé
+                directement sur ce conteneur `justify-end` : combinés, le
+                contenu aligné à droite "déborde" par la gauche, et au
+                scroll initial (0) c'est le DÉBUT du contenu (ex. le bouton
+                "Nouvel événement") qui se retrouve hors champ plutôt que la
+                fin — un piège CSS classique, constaté concrètement (le
+                bouton se retrouvait superposé au titre). Ce wrapper interne
+                garde un contenu aligné au début en son sein (scrollLeft=0
+                montre les premiers boutons), pendant que le conteneur
+                externe `justify-end` continue de le pousser à droite du
+                header quand tout rentre (desktop, comportement inchangé).
+                `min-w-0` : autorise ce wrapper à rétrécir sous la largeur
+                naturelle de son contenu plutôt que de la forcer (même piège
+                que les deux `min-w-0` ci-dessus). `nowheel` : évite que le
+                scroll ici soit capté par le zoom du canvas React Flow
+                plutôt que de scroller cette zone. */}
+            <div className="nodrag nowheel flex min-w-0 items-center gap-1 overflow-x-auto">{action}</div>
           </div>
         </div>
       </CardHeader>

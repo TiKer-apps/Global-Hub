@@ -203,7 +203,7 @@ export function PlanningWidget({ config }: PlanningWidgetProps) {
 
   return (
     <ModuleCard
-      className="w-[640px]"
+      className="w-full md:w-[640px]"
       titleClassName="capitalize"
       headerClassName={headerClassName}
       variant={headerStyle}

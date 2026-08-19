@@ -1,8 +1,83 @@
 # Global Hub
 
 Application personnelle d'organisation : une vue unique regroupant plusieurs
-modules (planning, notes, post-its, tâches, todo-list) sous forme de widgets
-disposés librement sur un canvas zoomable.
+modules (planning, notes, post-its, tâches, todo-list) sous forme de widgets.
+Sur grand écran, disposés librement sur un canvas zoomable ; sous 768px, en
+liste empilée (voir jalon "version mobile").
+
+## Statut — jalon du 2026-08-18 (version mobile)
+
+Depuis le dernier jalon, 1 chantier en cours (branche `feat/mobile-layout`
+— pas encore mergée au moment de ce jalon), le premier vrai chantier
+d'architecture depuis le scaffold initial :
+
+- **Layout mobile dédié** — l'app n'avait aucune logique responsive.
+  Sous 768px (`useIsMobile`, `src/canvas/use-is-mobile.ts`, seuil aligné
+  sur le préfixe Tailwind `md:`), `App.tsx` rend désormais `MobileHub.tsx`
+  (nouveau) à la place de `HubCanvas.tsx` : les widgets en liste empilée
+  scrollable plutôt que sur le canvas React Flow zoomable/pannable —
+  choix délibéré plutôt que de rendre le canvas existant utilisable au
+  doigt (pinch-zoom en conflit avec le scroll de page, sélection de plage
+  horaire au glisser-souris dans `WeekGrid` non tactile).
+  ⚠️ **Découverte clé qui a évité un refactor massif** : la plupart des
+  widgets (`PostItWidget`, `TodoListWidget`, `NotesWidget`,
+  `PlanningWidget`, `ImportantWidget`) appellent `useNodeId()`/
+  `useReactFlow()` — mais uniquement pour calculer une position de spawn
+  (jamais relue ailleurs que par `HubCanvas.tsx`) ou un `fitView` de
+  confort (recentrage caméra). En enveloppant `MobileHub` dans un
+  `<ReactFlowProvider>` **nu** (jamais de `<ReactFlow>` monté), ces hooks
+  continuent de fonctionner sans throw, juste en no-op silencieux — zéro
+  changement requis dans ces 5 fichiers.
+  Deux extractions de `HubCanvas.tsx` pour être partagées avec
+  `MobileHub.tsx` : `src/canvas/widget-components.tsx` (table id de
+  module → composant, `type` de node simplifié pour valoir le même id
+  plutôt qu'un vocabulaire séparé) et `src/canvas/module-visibility.ts`
+  (hook `useModuleVisibility`, hiddenModuleIds+toggleModule — corrige au
+  passage un petit bug existant : cet état n'était pas persisté avant,
+  perdu à chaque reload).
+  Seul `PlanningWidget.tsx` avait une largeur fixe cassant sur petit écran
+  (`w-[640px]` → `w-full md:w-[640px]`) ; les autres widgets (160–320px)
+  tenaient déjà sur un écran de téléphone standard.
+  ⚠️ **Hors périmètre, limitations connues** : la sélection de plage
+  horaire au glisser-souris dans `WeekGrid` (création rapide d'événement)
+  ne fonctionne pas au doigt — le bouton "Nouvel événement" (tap) reste
+  le chemin de création sur mobile, pas de fix du geste dans ce chantier.
+  `ImportantWidget.focusNode` (recentrage caméra vers un post-it/fiche
+  détaché) est un no-op silencieux en mobile — l'item reste visible dans
+  la liste, juste pas auto-scrollé vers lui. Un seul breakpoint (768px),
+  pas de mode "tablette" intermédiaire.
+  Nouveau spec e2e `e2e/mobile-hub.spec.ts` (`test.use({ viewport:
+  {width:390, height:844} })`, gabarit iPhone) : les widgets sont listés
+  verticalement, aucune erreur console, création d'événement via le
+  bouton.
+  ⚠️ **Bug découvert après coup (signalé par l'utilisateur) : le titre
+  "Planning — semaine" passait sur 3 lignes en mobile et débordait du
+  cadre du header** — deux causes empilées dans `module-card.tsx`, pas une
+  seule : (1) `CardTitle`, en flex item sans `min-w-0`, ne descend jamais
+  sous la largeur de son texte non wrappé (`min-w-0` + `truncate` ajoutés)
+  ; (2) `CardHeader`, en `display:grid`, agrandissait sa piste pour
+  accueillir la largeur *naturelle non contrainte* de la rangée
+  titre+actions plutôt que de la limiter à la largeur réelle du header —
+  même piège "grid blowout", un niveau plus haut (`min-w-0` ajouté sur la
+  rangée). Une fois ces deux corrigés, un **second bug est apparu** :
+  avec beaucoup de boutons d'action (toolbar Planning), les derniers
+  (`Vue mois`...) débordaient du `Card` (`overflow-hidden`) — présents
+  dans le DOM, cliquables par l'automatisation Playwright, mais
+  invisibles et inatteignables au doigt, sans le moindre indice visuel.
+  Un premier correctif (`overflow-x-auto` posé directement sur le
+  conteneur `justify-end` des actions) a introduit un **troisième bug** :
+  `overflow-x-auto` + `justify-content: flex-end` déborde par le
+  *début* du contenu (pas la fin), donc au scroll initial (0) c'était le
+  bouton "Nouvel événement" qui se retrouvait hors champ, superposé au
+  titre. Résolu avec un wrapper de scroll interne dédié (contenu aligné
+  au début en son sein) à l'intérieur du conteneur externe `justify-end`
+  (inchangé, pousse le tout à droite quand ça rentre) — le comportement
+  desktop reste identique, et en mobile les boutons en trop restent
+  atteignables par un swipe horizontal dans le header (bouton coupé à
+  bord visible, signal de scrollabilité standard), plutôt qu'invisibles.
+  Chaque étape vérifiée par mesure géométrique réelle (`boundingBox()`
+  via un script Playwright jetable), pas seulement par lecture du code —
+  les deux bugs intermédiaires n'auraient pas été visibles autrement.
 
 ## Statut — jalon du 2026-08-18 (icône "important" unifiée)
 
@@ -422,8 +497,20 @@ dit déjà.
   lancer automatiquement (repo sans pipeline CI pour l'instant, `npm run
   test:e2e` reste manuel). À enrichir si un bug réel émerge dans une zone
   non couverte plutôt que d'ajouter des scénarios par anticipation.
-- ~~Internationalisation (i18n) : `ModuleSettingsModal` non traduite~~ fait
-  le 2026-08-17 (voir Statut) — 100 % de l'UI est désormais traduite.
+- **Internationalisation (i18n)** — reste : la modale de réglages
+  (`ModuleSettingsModal`) n'est pas traduite — titres "Thème (fond et texte
+  du titre)"/"Style du header", et les 14 noms de couleur de
+  `theme-presets.ts` (`Bleu`, `Jaune`...) + les 2 noms de style (`Vague`/
+  `Plein`) resteraient à convertir en clés (`labelKey`, même pattern que
+  `EventTypePreset`/`ModuleDefinition`) si on veut couvrir 100 % de l'UI.
+  Volontairement hors périmètre pour l'instant (UI secondaire, moins
+  prioritaire que le contenu des modules eux-mêmes, déjà tous traduits).
+- **Mobile** — voir Statut. Reste : sélection de plage horaire au
+  glisser-souris dans `WeekGrid` non fonctionnelle au doigt (le bouton
+  "Nouvel événement" reste le chemin de création sur mobile) ;
+  `ImportantWidget.focusNode` sans effet visible en mobile (l'item est
+  déjà dans la liste, juste pas auto-scrollé) ; pas de mode "tablette"
+  intermédiaire (un seul breakpoint, 768px).
 - Todo-list : le module pourrait être simplifié (rien d'acté).
 - ~~Toggle "important" : glyphe `!` vs icône `Star`~~ fait le 2026-08-18
   (voir Statut) — `Star` partout.
