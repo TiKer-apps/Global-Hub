@@ -79,6 +79,68 @@ d'architecture depuis le scaffold initial :
   via un script Playwright jetable), pas seulement par lecture du code —
   les deux bugs intermédiaires n'auraient pas été visibles autrement.
 
+## Statut — jalon du 2026-08-19 (audit accessibilité)
+
+Depuis le dernier jalon, 1 chantier en cours (branche `feat/a11y-audit` —
+pas encore mergée au moment de ce jalon). **Audit seulement, aucune
+correction dans ce chantier** (décision explicite : comprendre l'ampleur
+avant de corriger). Outillage : `@axe-core/playwright` ajouté en
+devDependency (réutilisable pour le chantier de corrections à venir),
+scan automatisé (règles WCAG via axe-core) sur le board desktop, le board
+mobile, le drawer ouvert, la modale de réglages et la modale de création
+d'événement — complété par une vérification manuelle du focus (piège de
+focus et retour de focus dans les dialogs, qu'axe ne détecte pas).
+
+**Constat global : pas de trou béant (pas de `<div onClick>` à la place
+de `<button>`, focus trap correct dans les dialogs — Base UI fait bien
+son travail à ce niveau), mais plusieurs vraies violations concrètes,
+certaines systémiques (un seul point de correction touche toute l'app) :**
+
+- **[critique] Bouton de fermeture des dialogs sans nom accessible** —
+  `DialogClose` dans `components/ui/dialog.tsx` (icône `X` seule, aucun
+  `aria-label`) : présent dans **tous** les dialogs de l'app
+  (`EventFormModal`, `ModuleSettingsModal`, `DayDetailModal`). Un seul
+  fichier à corriger pour résoudre partout.
+- **[critique] Champs de formulaire sans label** — dans `EventFormModal.tsx`,
+  les 4 inputs date/heure (début/fin) n'ont ni `<label>` ni `aria-label`
+  (repérés seulement par leur position visuelle). `titlePlaceholder`/
+  `locationPlaceholder`/etc. utilisent un `placeholder` seul comme unique
+  indice, qui ne remplace pas un vrai label pour un lecteur d'écran.
+- **[modéré, à trancher] Focus perdu après fermeture d'un dialog** — testé
+  manuellement : `Escape` ferme bien la modale (piège de focus respecté
+  pendant l'ouverture), mais le focus retombe sur `<body>` plutôt que de
+  revenir au bouton qui l'a ouverte. Cause probable : tous les dialogs
+  sont pilotés en externe (`open`/`onOpenChange` React state) plutôt que
+  via `<DialogTrigger>` de Base UI, qui saurait alors à qui rendre le
+  focus. Un utilisateur clavier perd sa position dans la page à chaque
+  fermeture de modale.
+- **[sérieux] Contraste insuffisant sur les 14 couleurs de thème** —
+  `ModuleSettingsModal`, aperçu "Aa" en blanc sur les swatches de couleur
+  (`theme-presets.ts`) : ratios mesurés de 1.7:1 à 4.4:1, aucun n'atteint
+  le minimum WCAG AA (4.5:1) pour du texte. Concerne aussi les onglets de
+  module inactifs de cette modale (texte gris `#737373` sur fond
+  `#f5f5f5`, 4.34:1, juste sous le seuil).
+- **[sérieux, systémique] Zones scrollables non accessibles au clavier**
+  — toute zone `.nowheel` (listes Notes/Tâches, grilles WeekGrid/MonthGrid,
+  liste d'instances du drawer...) : scrollable à la souris/tactile
+  seulement, pas de moyen clavier de faire défiler sans `tabindex`/rôle
+  adapté. Motif répété dans beaucoup de composants (même classe
+  utilitaire), pas un cas isolé.
+- **[sérieux] Contraste insuffisant sur l'en-tête "aujourd'hui" en vue
+  mois/semaine** — le jour courant surligné (`bg-primary/10`) rend le
+  texte gris du libellé de jour illisible-limite (3.86:1, sous 4.5:1).
+- **[modéré] Contenu du drawer hors d'une landmark** — le panneau
+  "Modules" (`ModuleDrawer`) n'est dans aucune région sémantique
+  (`nav`/`aside`/`role="region"`), signalé par axe comme contenu de page
+  non rattaché à une landmark.
+
+**Pas testé dans cet audit** (à couvrir si un futur chantier corrections
+s'étend) : navigation clavier complète module par module (au-delà du
+focus trap des dialogs), lecteur d'écran réel (axe/Playwright ne simulent
+pas VoiceOver/NVDA), les 3 vues de Planning au clavier (sélection de
+plage horaire par glisser-souris déjà identifiée non tactile, également
+non clavier).
+
 ## Statut — jalon du 2026-08-18 (icône "important" unifiée)
 
 Depuis le dernier jalon, 1 chantier en cours (branche
@@ -479,6 +541,12 @@ dit déjà.
 
 ## À affiner
 
+- **Accessibilité** — audit fait (voir Statut, 2026-08-19), aucune
+  correction encore appliquée. 7 constats classés par sévérité, deux
+  critiques à traiter en priorité (bouton de fermeture des dialogs sans
+  nom accessible, champs date/heure sans label dans `EventFormModal`) —
+  chacun se corrige en un seul fichier mais touche toute l'app par
+  ricochet.
 - **Tests unitaires** — objectif 80 % atteint (voir Statut). Reste à 0 % :
   `App.tsx`/`HubCanvas.tsx` (cf. gotcha ci-dessous — pas juste "pas encore
   fait", un vrai blocage technique à lever), `ModuleSettingsModal.tsx`
