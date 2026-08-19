@@ -43,7 +43,11 @@ export function MobileHub() {
                 postIts={postIts}
                 todoSheets={todoSheets}
               />
-              <div className="flex flex-col items-center gap-4 p-4 pt-16">
+              <main className="flex flex-col items-center gap-4 p-4 pt-16">
+                {/* Cf. HubCanvas.tsx : même correctif (h1 masqué à
+                    l'intérieur du landmark main), audit accessibilité du
+                    2026-08-19. */}
+                <h1 className="sr-only">Global Hub</h1>
                 {MODULES.filter((module) => !hiddenModuleIds.has(module.id)).map((module) => {
                   const Widget = WIDGET_COMPONENTS[module.id]
                   return <Widget key={module.id} />
@@ -58,7 +62,7 @@ export function MobileHub() {
                   .map((sheet) => (
                     <TodoSheetNote key={sheet.id} sheetId={sheet.id} />
                   ))}
-              </div>
+              </main>
             </div>
           </ModuleNavigationProvider>
         </ReactFlowProvider>

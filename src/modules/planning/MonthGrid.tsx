@@ -31,7 +31,9 @@ export function MonthGrid({ events, mode, days, referenceDate, onDayClick, onEve
   )
 
   return (
-    <div className="nowheel max-h-96 overflow-y-auto text-xs">
+    // `tabIndex={0}` : cf. WeekGrid.tsx, même correctif (audit
+    // accessibilité du 2026-08-19).
+    <div className="nowheel max-h-96 overflow-y-auto text-xs" tabIndex={0}>
       <div className="grid grid-cols-7">
         {weekDayLabels.map((label, i) => (
           <div key={i} className="sticky top-0 z-10 border-b bg-card px-1 py-1 text-center text-muted-foreground">
@@ -61,8 +63,9 @@ export function MonthGrid({ events, mode, days, referenceDate, onDayClick, onEve
               {mode === 'extended' ? (
                 <>
                   {dayEvents.slice(0, MAX_TITLES).map((event) => (
-                    <div
+                    <button
                       key={event.id}
+                      type="button"
                       // La case entière ouvre la création d'un event (clic sur
                       // une zone vide) — sans stopPropagation, cliquer une
                       // chip remonterait aussi ce clic à la case et ouvrirait
@@ -73,13 +76,13 @@ export function MonthGrid({ events, mode, days, referenceDate, onDayClick, onEve
                       }}
                       title={t('planning.event.view', { source: t(sourceLabelKey(event.source)) })}
                       className={cn(
-                        'truncate rounded-sm border-l-4 bg-green-200 px-1 py-0.5 text-[10px] text-green-900 hover:ring-1 hover:ring-primary',
+                        'block w-full truncate rounded-sm border-l-4 bg-green-200 px-1 py-0.5 text-left text-[10px] text-green-900 hover:ring-1 hover:ring-primary',
                         sourceBorderClass(event.source),
                       )}
                       style={{ backgroundColor: event.color }}
                     >
                       {event.title}
-                    </div>
+                    </button>
                   ))}
                   {overflowCount > 0 && <div className="text-[10px] text-muted-foreground">+{overflowCount}</div>}
                 </>

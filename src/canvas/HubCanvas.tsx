@@ -115,18 +115,26 @@ export function HubCanvas() {
             todoSheets={todoSheets}
           />
           <ModuleNavigationProvider>
-            <ReactFlow
-              nodes={visibleNodes}
-              onNodesChange={onNodesChange}
-              nodeTypes={nodeTypes}
-              nodesConnectable={false}
-              elevateNodesOnSelect={false}
-              fitView
-            >
-              <Background />
-              <Controls />
-              <MiniMap />
-            </ReactFlow>
+            <main className="h-full w-full">
+              {/* `h1` masqué visuellement, à l'intérieur du landmark `main`
+                  (pas à côté) : sans ça, axe signale l'absence de landmark
+                  principal / de titre de niveau 1 dès qu'un autre landmark
+                  existe sur la page (le `nav` du drawer, cf.
+                  ModuleDrawer.tsx) — audit accessibilité du 2026-08-19. */}
+              <h1 className="sr-only">Global Hub</h1>
+              <ReactFlow
+                nodes={visibleNodes}
+                onNodesChange={onNodesChange}
+                nodeTypes={nodeTypes}
+                nodesConnectable={false}
+                elevateNodesOnSelect={false}
+                fitView
+              >
+                <Background />
+                <Controls />
+                <MiniMap />
+              </ReactFlow>
+            </main>
           </ModuleNavigationProvider>
         </div>
       </ModuleStyleProvider>

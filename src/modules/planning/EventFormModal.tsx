@@ -142,7 +142,7 @@ export function EventFormModal({ open, onOpenChange, selection, event }: EventFo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent closeLabel={t('common.close')}>
         <DialogHeader>
           <DialogTitle>{t(event ? 'planning.form.titleEdit' : 'planning.form.titleCreate')}</DialogTitle>
         </DialogHeader>
@@ -182,6 +182,7 @@ export function EventFormModal({ open, onOpenChange, selection, event }: EventFo
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
               required
+              aria-label={t('planning.form.startDateLabel')}
               className={inputClass}
             />
             {!allDay && (
@@ -190,6 +191,7 @@ export function EventFormModal({ open, onOpenChange, selection, event }: EventFo
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
                 required
+                aria-label={t('planning.form.startTimeLabel')}
                 className={cn('w-28', inputClass)}
               />
             )}
@@ -200,6 +202,7 @@ export function EventFormModal({ open, onOpenChange, selection, event }: EventFo
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               required
+              aria-label={t('planning.form.endDateLabel')}
               className={inputClass}
             />
             {!allDay && (
@@ -208,6 +211,7 @@ export function EventFormModal({ open, onOpenChange, selection, event }: EventFo
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
                 required
+                aria-label={t('planning.form.endTimeLabel')}
                 className={cn('w-28', inputClass)}
               />
             )}

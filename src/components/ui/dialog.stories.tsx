@@ -24,7 +24,7 @@ export const Default: Story = {
   render: () => (
     <Dialog>
       <DialogTrigger className={buttonVariants({ variant: 'default' })}>Ouvrir la modale</DialogTrigger>
-      <DialogContent>
+      <DialogContent closeLabel="Fermer">
         <DialogHeader>
           <DialogTitle>Titre de la modale</DialogTitle>
           <DialogDescription>Une description courte du contenu.</DialogDescription>
@@ -43,7 +43,7 @@ export const WithForm: Story = {
   render: () => (
     <Dialog>
       <DialogTrigger className={buttonVariants({ variant: 'outline' })}>Nouvel événement</DialogTrigger>
-      <DialogContent>
+      <DialogContent closeLabel="Fermer">
         <DialogHeader>
           <DialogTitle>Nouvel événement</DialogTitle>
         </DialogHeader>
