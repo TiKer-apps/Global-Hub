@@ -21,8 +21,10 @@ import { ModuleCard } from '@/components/module-card'
 import { useModuleHeaderClassName } from '@/canvas/module-theme'
 import { useModuleNavigation } from '@/canvas/module-navigation'
 import { useModuleStyleId } from '@/canvas/module-style'
+import { useIsMobile } from '@/canvas/use-is-mobile'
 import { db } from '@/lib/db'
 import { ToolbarButton } from '@/modules/text-editor/ToolbarButton'
+import { PlanningActionsMenu, type PlanningAction } from './PlanningActionsMenu'
 import {
   addDays,
   addMonths,
@@ -65,6 +67,7 @@ type ViewMode = 'grid' | 'minimal'
 // config du node) — `config` ne sert plus que de valeur initiale.
 export function PlanningWidget({ config }: PlanningWidgetProps) {
   const { t, i18n } = useTranslation()
+  const isMobile = useIsMobile()
   const headerClassName = useModuleHeaderClassName('planning-week', 'green-600')
   const headerStyle = useModuleStyleId('planning-week', 'wave')
   const events = useLiveQuery(() => db.events.toArray(), []) ?? []
@@ -201,6 +204,80 @@ export function PlanningWidget({ config }: PlanningWidgetProps) {
     view === 'day' ? 'planning.nav.nextDay' : view === 'week' ? 'planning.nav.nextWeek' : 'planning.nav.nextMonth',
   )
 
+  // Un seul tableau consommé par les deux rendus ci-dessous : la rangée
+  // desktop (ToolbarButton, inchangée) et le menu radial mobile
+  // (PlanningActionsMenu) — évite de dupliquer ces conditions (view/
+  // daysCount/hourMode/viewMode) dans deux JSX séparés.
+  const actions: PlanningAction[] = [
+    {
+      id: 'import',
+      ariaLabel: t('planning.toolbar.importIcs'),
+      icon: <Upload className="size-3.5" />,
+      onClick: () => fileInputRef.current?.click(),
+    },
+    {
+      id: 'new-event',
+      ariaLabel: t('planning.toolbar.newEvent'),
+      icon: <Plus className="size-3.5" />,
+      onClick: handleNewEventClick,
+    },
+    {
+      id: 'view-day',
+      ariaLabel: t('planning.toolbar.viewDay'),
+      icon: t('planning.view.day'),
+      onClick: () => setView('day'),
+      active: view === 'day',
+    },
+    {
+      id: 'view-week',
+      ariaLabel: t('planning.toolbar.viewWeek'),
+      icon: t('planning.view.week'),
+      onClick: () => setView('week'),
+      active: view === 'week',
+    },
+    {
+      id: 'view-month',
+      ariaLabel: t('planning.toolbar.viewMonth'),
+      icon: t('planning.view.month'),
+      onClick: () => setView('month'),
+      active: view === 'month',
+    },
+    ...(view === 'week'
+      ? [
+          {
+            id: 'days-count',
+            ariaLabel: t(daysCount === 7 ? 'planning.toolbar.daysCountTo5' : 'planning.toolbar.daysCountTo7'),
+            icon: daysCount === 7 ? <CalendarDays className="size-3.5" /> : <CalendarRange className="size-3.5" />,
+            onClick: () => setDaysCount((d) => (d === 7 ? 5 : 7)),
+          },
+        ]
+      : []),
+    view !== 'month'
+      ? {
+          id: 'hour-mode',
+          ariaLabel: t(hourMode === 'extended' ? 'planning.toolbar.hourModeCompact' : 'planning.toolbar.hourModeExtended'),
+          icon: hourMode === 'extended' ? <Clock className="size-3.5" /> : <Briefcase className="size-3.5" />,
+          onClick: () => setHourMode((m) => (m === 'extended' ? 'compact' : 'extended')),
+          disabled: viewMode === 'minimal',
+        }
+      : {
+          id: 'hour-mode',
+          ariaLabel: t(hourMode === 'extended' ? 'planning.toolbar.monthModeIndicator' : 'planning.toolbar.monthModeTitles'),
+          icon: hourMode === 'extended' ? <List className="size-3.5" /> : <Dot className="size-3.5" />,
+          onClick: () => setHourMode((m) => (m === 'extended' ? 'compact' : 'extended')),
+        },
+    ...(view !== 'month'
+      ? [
+          {
+            id: 'view-mode',
+            ariaLabel: t(viewMode === 'grid' ? 'planning.toolbar.viewModeMinimal' : 'planning.toolbar.viewModeGrid'),
+            icon: viewMode === 'grid' ? <Rows3 className="size-3.5" /> : <LayoutGrid className="size-3.5" />,
+            onClick: () => setViewMode((v) => (v === 'grid' ? 'minimal' : 'grid')),
+          },
+        ]
+      : []),
+  ]
+
   return (
     <ModuleCard
       className="w-full md:w-[640px]"
@@ -218,52 +295,21 @@ export function PlanningWidget({ config }: PlanningWidgetProps) {
             onChange={handleFilesSelected}
             className="hidden"
           />
-          <ToolbarButton onClick={() => fileInputRef.current?.click()} aria-label={t('planning.toolbar.importIcs')}>
-            <Upload className="size-3.5" />
-          </ToolbarButton>
-          <ToolbarButton onClick={handleNewEventClick} aria-label={t('planning.toolbar.newEvent')}>
-            <Plus className="size-3.5" />
-          </ToolbarButton>
-          <ToolbarButton active={view === 'day'} size="sm" onClick={() => setView('day')} aria-label={t('planning.toolbar.viewDay')}>
-            {t('planning.view.day')}
-          </ToolbarButton>
-          <ToolbarButton active={view === 'week'} size="sm" onClick={() => setView('week')} aria-label={t('planning.toolbar.viewWeek')}>
-            {t('planning.view.week')}
-          </ToolbarButton>
-          <ToolbarButton active={view === 'month'} size="sm" onClick={() => setView('month')} aria-label={t('planning.toolbar.viewMonth')}>
-            {t('planning.view.month')}
-          </ToolbarButton>
-          {view === 'week' && (
-            <ToolbarButton
-              onClick={() => setDaysCount((d) => (d === 7 ? 5 : 7))}
-              aria-label={t(daysCount === 7 ? 'planning.toolbar.daysCountTo5' : 'planning.toolbar.daysCountTo7')}
-            >
-              {daysCount === 7 ? <CalendarDays className="size-3.5" /> : <CalendarRange className="size-3.5" />}
-            </ToolbarButton>
-          )}
-          {view !== 'month' ? (
-            <ToolbarButton
-              onClick={() => setHourMode((m) => (m === 'extended' ? 'compact' : 'extended'))}
-              disabled={viewMode === 'minimal'}
-              aria-label={t(hourMode === 'extended' ? 'planning.toolbar.hourModeCompact' : 'planning.toolbar.hourModeExtended')}
-            >
-              {hourMode === 'extended' ? <Clock className="size-3.5" /> : <Briefcase className="size-3.5" />}
-            </ToolbarButton>
+          {isMobile ? (
+            <PlanningActionsMenu actions={actions} />
           ) : (
-            <ToolbarButton
-              onClick={() => setHourMode((m) => (m === 'extended' ? 'compact' : 'extended'))}
-              aria-label={t(hourMode === 'extended' ? 'planning.toolbar.monthModeIndicator' : 'planning.toolbar.monthModeTitles')}
-            >
-              {hourMode === 'extended' ? <List className="size-3.5" /> : <Dot className="size-3.5" />}
-            </ToolbarButton>
-          )}
-          {view !== 'month' && (
-            <ToolbarButton
-              onClick={() => setViewMode((v) => (v === 'grid' ? 'minimal' : 'grid'))}
-              aria-label={t(viewMode === 'grid' ? 'planning.toolbar.viewModeMinimal' : 'planning.toolbar.viewModeGrid')}
-            >
-              {viewMode === 'grid' ? <Rows3 className="size-3.5" /> : <LayoutGrid className="size-3.5" />}
-            </ToolbarButton>
+            actions.map((a) => (
+              <ToolbarButton
+                key={a.id}
+                active={a.active}
+                disabled={a.disabled}
+                size={a.id.startsWith('view-') && a.id !== 'view-mode' ? 'sm' : undefined}
+                onClick={a.onClick}
+                aria-label={a.ariaLabel}
+              >
+                {a.icon}
+              </ToolbarButton>
+            ))
           )}
         </>
       }

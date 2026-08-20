@@ -39,6 +39,9 @@ test('reveals a hidden module via the drawer', async ({ page }) => {
 test('creates an event via the "Nouvel événement" button (not the drag gesture)', async ({ page }) => {
   await page.goto('/')
 
+  // En mobile, la toolbar de Planning est un menu radial (PlanningActionsMenu)
+  // — "Nouvel événement" n'est visible qu'une fois ce menu ouvert.
+  await page.getByRole('button', { name: "Plus d'actions" }).click()
   await page.getByRole('button', { name: 'Nouvel événement' }).click()
 
   const title = `Réunion mobile ${Date.now()}`

@@ -10,9 +10,28 @@ import 'fake-indexeddb/auto'
 // build` échoue en typecheck sur chaque matcher jest-dom).
 import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
-import { afterEach } from 'vitest'
+import { afterEach, beforeEach } from 'vitest'
 import { db } from '@/lib/db'
 import i18n from '@/i18n'
+
+// La taille réelle de l'iframe headless dans laquelle Vitest monte les
+// composants est étroite (indépendante du viewport de la page/contexte
+// Playwright) — assez pour déclencher `useIsMobile()` (768px) et casser
+// tout test qui rend un composant sensible au breakpoint (ex.
+// PlanningWidget.tsx) sans s'y attendre, alors que la quasi-totalité de
+// cette suite est écrite en supposant un rendu desktop. Défaut "non
+// mobile" ici ; un test qui veut spécifiquement le cas mobile fait son
+// propre `window.matchMedia = ...` dans son corps (cf. use-is-mobile.test.tsx),
+// qui l'emporte puisqu'il s'exécute après ce `beforeEach`.
+beforeEach(() => {
+  window.matchMedia = (query: string) =>
+    ({
+      matches: false,
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    }) as unknown as MediaQueryList
+})
 
 afterEach(async () => {
   // Base partagée par tous les tests `component` (même singleton `db` que

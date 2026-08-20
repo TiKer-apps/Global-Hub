@@ -5,6 +5,85 @@ modules (planning, notes, post-its, tâches, todo-list) sous forme de widgets.
 Sur grand écran, disposés librement sur un canvas zoomable ; sous 768px, en
 liste empilée (voir jalon "version mobile").
 
+## Statut — jalon du 2026-08-20 (menu radial Planning en mobile)
+
+Depuis le jalon précédent (même date), 1 chantier en cours (branche
+`feat/planning-radial-menu` — pas encore mergée au moment de ce jalon).
+Concrétise la piste notée dans "À affiner" : en mobile, la rangée
+d'actions de `PlanningWidget` (jusqu'à 7 boutons) est remplacée par un
+seul déclencheur ouvrant un menu radial (nouveau
+`PlanningActionsMenu.tsx`) — plus de scroll horizontal caché dans le
+header. Le desktop garde la rangée `ToolbarButton` inchangée (branché sur
+`useIsMobile()`, déjà existant) ; les deux rendus partagent désormais un
+seul tableau `actions` construit dans `PlanningWidget.tsx` (mêmes
+conditions `view`/`daysCount`/`hourMode`/`viewMode` qu'avant, juste
+factorisées une fois plutôt que dupliquées).
+
+- **Design final : roue complète (360°) en modale centrée**, pas l'arc
+  ancré au trigger d'un premier jet — clarifié après coup avec une
+  référence visuelle fournie par l'utilisateur (fond sombre semi-
+  transparent, roue en camembert, bouton central). D'où `Dialog`/
+  `DialogContent` (`components/ui/dialog.tsx`) plutôt que `Popover` :
+  `DialogContent` a déjà le centrage (`top-1/2 left-1/2 -translate-1/2`),
+  le fond semi-transparent (`DialogBackdrop`) et le retour de focus à la
+  fermeture (`RestoreFocusContext`, posé pendant le chantier
+  accessibilité) construits pour des dialogs pilotés en externe — rien à
+  refaire. Nouveau prop `showCloseButton` sur `DialogContent` (défaut
+  `true`, rétrocompatible) pour désactiver son bouton de fermeture en
+  coin, remplacé ici par un bouton central (icône `X`) au milieu de la
+  roue.
+- Fond de la roue en `conic-gradient` calculé dynamiquement (pas de
+  géométrie SVG à la main) — alterne deux teintes neutres par secteur,
+  teinte `primary` sur le secteur actif (vue courante sélectionnée).
+  Icônes des actions réparties sur 360° (même trigonométrie que le
+  premier jet, sur un cercle complet plutôt qu'un arc de 100°) — un
+  centrage donne beaucoup plus de marge qu'un ancrage près du trigger,
+  aucun débordement de viewport constaté cette fois.
+- ⚠️ **Bugs trouvés et corrigés par vérification empirique (capture
+  d'écran + interactions réelles), pas à la lecture du code** — sur le
+  premier jet (`Popover`, arc) : arc débordant hors du viewport côté
+  droit (le trigger est en haut à droite de la carte, l'arc doit s'ouvrir
+  uniquement vers le bas-gauche) ; `Popover` ne se ferme pas tout seul au
+  clic sur une action (contrairement à un `Menu`) — state contrôlé
+  (`open`/`onOpenChange` + fermeture explicite dans chaque `onClick`)
+  nécessaire, sans quoi un second tap sur le trigger refermait le menu au
+  lieu de l'ouvrir ; `role="dialog"` du popup sans nom accessible
+  (`aria-label` manquant, trouvé par re-scan axe). Le passage à `Dialog`
+  (design final) a hérité de ces deux derniers correctifs (state contrôlé,
+  nom accessible) directement.
+- Pas de rôle ARIA `menu`/`menuitem` (navigation flèches spatiale d'un
+  vrai menu radial difficile à faire correctement) — de simples
+  `<button>` avec leur `aria-label` existant, parcourus au Tab (secteurs
+  puis bouton central de fermeture).
+- ⚠️ **Bug signalé par l'utilisateur après capture d'écran** : icônes/
+  labels affichés à la frontière entre deux secteurs plutôt qu'au centre
+  du leur. `wedgeAngle` plaçait chaque icône au *début* angulaire de son
+  secteur (`index × 360/total`) au lieu de son milieu — corrigé en
+  utilisant `(index + 0.5) × 360/total`, cohérent avec les bornes de
+  pourcentage du `conic-gradient` (les deux partent du haut et tournent
+  dans le même sens). Revérifié par capture d'écran.
+- ⚠️ **Gotcha test découvert en cours de route** : l'iframe headless où
+  Vitest monte les composants `component` est étroite (indépendante du
+  viewport du contexte Playwright — un `context.viewport` explicite
+  n'a aucun effet), assez pour déclencher `useIsMobile()` (768px) et
+  casser `PlanningWidget.test.tsx` (qui suppose un rendu desktop). Fixé
+  par un `window.matchMedia` par défaut "non mobile" dans
+  `setup-component.ts` (`beforeEach`), qu'un test spécifiquement mobile
+  peut toujours écraser localement (cf. `use-is-mobile.test.tsx`).
+- Nouveau `e2e/planning-actions-menu.spec.ts` : les actions restent dans
+  le viewport à 7 boutons (vue semaine, cas le plus chargé), sélectionner
+  une action ferme le menu et l'applique, le focus revient au trigger
+  (Escape et sélection), 0 violation axe menu ouvert.
+- ⚠️ **Bug similaire trouvé par l'utilisateur dans `ModuleSettingsModal`**
+  — les `Tabs` (un par module, 6) ne wrappent pas sur un écran mobile
+  étroit : toute la modale de réglages défilait horizontalement. Corrigé
+  en remplaçant les `Tabs` par un `<select>` natif en mobile (branché sur
+  `useIsMobile()`, même pattern que `PlanningWidget`) — le module choisi
+  pilote les mêmes `ModuleStylePicker`/`ModuleThemePicker` qu'avant,
+  desktop inchangé. Nouveau `e2e/module-settings-mobile.spec.ts` : plus de
+  débordement horizontal, changer de module via le select met à jour les
+  pickers thème/style affichés.
+
 ## Statut — jalon du 2026-08-20 (mobile : Planning seul par défaut)
 
 Depuis le dernier jalon, 1 chantier en cours (branche
@@ -627,14 +706,15 @@ dit déjà.
   l'usage réel sur mobile révèle des frictions (ordre des widgets,
   pertinence du défaut "Planning seul", façon de révéler les autres
   modules...).
-  Piste concrète identifiée pour la toolbar de `PlanningWidget` en
-  mobile : trop de petits boutons d'action (import/export, jour/semaine/
-  mois, etc.) pour la largeur disponible, d'où le scroll horizontal
-  ajouté dans `module-card.tsx` (voir jalon "version mobile", constat
-  découvert après coup). Idée envisagée mais pas implémentée : un seul
-  bouton qui ouvre un menu radial regroupant tous ces petits boutons,
-  plutôt que le scroll horizontal actuel — à étudier/prototyper avant de
-  trancher.
+  ~~Toolbar de `PlanningWidget` en mobile : trop de petits boutons pour
+  la largeur disponible~~ fait le 2026-08-20 (voir Statut "menu radial
+  Planning en mobile") — menu radial (`PlanningActionsMenu.tsx`) plutôt
+  que le scroll horizontal. Considéré comme un premier jet fonctionnel,
+  pas figé : les couleurs du `conic-gradient` (`wheelBackground` dans
+  `PlanningActionsMenu.tsx`, teintes `muted`/`card`/`primary` en dur) sont
+  probablement à revoir selon ce que donnera le chantier "thèmes" évoqué
+  par l'utilisateur (pas encore cadré) — éviter de peaufiner ces couleurs
+  avant que ce chantier clarifie comment les thèmes s'appliquent au menu.
 - ~~Accessibilité : 7 constats de l'audit~~ tous corrigés le 2026-08-19
   (voir Statut) — vérifiés par re-scan axe (0 violation) + régression
   permanente `e2e/a11y.spec.ts`. Pas couvert par cet audit ni ce chantier
