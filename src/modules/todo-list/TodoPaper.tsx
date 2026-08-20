@@ -14,7 +14,7 @@ export function TodoPaper({ children, className }: TodoPaperProps) {
   return (
     <div
       className={cn(
-        'relative min-h-96 w-full rounded-sm bg-white pt-4 text-sm shadow-inner [background-image:repeating-linear-gradient(to_bottom,transparent,transparent_27px,var(--border)_27px,var(--border)_28px)]',
+        'paper-surface relative min-h-96 w-full rounded-sm bg-white pt-4 text-sm shadow-inner [background-image:repeating-linear-gradient(to_bottom,transparent,transparent_27px,var(--border)_27px,var(--border)_28px)]',
         className,
       )}
     >

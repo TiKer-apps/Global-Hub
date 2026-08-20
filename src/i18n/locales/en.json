@@ -5,6 +5,8 @@
     "modulesTitle": "Modules",
     "settingsButton": "Module settings",
     "close": "Close",
+    "lightMode": "Light",
+    "darkMode": "Dark",
     "empty": "Empty",
     "noTitle": "Untitled",
     "loading": "Loading…",

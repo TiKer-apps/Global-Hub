@@ -137,6 +137,22 @@
     @apply bg-orange-300 text-white;
   }
 
+  /* Post-it (jaune) et TodoPaper (blanc) sont des surfaces "papier"
+     volontairement en dur, pas suivies par le thème (cf. leurs propres
+     commentaires) — mais leur texte héritait quand même de
+     `text-foreground`/`--muted-foreground`, qui deviennent quasi blancs en
+     dark mode : texte illisible (contraste mesuré 1.11:1 par
+     @axe-core/playwright) voire invisible sur `bg-white`. Redéclare ces
+     variables localement (elles cascadent normalement, une redéclaration
+     sur un ancêtre l'emporte) pour que ces deux surfaces restent toujours
+     sombres sur clair, quel que soit `.dark` sur `<html>`.
+  */
+  .paper-surface {
+    --foreground: oklch(0.145 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    color: var(--foreground);
+  }
+
   /* Placeholder Tiptap (@tiptap/extension-placeholder) : l'extension pose
      l'attribut `data-placeholder` et la classe `is-editor-empty`, mais ne
      fournit aucun style — c'est à l'appli de l'afficher. */
