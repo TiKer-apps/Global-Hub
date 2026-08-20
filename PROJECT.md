@@ -5,6 +5,28 @@ modules (planning, notes, post-its, tâches, todo-list) sous forme de widgets.
 Sur grand écran, disposés librement sur un canvas zoomable ; sous 768px, en
 liste empilée (voir jalon "version mobile").
 
+## Statut — jalon du 2026-08-20 (mobile : Planning seul par défaut)
+
+Depuis le dernier jalon, 1 chantier en cours (branche
+`feat/mobile-default-planning-only` — pas encore mergée au moment de ce
+jalon). Discussion produit avec l'utilisateur sur d'autres façons
+d'organiser la version mobile (canvas responsive, tab bar par module,
+accordéon) — retenu : garder la liste empilée (l'app est un dashboard
+"coup d'œil", pas une app à onglets — cf. le rôle du module Important,
+qui perd son intérêt si voir son contenu demande une navigation) mais
+changer son **défaut**, pas sa structure.
+
+- **Seul Planning visible par défaut sur mobile** — première visite,
+  aucune préférence enregistrée : les 6 widgets empilés d'un coup
+  noyaient l'écran. `useModuleVisibility` (`module-visibility.ts`) prend
+  désormais un `defaultHiddenIds` optionnel (vide par défaut, comportement
+  desktop inchangé) ; `MobileHub.tsx` y passe tous les modules sauf
+  Planning. Aucun nouveau mécanisme : le drawer existant (masquer/afficher)
+  suffit pour révéler les autres widgets à la demande, un tap suffit.
+  Dès qu'une préférence est enregistrée (n'importe quel toggle), elle
+  prend le pas sur ce défaut, y compris pour re-masquer Planning si
+  l'utilisateur le souhaite.
+
 ## Statut — jalon du 2026-08-19 (corrections accessibilité)
 
 Depuis le jalon précédent (audit, même date), 1 chantier en cours
