@@ -627,6 +627,14 @@ dit déjà.
   l'usage réel sur mobile révèle des frictions (ordre des widgets,
   pertinence du défaut "Planning seul", façon de révéler les autres
   modules...).
+  Piste concrète identifiée pour la toolbar de `PlanningWidget` en
+  mobile : trop de petits boutons d'action (import/export, jour/semaine/
+  mois, etc.) pour la largeur disponible, d'où le scroll horizontal
+  ajouté dans `module-card.tsx` (voir jalon "version mobile", constat
+  découvert après coup). Idée envisagée mais pas implémentée : un seul
+  bouton qui ouvre un menu radial regroupant tous ces petits boutons,
+  plutôt que le scroll horizontal actuel — à étudier/prototyper avant de
+  trancher.
 - ~~Accessibilité : 7 constats de l'audit~~ tous corrigés le 2026-08-19
   (voir Statut) — vérifiés par re-scan axe (0 violation) + régression
   permanente `e2e/a11y.spec.ts`. Pas couvert par cet audit ni ce chantier
