@@ -163,6 +163,51 @@ un seul point de retour arrière possible.
 le *pourquoi* du changement (pas juste *quoi*), dans le style des
 messages déjà présents dans ce dépôt.
 
+## Accessibilité : à considérer à chaque ajout/modification
+
+**Règle** : tout nouvel élément interactif (bouton, champ, dialog,
+zone scrollable...) ou toute modification de l'UI existante doit
+rester accessible — pas seulement fonctionnelle à la souris/au tactile.
+Points à vérifier par réflexe :
+- Icône seule (bouton de fermeture, action sans texte visible) →
+  `aria-label`, jamais juste l'icône.
+- Champ de formulaire sans `<label>` visible → `aria-label` explicite
+  (cf. les inputs date/heure d'`EventFormModal.tsx`).
+- Élément cliquable qui n'est pas un vrai contrôle interactif
+  (`<div onClick>` à la place d'un `<button>`) → ni focusable ni
+  activable au clavier. Utiliser un `<button type="button">` (les
+  classes Tailwind existantes suffisent, pas besoin de reset — le
+  preflight de Tailwind gère déjà l'apparence par défaut).
+- Nouvelle couleur de texte sur un fond coloré (thème, badge, aperçu...)
+  → vérifier le contraste WCAG AA (4.5:1 pour du texte normal), pas
+  seulement "ça se lit à l'œil".
+- Nouvelle zone scrollable avec du contenu qui pourrait être vide
+  (liste, grille) → `tabIndex={0}` sur le conteneur si son contenu n'est
+  pas garanti d'inclure un élément focusable.
+- Nouveau landmark (`nav`, `main`...) → vérifier qu'il ne fait pas
+  apparaître de nouvelles violations "hors landmark" sur le contenu
+  voisin (axe applique une structure plus stricte dès qu'un premier
+  landmark existe sur la page).
+
+**Impact si non respecté** : l'audit du 2026-08-19 (voir `PROJECT.md`)
+a trouvé 7 violations concrètes accumulées sans qu'aucune ne soit
+volontaire — chacune issue d'un pattern ci-dessus répété sans y penser
+(icône seule, `div onClick`, texte blanc sur couleur vive...). Corriger
+après coup a demandé de re-vérifier toute l'app plutôt que de coûter
+quelques minutes au moment de l'écrire. Plusieurs "corrections" ont
+elles-mêmes introduit un nouveau bug (badge de contraste sombre sur du
+texte déjà noir, structure de landmarks incomplète) — un changement a11y
+n'est fiable que vérifié, pas juste "plausible à la lecture".
+
+**Comment l'appliquer** : `@axe-core/playwright` est installé
+(`devDependencies`) — avant de considérer un changement d'UI terminé,
+un scan rapide (`new AxeBuilder({ page }).analyze()` sur la page/le
+dialog concerné, cf. `e2e/a11y.spec.ts` pour le pattern) confirme
+l'absence de régression, plus fiable qu'une relecture du JSX. Le test
+`e2e/a11y.spec.ts` existant couvre déjà les surfaces principales
+(board desktop/mobile, modale de création d'événement, modale de
+réglages) — l'étendre si une nouvelle surface significative apparaît.
+
 ## Étendre ce document
 
 Si une nouvelle convention non-évidente apparaît (un piège récurrent,

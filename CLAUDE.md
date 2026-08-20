@@ -13,3 +13,4 @@ Avant de travailler sur ce projet, lire dans l'ordre :
 - Avant de considérer un changement terminé : `npm run build` (tsc + vite) et `npm run lint` doivent passer.
 - Un nouveau jalon dans `PROJECT.md` s'ajoute au-dessus du précédent — l'ancien part tel quel en archive en bas du fichier, jamais écrasé.
 - Après un chantier, mettre à jour `PROJECT.md` (Statut + "À affiner") pour que l'état documenté reste fidèle au code.
+- Tout ajout/modification d'UI doit rester accessible (icône seule → `aria-label`, `div onClick` → `button`, contraste, landmarks...) — cf. CONTRIBUTING.md, "Accessibilité : à considérer à chaque ajout/modification". Vérifier avec `@axe-core/playwright` (`e2e/a11y.spec.ts`), pas seulement à la lecture.
