@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { headerNotchPath, NOTCH_RADIUS } from '@/components/module-card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -7,6 +8,7 @@ import { useModuleHeaderClassName, useModuleThemeId, useSetModuleTheme } from '.
 import { HEADER_STYLE_OPTIONS, useModuleStyleId, useSetModuleStyle } from './module-style'
 import { MODULES, type ModuleDefinition } from './module-registry'
 import { extractBgClass, THEME_PRESETS } from './theme-presets'
+import { useIsMobile } from './use-is-mobile'
 
 // Bordure + ombre légère sur les aperçus de couleur/style — sans ça, un
 // aperçu clair (ex. la moitié blanche du style "Vague") se fond dans le fond
@@ -32,27 +34,56 @@ interface ModuleSettingsModalProps {
 // n'affecte pas les autres).
 export function ModuleSettingsModal({ open, onOpenChange }: ModuleSettingsModalProps) {
   const { t } = useTranslation()
+  const isMobile = useIsMobile()
+  const [selectedModuleId, setSelectedModuleId] = useState(MODULES[0].id)
+  const selectedModule = MODULES.find((m) => m.id === selectedModuleId) ?? MODULES[0]
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[80vh] w-full max-w-2xl overflow-y-auto" closeLabel={t('common.close')}>
         <DialogHeader>
           <DialogTitle>{t('common.settingsButton')}</DialogTitle>
         </DialogHeader>
-        <Tabs defaultValue={MODULES[0].id}>
-          <TabsList>
+        {isMobile ? (
+          <div className="space-y-4">
+            {/* `Tabs` (TabsList) ne wrap pas sur 6 modules : sur un écran
+                mobile étroit, ça faisait défiler toute la modale
+                horizontalement (signalé par l'utilisateur) — un `<select>`
+                natif ne dépend pas de la largeur disponible. */}
+            <select
+              value={selectedModuleId}
+              onChange={(e) => setSelectedModuleId(e.target.value)}
+              aria-label={t('moduleSettings.selectModule')}
+              className="w-full rounded-md border bg-background px-2 py-1.5 text-sm outline-none"
+            >
+              {MODULES.map((module) => (
+                <option key={module.id} value={module.id}>
+                  {t(module.labelKey)}
+                </option>
+              ))}
+            </select>
+            <div className="space-y-4">
+              <ModuleStylePicker module={selectedModule} />
+              <ModuleThemePicker module={selectedModule} />
+            </div>
+          </div>
+        ) : (
+          <Tabs defaultValue={MODULES[0].id}>
+            <TabsList>
+              {MODULES.map((module) => (
+                <TabsTab key={module.id} value={module.id}>
+                  {t(module.labelKey)}
+                </TabsTab>
+              ))}
+            </TabsList>
             {MODULES.map((module) => (
-              <TabsTab key={module.id} value={module.id}>
-                {t(module.labelKey)}
-              </TabsTab>
+              <TabsPanel key={module.id} value={module.id} className="space-y-4 pt-4">
+                <ModuleStylePicker module={module} />
+                <ModuleThemePicker module={module} />
+              </TabsPanel>
             ))}
-          </TabsList>
-          {MODULES.map((module) => (
-            <TabsPanel key={module.id} value={module.id} className="space-y-4 pt-4">
-              <ModuleStylePicker module={module} />
-              <ModuleThemePicker module={module} />
-            </TabsPanel>
-          ))}
-        </Tabs>
+          </Tabs>
+        )}
       </DialogContent>
     </Dialog>
   )

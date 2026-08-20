@@ -55,9 +55,13 @@ interface DialogContentProps extends DialogPrimitive.Popup.Props {
   // pour le bouton de fermeture — sans nom accessible sinon (icône `X`
   // seule), constat critique de l'audit accessibilité du 2026-08-19.
   closeLabel: string
+  // `false` pour un contenu qui fournit son propre bouton de fermeture
+  // (ex. le menu radial Planning, croix au centre de la roue plutôt qu'en
+  // coin) — `true` par défaut, inchangé pour les appelants existants.
+  showCloseButton?: boolean
 }
 
-function DialogContent({ className, children, closeLabel, ...props }: DialogContentProps) {
+function DialogContent({ className, children, closeLabel, showCloseButton = true, ...props }: DialogContentProps) {
   const restoreFocusRef = React.useContext(RestoreFocusContext)
   return (
     <DialogPrimitive.Portal>
@@ -75,12 +79,14 @@ function DialogContent({ className, children, closeLabel, ...props }: DialogCont
         {...props}
       >
         {children}
-        <DialogClose
-          aria-label={closeLabel}
-          className="absolute top-3 right-3 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-        >
-          <X className="size-4" />
-        </DialogClose>
+        {showCloseButton && (
+          <DialogClose
+            aria-label={closeLabel}
+            className="absolute top-3 right-3 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <X className="size-4" />
+          </DialogClose>
+        )}
       </DialogPrimitive.Popup>
     </DialogPrimitive.Portal>
   )

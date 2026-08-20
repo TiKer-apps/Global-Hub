@@ -26,6 +26,7 @@
     }
   },
   "moduleSettings": {
+    "selectModule": "Module",
     "themeTitle": "Theme (background and title text)",
     "styleTitle": "Header style",
     "themes": {
@@ -135,7 +136,8 @@
       "monthModeTitles": "Show event titles",
       "viewModeMinimal": "Switch to minimal mode",
       "viewModeGrid": "Switch to grid mode",
-      "today": "Today"
+      "today": "Today",
+      "moreActions": "More actions"
     },
     "nav": {
       "previousDay": "Previous day",
