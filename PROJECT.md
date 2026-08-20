@@ -616,6 +616,17 @@ dit déjà.
 
 ## À affiner
 
+- **Mobile : UX/UI pas figée** — la liste empilée (voir jalon "version
+  mobile") avec Planning seul par défaut (voir jalon "Planning seul par
+  défaut") est un premier jet fonctionnel, pas une version considérée
+  aboutie. Alternatives déjà discutées avec l'utilisateur et écartées
+  pour l'instant : tab bar par module (écartée — casse l'esprit
+  "dashboard coup d'œil" de l'app, en particulier pour Important, qui
+  perd son intérêt si le voir demande une navigation), accordéon.
+  Aucune de ces pistes n'est tranchée définitivement : à revisiter si
+  l'usage réel sur mobile révèle des frictions (ordre des widgets,
+  pertinence du défaut "Planning seul", façon de révéler les autres
+  modules...).
 - ~~Accessibilité : 7 constats de l'audit~~ tous corrigés le 2026-08-19
   (voir Statut) — vérifiés par re-scan axe (0 violation) + régression
   permanente `e2e/a11y.spec.ts`. Pas couvert par cet audit ni ce chantier
