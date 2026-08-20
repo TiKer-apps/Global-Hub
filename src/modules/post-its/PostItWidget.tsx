@@ -65,7 +65,10 @@ export function PostItWidget() {
             className="nodrag"
           />
         )}
-        <EditorContent editor={editor} className="nodrag size-32 overflow-hidden bg-yellow-200 p-3 text-sm shadow-md" />
+        <EditorContent
+          editor={editor}
+          className="paper-surface nodrag size-32 overflow-hidden bg-yellow-200 p-3 text-sm shadow-md"
+        />
         <ToolbarButton
           onClick={handleDetach}
           disabled={isEmptyHtml(draftHtml)}

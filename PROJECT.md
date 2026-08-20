@@ -5,6 +5,48 @@ modules (planning, notes, post-its, tâches, todo-list) sous forme de widgets.
 Sur grand écran, disposés librement sur un canvas zoomable ; sous 768px, en
 liste empilée (voir jalon "version mobile").
 
+## Statut — jalon du 2026-08-20 (dark mode)
+
+Depuis le dernier jalon, 1 chantier en cours (branche `feat/dark-mode` —
+pas encore mergée au moment de ce jalon). Distinct du thème par module
+existant (couleur de header par widget, `module-theme.tsx`) : un thème
+**général** clair/sombre pour toute l'app.
+
+- **Découverte clé** : le scaffold shadcn de ce projet a déjà tous les
+  tokens CSS dark mode définis dans `index.css` (`:root` + `.dark {...}`,
+  variante Tailwind `@custom-variant dark`) — jamais activés, aucun
+  switch n'existait. Poser le switch a suffi à faire basculer tout le
+  "chrome" de l'app (fonds de carte, texte, bordures, dialogs, boutons
+  shadcn) automatiquement, sans toucher un seul composant individuel —
+  vérifié visuellement (capture d'écran desktop + mobile).
+- Nouveau hook `src/canvas/color-scheme.ts` (`useColorScheme`, pas de
+  Context — même raisonnement que `module-visibility.ts`, un seul point
+  de montage à la fois via `ModuleDrawer`) : suit `prefers-color-scheme`
+  du système par défaut (écoute ses changements en direct), un choix
+  explicite (nouveaux boutons "Clair"/"Sombre" dans le drawer, sous
+  FR/EN) prend le dessus et se persiste dans `localStorage`, ignorant
+  ensuite les changements système. Application via `useLayoutEffect`
+  (avant peinture) pour éviter un flash clair→sombre au chargement.
+- ⚠️ **Bug de contraste réel trouvé par re-scan axe avec du contenu
+  réel** (le premier scan sur un board vide ne l'exposait pas) : le
+  texte des surfaces "papier" du post-it et de `TodoPaper` (jaune/blanc
+  en dur, volontairement pas suivies par le thème — objet physique) hérite
+  de `text-foreground`/`--muted-foreground`, qui deviennent quasi blancs
+  en dark mode — 1.11:1 mesuré, texte pratiquement invisible sur `bg-white`.
+  Corrigé par une classe `.paper-surface` (`index.css`, `@layer
+  components`) qui redéclare ces deux variables en dur localement (une
+  redéclaration sur un ancêtre l'emporte via la cascade normale) plutôt
+  que d'ajouter des classes `dark:` un peu partout — appliquée sur les 3
+  points d'usage (`PostItWidget.tsx`, `PostItNote.tsx`, `TodoPaper.tsx`).
+  Les 14 presets de thème de module, les chips d'événement Planning et la
+  roue du menu radial ont eux été vérifiés SANS violation (texte
+  déjà contrasté indépendamment du thème par preset ; la roue s'appuie en
+  fait déjà sur les variables CSS `--color-primary`/etc., donc s'adapte
+  correctement toute seule) — rien à corriger là.
+- Nouveau `e2e/dark-mode.spec.ts` : défaut système, override explicite
+  persisté après reload (`page.emulateMedia`), 0 violation axe en mode
+  sombre (board vide + surfaces papier avec du contenu réel).
+
 ## Statut — jalon du 2026-08-20 (menu radial Planning en mobile)
 
 Depuis le jalon précédent (même date), 1 chantier en cours (branche
@@ -695,6 +737,16 @@ dit déjà.
 
 ## À affiner
 
+- ~~Dark mode : contraste des couleurs littérales~~ vérifié le 2026-08-20
+  par re-scan axe avec du contenu réel (pas seulement à la lecture du
+  code) : un vrai bug trouvé et corrigé (texte des surfaces "papier"
+  post-it/todo-list, quasi invisible en dark — 1.11:1 mesuré), les autres
+  éléments à couleur littérale (14 presets de thème de module, chips
+  d'événement Planning, roue du menu radial) n'ont **aucune** violation
+  — leur texte est déjà contrasté indépendamment du thème (couleur fixe
+  choisie par preset), et la roue s'appuie en fait déjà sur les variables
+  CSS (`--color-primary` etc.), donc s'adapte correctement toute seule.
+  Rien à corriger de plus sur ce point ; voir Statut "dark mode".
 - **Mobile : UX/UI pas figée** — la liste empilée (voir jalon "version
   mobile") avec Planning seul par défaut (voir jalon "Planning seul par
   défaut") est un premier jet fonctionnel, pas une version considérée

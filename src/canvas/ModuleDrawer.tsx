@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 import { ToolbarButton } from '@/modules/text-editor/ToolbarButton'
 import type { PostIt } from '@/modules/post-its/types'
 import type { TodoSheet } from '@/modules/todo-list/types'
+import { useColorScheme } from './color-scheme'
 import { useLanguage } from './language'
 import { ModuleSettingsModal } from './ModuleSettingsModal'
 import { MODULES, type ModuleDefinition } from './module-registry'
@@ -44,6 +45,7 @@ export function ModuleDrawer({ hiddenModuleIds, onToggleModule, postIts, todoShe
   const [open, setOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const { language, setLanguage } = useLanguage()
+  const { scheme, setScheme } = useColorScheme()
 
   const instancesFor = (kind?: 'postIt' | 'todoSheet'): Instance[] => {
     if (kind === 'postIt') return postIts.map((p) => ({ id: p.id, preview: stripHtml(p.html, t('common.empty')) }))
@@ -132,6 +134,24 @@ export function ModuleDrawer({ hiddenModuleIds, onToggleModule, postIts, todoShe
             </ToolbarButton>
             <ToolbarButton active={language === 'en'} size="sm" onClick={() => setLanguage('en')} aria-label="English">
               EN
+            </ToolbarButton>
+          </div>
+          <div className="flex items-center justify-center gap-1">
+            <ToolbarButton
+              active={scheme === 'light'}
+              aria-pressed={scheme === 'light'}
+              size="sm"
+              onClick={() => setScheme('light')}
+            >
+              {t('common.lightMode')}
+            </ToolbarButton>
+            <ToolbarButton
+              active={scheme === 'dark'}
+              aria-pressed={scheme === 'dark'}
+              size="sm"
+              onClick={() => setScheme('dark')}
+            >
+              {t('common.darkMode')}
             </ToolbarButton>
           </div>
           <button

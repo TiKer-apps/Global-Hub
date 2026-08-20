@@ -100,7 +100,7 @@ function PostItNoteLoaded({ postIt }: { postIt: PostIt }) {
       )}
       <div
         onClick={() => setActive(true)}
-        className="size-40 cursor-pointer overflow-hidden bg-yellow-200 p-3 text-sm shadow-md"
+        className="paper-surface size-40 cursor-pointer overflow-hidden bg-yellow-200 p-3 text-sm shadow-md"
       >
         <EditorContent editor={editor} className="size-full" />
       </div>
