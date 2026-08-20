@@ -12,6 +12,14 @@ import { ModuleThemeProvider } from './module-theme'
 import { useModuleVisibility } from './module-visibility'
 import { WIDGET_COMPONENTS } from './widget-components'
 
+// Par défaut (première visite, aucune préférence enregistrée), seul
+// Planning est visible sur mobile — les 6 widgets empilés d'un coup
+// noyaient l'écran, contrairement au desktop où le canvas laisse la place
+// de tout voir en un coup d'œil. Les autres modules restent à un tap près
+// via le drawer (mécanisme de masquage déjà existant, juste le défaut qui
+// change) — cf. useModuleVisibility.
+const DEFAULT_MOBILE_HIDDEN_IDS = new Set(MODULES.filter((m) => m.id !== 'planning-week').map((m) => m.id))
+
 // Layout mobile : liste empilée plutôt que le canvas React Flow zoomable
 // de HubCanvas.tsx (pas adapté au tactile — pinch-zoom en conflit avec le
 // scroll de page, glisser-souris pour sélectionner une plage horaire dans
@@ -29,7 +37,7 @@ import { WIDGET_COMPONENTS } from './widget-components'
 export function MobileHub() {
   const postIts = useLiveQuery(() => db.postIts.toArray(), []) ?? []
   const todoSheets = useLiveQuery(() => db.todoSheets.toArray(), []) ?? []
-  const { hiddenModuleIds, toggleModule } = useModuleVisibility(postIts, todoSheets)
+  const { hiddenModuleIds, toggleModule } = useModuleVisibility(postIts, todoSheets, DEFAULT_MOBILE_HIDDEN_IDS)
 
   return (
     <ModuleThemeProvider>

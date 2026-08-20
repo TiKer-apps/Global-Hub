@@ -3,12 +3,12 @@ import { MODULES } from './module-registry'
 
 const STORAGE_KEY = 'global-hub:hidden-modules'
 
-function loadHiddenIds(): Set<string> {
+function loadHiddenIds(defaultHiddenIds: Set<string>): Set<string> {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? new Set(JSON.parse(raw) as string[]) : new Set()
+    return raw ? new Set(JSON.parse(raw) as string[]) : defaultHiddenIds
   } catch {
-    return new Set()
+    return defaultHiddenIds
   }
 }
 
@@ -29,8 +29,17 @@ interface TodoSheetLike {
 // Masquer/afficher Post-it ou Todo-list masque/affiche aussi ses instances
 // détachées — mais cliquer une instance individuelle ne touche jamais au
 // module ni à ses autres instances (asymétrique, cf. demande utilisateur).
-export function useModuleVisibility(postIts: PostItLike[], todoSheets: TodoSheetLike[]) {
-  const [hiddenModuleIds, setHiddenModuleIds] = useState<Set<string>>(loadHiddenIds)
+//
+// `defaultHiddenIds` : uniquement utilisé tant qu'aucune préférence n'est
+// encore enregistrée (première visite) — MobileHub s'en sert pour ne
+// montrer que Planning par défaut sur petit écran (voir son commentaire),
+// HubCanvas ne le passe pas (comportement desktop inchangé, tout visible).
+export function useModuleVisibility(
+  postIts: PostItLike[],
+  todoSheets: TodoSheetLike[],
+  defaultHiddenIds: Set<string> = new Set(),
+) {
+  const [hiddenModuleIds, setHiddenModuleIds] = useState<Set<string>>(() => loadHiddenIds(defaultHiddenIds))
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([...hiddenModuleIds]))

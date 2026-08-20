@@ -12,21 +12,24 @@ describe('MobileHub', () => {
     await i18n.changeLanguage('fr')
   })
 
-  it('lists every visible module', () => {
+  it('shows only Planning by default (first visit, no saved preference)', () => {
     render(<MobileHub />)
+    expect(screen.getByText('Planning', { exact: false, selector: '[data-slot="card-title"]' })).toBeInTheDocument()
     for (const title of ['Important', 'Notes', 'Tâches', 'Post-it', 'Todo-list']) {
-      expect(screen.getByText(title, { selector: '[data-slot="card-title"]' })).toBeInTheDocument()
+      expect(screen.queryByText(title, { selector: '[data-slot="card-title"]' })).toBeNull()
     }
   })
 
-  it('hides a module from the list when toggled off via the drawer', async () => {
+  it('reveals a module hidden by default when toggled on via the drawer, and can hide it again', async () => {
     const user = userEvent.setup()
     render(<MobileHub />)
-    expect(screen.getByText('Notes', { selector: '[data-slot="card-title"]' })).toBeInTheDocument()
+    expect(screen.queryByText('Notes', { selector: '[data-slot="card-title"]' })).toBeNull()
 
     await user.click(screen.getByRole('button', { name: 'Ouvrir le menu des modules' }))
     await user.click(screen.getByRole('button', { name: 'Notes' }))
+    expect(screen.getByText('Notes', { selector: '[data-slot="card-title"]' })).toBeInTheDocument()
 
+    await user.click(screen.getByRole('button', { name: 'Notes' }))
     expect(screen.queryByText('Notes', { selector: '[data-slot="card-title"]' })).toBeNull()
   })
 
