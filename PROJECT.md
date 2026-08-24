@@ -737,6 +737,42 @@ dit déjà.
 
 ## À affiner
 
+### Pistes d'amélioration proposées (2026-08-24, pas encore décidées)
+
+Cinq évolutions proposées par Claude à la demande de l'utilisateur — pas
+des chantiers actés, juste une liste priorisée soumise à discussion.
+Marquer chaque puce faite/écartée au fur et à mesure plutôt que de
+réécrire ce bloc.
+
+- **[Indispensable] Pipeline CI (GitHub Actions)** — aucun des 177 tests
+  Vitest / 23 e2e Playwright / scan a11y n'est exécuté automatiquement
+  sur une PR aujourd'hui ; tout repose sur le fait de lancer `npm run
+  build`/`lint`/`test`/`test:e2e` à la main. Risque de régression
+  silencieuse si l'étape est oubliée. Coût de mise en place faible (un
+  workflow `.github/workflows/ci.yml`).
+- **[Indispensable] Export/import de données (backup JSON)** — tout est
+  en local (IndexedDB/Dexie), pas de sync multi-appareil (explicitement
+  hors périmètre pour l'instant, voir "Reporté à plus tard"). Un vidage
+  de cache navigateur = perte totale des notes/tâches/planning. Un
+  export/import JSON serait un filet de sécurité réel, pas un confort —
+  Dexie a déjà toutes les données en mémoire, coût de mise en place
+  modéré.
+- **[Important] Découpage du bundle (code-splitting)** — le build
+  avertit systématiquement d'un chunk >500 kB (Tiptap, Storybook et le
+  reste dans un seul bundle initial). Pertinent pour une PWA pensée
+  mobile, où la taille du premier chargement compte. `dynamic import()`
+  sur les plus gros modules.
+- **[Important] Icônes PWA + expérience d'installation** — le manifest a
+  `icons: []` depuis le scaffold initial (`vite.config.ts`) : l'app ne
+  peut probablement pas s'installer correctement sur un écran d'accueil
+  mobile, gap direct sur la promesse "PWA".
+- **[Pertinent] Navigation clavier complète au-delà des dialogs** — le
+  chantier accessibilité a corrigé dialogs/contrastes mais avait
+  explicitement laissé de côté la navigation clavier complète des
+  widgets (ex. la sélection de plage horaire par glisser-souris dans
+  `WeekGrid`, toujours pas opérable au clavier) — dette la plus concrète
+  restante de ce chantier.
+
 - ~~Dark mode : contraste des couleurs littérales~~ vérifié le 2026-08-20
   par re-scan axe avec du contenu réel (pas seulement à la lecture du
   code) : un vrai bug trouvé et corrigé (texte des surfaces "papier"
