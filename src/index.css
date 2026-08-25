@@ -153,6 +153,25 @@
     color: var(--foreground);
   }
 
+  /* Fond + lignes réglées de TodoPaper, séparés de `.paper-surface`
+     (qui ne gère que le texte) : le quadrillage utilisait `var(--border)`,
+     un token qui bascule volontairement pour les surfaces UI en dark mode
+     (gris clair translucide → quasi blanc translucide) — posé sur un fond
+     resté `bg-white` en dur, ça rendait les lignes invisibles (blanc à 10%
+     sur blanc). Cette page reste un objet "papier" indépendant du thème
+     général (voir TodoPaper.tsx), mais avec SA PROPRE variante sombre —
+     un blanc plein écran est ressorti trop agressif une fois vu en
+     contexte réel (contrairement au post-it, plus petit et déjà coloré).
+  */
+  .todo-paper {
+    background-color: oklch(1 0 0);
+    --todo-paper-line: oklch(0.87 0 0);
+  }
+  .dark .todo-paper {
+    background-color: oklch(0.87 0 0);
+    --todo-paper-line: oklch(0.7 0 0);
+  }
+
   /* Placeholder Tiptap (@tiptap/extension-placeholder) : l'extension pose
      l'attribut `data-placeholder` et la classe `is-editor-empty`, mais ne
      fournit aucun style — c'est à l'appli de l'afficher. */

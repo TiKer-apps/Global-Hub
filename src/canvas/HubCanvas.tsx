@@ -11,6 +11,7 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { useLiveQuery } from 'dexie-react-hooks'
+import { useColorScheme } from './color-scheme'
 import { db } from '@/lib/db'
 import { PostItNote } from '@/modules/post-its/PostItNote'
 import { TodoSheetNote } from '@/modules/todo-list/TodoSheetNote'
@@ -50,6 +51,12 @@ export function HubCanvas() {
   // Dexie ne sert plus que de persistance : synchronisé DANS `nodes` quand un
   // post-it est ajouté/supprimé, et mis à jour DEPUIS `nodes` en fin de drag.
   const [nodes, setNodes] = useState(initialNodes)
+
+  // Controls/MiniMap/Background de React Flow ont leur propre thème,
+  // indépendant des variables CSS de l'app : sans `colorMode`, ils
+  // restaient blancs en dark mode. `useColorScheme` gère déjà la
+  // résolution système/explicite, `scheme` est toujours 'light' ou 'dark'.
+  const { scheme } = useColorScheme()
 
   const postIts = useLiveQuery(() => db.postIts.toArray(), []) ?? []
   const postItIds = useMemo(() => new Set(postIts.map((p) => p.id)), [postIts])
@@ -129,6 +136,7 @@ export function HubCanvas() {
                 nodesConnectable={false}
                 elevateNodesOnSelect={false}
                 fitView
+                colorMode={scheme}
               >
                 <Background />
                 <Controls />
