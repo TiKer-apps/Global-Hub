@@ -24,6 +24,26 @@ test('an explicit choice overrides the system preference and persists after relo
   expect(await page.evaluate(() => document.documentElement.classList.contains('dark'))).toBe(false)
 })
 
+test('the React Flow controls and minimap follow the toggle instead of staying stuck light', async ({ page }) => {
+  // `Controls`/`MiniMap` (@xyflow/react) ont leur propre thème indépendant
+  // des variables CSS de l'app — sans le prop `colorMode` (câblé sur
+  // `useColorScheme` dans HubCanvas.tsx), ils restaient blancs quel que
+  // soit `.dark` sur `<html>`. `useColorScheme` doit aussi rester
+  // synchronisé entre ses deux points de montage (ModuleDrawer et
+  // HubCanvas), d'où l'assertion via le bouton du drawer plutôt qu'un
+  // simple `localStorage.setItem`.
+  await page.goto('/')
+  const zoomIn = page.locator('.react-flow__controls-zoomin')
+  const lightBg = await zoomIn.evaluate((el) => getComputedStyle(el).backgroundColor)
+
+  await page.getByRole('button', { name: 'Ouvrir le menu des modules' }).click()
+  await page.getByRole('button', { name: 'Sombre' }).click()
+  await page.getByRole('button', { name: 'Fermer le menu' }).click()
+
+  const darkBg = await zoomIn.evaluate((el) => getComputedStyle(el).backgroundColor)
+  expect(darkBg).not.toBe(lightBg)
+})
+
 test('no automated accessibility violations in dark mode', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('button', { name: 'Ouvrir le menu des modules' }).click()

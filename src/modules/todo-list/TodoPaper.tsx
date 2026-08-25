@@ -7,14 +7,16 @@ interface TodoPaperProps {
 }
 
 // Fond commun "feuille de bloc-note" (bloc fixe et fiche détachée) : blanc,
-// lignes réglées, punaise rouge en haut — en dur (`bg-white`/`bg-red-600`)
-// plutôt que les tokens du thème, pour rendre l'objet physique plutôt que
-// suivre le dark mode (même logique que le jaune du post-it).
+// lignes réglées, punaise rouge en haut — objet physique plutôt que
+// composant UI suivant le thème général (même logique que le jaune du
+// post-it), mais avec sa propre variante dark (voir `.todo-paper` dans
+// index.css) plutôt que de rester figé sur un blanc identique en toute
+// circonstance.
 export function TodoPaper({ children, className }: TodoPaperProps) {
   return (
     <div
       className={cn(
-        'paper-surface relative min-h-96 w-full rounded-sm bg-white pt-4 text-sm shadow-inner [background-image:repeating-linear-gradient(to_bottom,transparent,transparent_27px,var(--border)_27px,var(--border)_28px)]',
+        'paper-surface todo-paper relative min-h-96 w-full rounded-sm pt-4 text-sm shadow-inner [background-image:repeating-linear-gradient(to_bottom,transparent,transparent_27px,var(--todo-paper-line)_27px,var(--todo-paper-line)_28px)]',
         className,
       )}
     >

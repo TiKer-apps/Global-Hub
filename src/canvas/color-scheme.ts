@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useState, useSyncExternalStore } from 'react'
 
 export type ColorScheme = 'light' | 'dark'
 
@@ -18,19 +18,33 @@ function systemScheme(): ColorScheme {
   return window.matchMedia(DARK_QUERY).matches ? 'dark' : 'light'
 }
 
-// Pas de Context (même raisonnement que `module-visibility.ts`) : un seul
-// point de montage à la fois (`ModuleDrawer`), et le `.dark` posé sur
-// `<html>` fait déjà cascader l'effet visuel à toute l'app via les
-// variables CSS déjà définies dans `index.css` (scaffold shadcn jamais
-// activé jusqu'ici) — pas besoin de partager cet état React avec des
-// descendants profonds.
-//
+// Petit store externe (pas de Context) : `useColorScheme` est maintenant
+// consommé depuis plusieurs points de montage à la fois (`ModuleDrawer`
+// pour le switch, `HubCanvas` pour le `colorMode` de React Flow) — un
+// `useState` local par composant, comme au départ, désynchroniserait ces
+// instances (le choix fait dans l'une ne serait pas vu par l'autre avant
+// un remount). `useSyncExternalStore` partage la même valeur `explicit`
+// entre toutes les instances, tout en gardant le `.dark` posé sur `<html>`
+// comme seul mécanisme de propagation visuelle vers le reste de l'app (pas
+// besoin de Context pour ça).
+let explicitScheme = loadExplicitScheme()
+const listeners = new Set<() => void>()
+
+function subscribe(listener: () => void) {
+  listeners.add(listener)
+  return () => listeners.delete(listener)
+}
+
+function getExplicitSnapshot() {
+  return explicitScheme
+}
+
 // Tant qu'aucun choix explicite n'a été fait (première visite), suit
 // `prefers-color-scheme` du système, y compris ses changements en direct
 // — un choix explicite (bouton) prend le dessus et ignore ensuite les
 // changements système, jusqu'à persistance dans `localStorage`.
 export function useColorScheme() {
-  const [explicit, setExplicit] = useState<ColorScheme | null>(loadExplicitScheme)
+  const explicit = useSyncExternalStore(subscribe, getExplicitSnapshot)
   const [system, setSystem] = useState<ColorScheme>(systemScheme)
 
   useEffect(() => {
@@ -50,15 +64,16 @@ export function useColorScheme() {
     document.documentElement.classList.toggle('dark', scheme === 'dark')
   }, [scheme])
 
-  const setScheme = (next: ColorScheme) => {
-    setExplicit(next)
-    try {
-      localStorage.setItem(STORAGE_KEY, next)
-    } catch {
-      // localStorage indisponible (mode privé strict...) : le choix reste
-      // actif pour la session, juste pas persisté — pas bloquant.
-    }
-  }
-
   return { scheme, setScheme }
+}
+
+function setScheme(next: ColorScheme) {
+  explicitScheme = next
+  try {
+    localStorage.setItem(STORAGE_KEY, next)
+  } catch {
+    // localStorage indisponible (mode privé strict...) : le choix reste
+    // actif pour la session, juste pas persisté — pas bloquant.
+  }
+  listeners.forEach((listener) => listener())
 }
