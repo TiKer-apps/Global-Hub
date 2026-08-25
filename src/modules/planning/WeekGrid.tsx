@@ -1,4 +1,12 @@
-import { useEffect, useMemo, useState, type MouseEvent as ReactMouseEvent } from 'react'
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
+} from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { eventOccursOnDay, getDayLabel, isSameDay } from './date-utils'
@@ -58,6 +66,18 @@ export function WeekGrid({ events, mode, days, selection, onSelectionChange, onE
   // sélection d'1h au même endroit.
   const [clickedInsideSelection, setClickedInsideSelection] = useState(false)
 
+  // Navigation clavier (roving tabindex) : cellule "active" hors extension
+  // en cours — indépendante de `dragDay`/`dragCurrentHour`, qui eux ne
+  // servent que pendant une extension (souris OU clavier, cf. plus bas).
+  const todayIndex = days.findIndex((day) => isSameDay(day, today))
+  const [focusedDayIndex, setFocusedDayIndex] = useState(Math.max(todayIndex, 0))
+  const [focusedHour, setFocusedHour] = useState(startHour)
+  const cellRefs = useRef<Record<string, HTMLButtonElement | null>>({})
+
+  const focusCell = (dayIndex: number, hour: number) => {
+    cellRefs.current[`${dayIndex}-${hour}`]?.focus()
+  }
+
   // Le canvas React Flow applique son propre `transform: scale(...)` (zoom) :
   // `getBoundingClientRect` renvoie donc une hauteur déjà mise à l'échelle,
   // différente des `HOUR_HEIGHT` px "locaux" utilisés pour le placement.
@@ -89,27 +109,102 @@ export function WeekGrid({ events, mode, days, selection, onSelectionChange, onE
     setDragCurrentHour(hourFromEvent(e))
   }
 
+  // Finalise la plage en cours (souris OU clavier) : réutilisée par le
+  // listener `mouseup` ci-dessous et par la confirmation clavier (Entrée).
+  const commitDrag = (day: Date, start: number, current: number) => {
+    const wasJustAClick = start === current
+    onSelectionChange(
+      wasJustAClick && clickedInsideSelection
+        ? null
+        : { day, startHour: Math.min(start, current), endHour: Math.max(start, current) + 1 },
+    )
+    setDragDay(null)
+    setDragStartHour(null)
+    setDragCurrentHour(null)
+    setClickedInsideSelection(false)
+  }
+
   useEffect(() => {
     if (dragDay === null || dragStartHour === null || dragCurrentHour === null) return
-    const handleUp = () => {
-      const wasJustAClick = dragStartHour === dragCurrentHour
-      onSelectionChange(
-        wasJustAClick && clickedInsideSelection
-          ? null
-          : {
-              day: dragDay,
-              startHour: Math.min(dragStartHour, dragCurrentHour),
-              endHour: Math.max(dragStartHour, dragCurrentHour) + 1,
-            },
-      )
+    const handleUp = () => commitDrag(dragDay, dragStartHour, dragCurrentHour)
+    window.addEventListener('mouseup', handleUp)
+    return () => window.removeEventListener('mouseup', handleUp)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dragDay, dragStartHour, dragCurrentHour, clickedInsideSelection, onSelectionChange])
+
+  const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max)
+
+  // Navigation/extension clavier sur une cellule (jour, heure) donnée —
+  // mêmes états `dragDay`/`dragStartHour`/`dragCurrentHour` que le
+  // glisser-souris, alimentés ici par Maj+Flèche au lieu de mousemove.
+  const handleCellKeyDown = (day: Date, dayIndex: number, hour: number) => (e: ReactKeyboardEvent<HTMLButtonElement>) => {
+    const isExtending = dragDay !== null && isSameDay(dragDay, day)
+
+    // React Flow écoute lui aussi les flèches (déplacement du node
+    // sélectionné) sur un listener global : sans `stopPropagation`, nos
+    // touches de navigation/extension font aussi glisser tout le widget
+    // Planning sur le canvas.
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter', ' ', 'Escape'].includes(e.key)) {
+      e.stopPropagation()
+    }
+
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault()
+      const delta = e.key === 'ArrowDown' ? 1 : -1
+      if (e.shiftKey) {
+        const anchor = isExtending ? dragStartHour! : hour
+        const current = isExtending ? dragCurrentHour! : hour
+        const nextCurrent = clamp(current + delta, startHour, endHour - 1)
+        setClickedInsideSelection(false)
+        setDragDay(day)
+        setDragStartHour(anchor)
+        setDragCurrentHour(nextCurrent)
+        focusCell(dayIndex, nextCurrent)
+      } else {
+        const nextHour = clamp(hour + delta, startHour, endHour - 1)
+        setFocusedDayIndex(dayIndex)
+        setFocusedHour(nextHour)
+        focusCell(dayIndex, nextHour)
+      }
+      return
+    }
+
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      if (e.shiftKey) return // extension limitée au jour courant, comme le glisser-souris
+      e.preventDefault()
+      const nextDayIndex = clamp(dayIndex + (e.key === 'ArrowRight' ? 1 : -1), 0, days.length - 1)
+      setFocusedDayIndex(nextDayIndex)
+      setFocusedHour(hour)
+      focusCell(nextDayIndex, hour)
+      return
+    }
+
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      if (isExtending) {
+        // Resynchronise le focus roving sur la cellule où le focus DOM se
+        // trouve réellement (celle de `dragCurrentHour`), sinon un Tab hors
+        // puis retour dans la grille sauterait sur l'ancienne cellule
+        // d'avant l'extension.
+        setFocusedDayIndex(dayIndex)
+        setFocusedHour(dragCurrentHour!)
+        commitDrag(dragDay, dragStartHour!, dragCurrentHour!)
+      } else {
+        onSelectionChange({ day, startHour: hour, endHour: hour + 1 })
+      }
+      return
+    }
+
+    if (e.key === 'Escape' && isExtending) {
+      e.preventDefault()
+      setFocusedDayIndex(dayIndex)
+      setFocusedHour(dragCurrentHour!)
       setDragDay(null)
       setDragStartHour(null)
       setDragCurrentHour(null)
       setClickedInsideSelection(false)
     }
-    window.addEventListener('mouseup', handleUp)
-    return () => window.removeEventListener('mouseup', handleUp)
-  }, [dragDay, dragStartHour, dragCurrentHour, clickedInsideSelection, onSelectionChange])
+  }
 
   const handleHeaderClick = (day: Date) => () => {
     const isFullDaySelected =
@@ -118,13 +213,18 @@ export function WeekGrid({ events, mode, days, selection, onSelectionChange, onE
   }
 
   const columns = `${GUTTER} repeat(${days.length}, 1fr)`
+  const instructionsId = useId()
 
-  // `tabIndex={0}` : rend la zone scrollable elle-même joignable/défilable
-  // au clavier indépendamment de son contenu (un calendrier sans événement
-  // n'aurait sinon aucun descendant focusable), cf. audit accessibilité du
-  // 2026-08-19.
+  // Plus de `tabIndex={0}` ici : chaque cellule horaire est désormais un
+  // bouton focusable (cf. plus bas), la grille a donc toujours au moins un
+  // descendant joignable au clavier, contrairement au constat de l'audit
+  // accessibilité du 2026-08-19 qui avait motivé ce `tabIndex` sur le
+  // conteneur (calendrier vide = aucun descendant focusable, à l'époque).
   return (
-    <div className="nowheel max-h-96 overflow-y-auto text-xs" tabIndex={0}>
+    <div className="nowheel max-h-96 overflow-y-auto text-xs">
+      <p id={instructionsId} className="sr-only">
+        {t('planning.grid.instructions')}
+      </p>
       <div className="grid" style={{ gridTemplateColumns: columns }}>
         <div className="sticky top-0 z-10 border-b bg-card" />
         {days.map((day, i) => (
@@ -190,6 +290,10 @@ export function WeekGrid({ events, mode, days, selection, onSelectionChange, onE
               ? { start: selection.startHour, end: selection.endHour }
               : null
 
+          const dayLabel = new Intl.DateTimeFormat(i18n.language, { weekday: 'long', day: 'numeric', month: 'long' }).format(
+            day,
+          )
+
           return (
             <div
               key={dayIndex}
@@ -198,9 +302,36 @@ export function WeekGrid({ events, mode, days, selection, onSelectionChange, onE
               className={cn('relative cursor-pointer border-l select-none', isSameDay(day, today) && 'bg-primary/5')}
               style={{ height: hours.length * HOUR_HEIGHT }}
             >
-              {hours.map((h) => (
-                <div key={h} className="border-b" style={{ height: HOUR_HEIGHT }} />
-              ))}
+              {hours.map((h) => {
+                const isActive = isDraggingThisDay
+                  ? h === dragCurrentHour
+                  : dayIndex === focusedDayIndex && h === focusedHour
+                const isSelected = range !== null && h >= range.start && h < range.end
+                return (
+                  <button
+                    key={h}
+                    type="button"
+                    ref={(el) => {
+                      cellRefs.current[`${dayIndex}-${h}`] = el
+                    }}
+                    tabIndex={isActive ? 0 : -1}
+                    onKeyDown={handleCellKeyDown(day, dayIndex, h)}
+                    onFocus={() => {
+                      if (!isDraggingThisDay) {
+                        setFocusedDayIndex(dayIndex)
+                        setFocusedHour(h)
+                      }
+                    }}
+                    aria-label={t(isSelected ? 'planning.grid.cellLabelSelected' : 'planning.grid.cellLabel', {
+                      day: dayLabel,
+                      hour: h,
+                    })}
+                    aria-describedby={instructionsId}
+                    className="focus-visible:ring-primary block w-full appearance-none border-b bg-transparent p-0 text-left focus-visible:relative focus-visible:z-10 focus-visible:ring-2 focus-visible:outline-none"
+                    style={{ height: HOUR_HEIGHT }}
+                  />
+                )
+              })}
               {range && (
                 <div
                   className="pointer-events-none absolute inset-x-0.5 rounded-sm bg-blue-400/30 ring-1 ring-blue-500"

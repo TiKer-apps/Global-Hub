@@ -154,6 +154,11 @@
       "range": "{{start}}h–{{end}}h, {{date}}",
       "label": "Sélection : {{value}}"
     },
+    "grid": {
+      "instructions": "Flèches pour naviguer, Maj + flèche haut/bas pour étendre une plage, Entrée pour créer un événement, Échap pour annuler.",
+      "cellLabel": "{{day}}, {{hour}}h",
+      "cellLabelSelected": "{{day}}, {{hour}}h (dans la sélection)"
+    },
     "importStatus_one": "{{count}} événement importé.",
     "importStatus_other": "{{count}} événements importés.",
     "event": {

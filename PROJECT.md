@@ -766,12 +766,18 @@ réécrire ce bloc.
   `icons: []` depuis le scaffold initial (`vite.config.ts`) : l'app ne
   peut probablement pas s'installer correctement sur un écran d'accueil
   mobile, gap direct sur la promesse "PWA".
-- **[Pertinent] Navigation clavier complète au-delà des dialogs** — le
-  chantier accessibilité a corrigé dialogs/contrastes mais avait
-  explicitement laissé de côté la navigation clavier complète des
-  widgets (ex. la sélection de plage horaire par glisser-souris dans
-  `WeekGrid`, toujours pas opérable au clavier) — dette la plus concrète
-  restante de ce chantier.
+- ~~[Pertinent] Navigation clavier complète au-delà des dialogs~~ point le
+  plus concret (sélection de plage horaire par glisser-souris dans
+  `WeekGrid`) traité le 2026-08-25 : flèches pour naviguer entre cellules
+  (roving tabindex), Maj+flèche haut/bas pour étendre une plage ancrée sur
+  la cellule focus, Entrée pour confirmer (parité avec un simple clic
+  souris), Échap pour annuler — réutilise l'état de glisser existant
+  (`dragDay`/`dragStartHour`/`dragCurrentHour`) pour les deux modalités.
+  Vérifié par `e2e/planning-week-keyboard.spec.ts` (nouveau, permanent) +
+  re-scan axe (0 violation) + non-régression du glisser-souris confirmée
+  manuellement. Le clic sur l'en-tête de jour (sélection du jour entier)
+  et la navigation clavier des autres vues (`WeekMinimal`/`MonthGrid`, qui
+  n'ont pas de glisser-souris) restent hors périmètre.
 
 - ~~Dark mode : contraste des couleurs littérales~~ vérifié le 2026-08-20
   par re-scan axe avec du contenu réel (pas seulement à la lecture du
@@ -806,10 +812,10 @@ réécrire ce bloc.
 - ~~Accessibilité : 7 constats de l'audit~~ tous corrigés le 2026-08-19
   (voir Statut) — vérifiés par re-scan axe (0 violation) + régression
   permanente `e2e/a11y.spec.ts`. Pas couvert par cet audit ni ce chantier
-  (à traiter séparément si besoin) : navigation clavier complète au-delà
-  des dialogs, test avec un vrai lecteur d'écran (VoiceOver/NVDA), la
-  sélection de plage horaire par glisser-souris dans `WeekGrid` (déjà
-  identifiée non tactile/non clavier lors du chantier mobile).
+  (à traiter séparément si besoin) : test avec un vrai lecteur d'écran
+  (VoiceOver/NVDA). La sélection de plage horaire par glisser-souris dans
+  `WeekGrid` (déjà identifiée non tactile lors du chantier mobile) a depuis
+  reçu un équivalent clavier, voir "À affiner" ci-dessus.
 - **Tests unitaires** — objectif 80 % atteint (voir Statut). Reste à 0 % :
   `App.tsx`/`HubCanvas.tsx` (cf. gotcha ci-dessous — pas juste "pas encore
   fait", un vrai blocage technique à lever), `ModuleSettingsModal.tsx`
