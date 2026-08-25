@@ -101,7 +101,10 @@
   },
   "todoList": {
     "title": "Todo-list",
-    "placeholderDraft": "Clique pour écrire…",
+    "itemPlaceholder": "Ajouter un élément…",
+    "addItem": "Ajouter",
+    "removeItem": "Retirer « {{text}} »",
+    "emptyDraft": "Aucun élément pour l'instant.",
     "detachSheet": "Détacher la fiche",
     "deleteSheet": "Supprimer la fiche",
     "confirmDelete": "Supprimer cette fiche ?"

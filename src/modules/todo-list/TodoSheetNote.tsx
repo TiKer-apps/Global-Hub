@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { db } from '@/lib/db'
 import { ToolbarButton } from '@/modules/text-editor/ToolbarButton'
-import { TodoPaper } from './TodoPaper'
 import type { TodoSheet } from './types'
 
 interface TodoSheetNoteProps {
@@ -13,8 +12,14 @@ interface TodoSheetNoteProps {
 
 // Fiche détachée du bloc : un node React Flow indépendant, dragable et
 // supprimable — comme un post-it détaché, sauf qu'elle n'est plus éditable
-// (cf. TodoListWidget) : cliquer une ligne la barre/coche, même convention
-// que ChecklistWidget (isItem -> rayé, sinon grisé + coché).
+// (cf. TodoListWidget) : cliquer une case coche/décoche la ligne. Même
+// liste plate (case à cocher + texte) que le brouillon, pour la même
+// raison (cf. TodoListWidget.tsx) — plus de fond "papier"/quadrillage,
+// qui coupait visuellement le texte et ne se lisait pas comme une
+// checklist. `!isItem` (convention historique, avant simplification à un
+// seul type de ligne cochable) est traité à l'identique : une case, pas
+// de distinction visuelle, pas de migration nécessaire sur les données
+// déjà en base.
 export function TodoSheetNote({ sheetId }: TodoSheetNoteProps) {
   const sheet = useLiveQuery(() => db.todoSheets.get(sheetId), [sheetId])
   if (!sheet) return null
@@ -55,23 +60,31 @@ function TodoSheetNoteLoaded({ sheet }: { sheet: TodoSheet }) {
       >
         <Trash2 className="size-3.5" />
       </ToolbarButton>
-      <TodoPaper className="shadow-md">
-        <div className="nodrag px-3">
+      <div className="rounded-md border bg-card p-2 shadow-md">
+        {/* `nodrag` posé ici (sur tout le conteneur de la liste), pas
+            seulement sur chaque `<li>` : l'espace entre deux lignes
+            (`space-y-0.5`, une marge) appartient au `<ul>` lui-même, pas
+            aux `<li>` — sans ce `nodrag` sur le parent, ce petit espace
+            retombait sur le comportement "drag" du node (curseur `grab`
+            trompeur entre deux items). */}
+        <ul className="nodrag nowheel max-h-[150px] space-y-0.5 overflow-y-auto">
           {sheet.lines.map((line) => (
-            <div
-              key={line.id}
-              onClick={() => handleToggleLine(line.id)}
-              className={cn(
-                'h-[28px] cursor-pointer truncate leading-[28px]',
-                line.isItem && line.done && 'text-muted-foreground line-through',
-                !line.isItem && line.done && 'text-muted-foreground',
-              )}
-            >
-              {!line.isItem && line.done ? `${line.text} ✓` : line.text}
-            </div>
+            <li key={line.id} className="rounded-md hover:bg-muted">
+              <label className="flex cursor-pointer items-center gap-2 px-1">
+                <input
+                  type="checkbox"
+                  checked={line.done}
+                  onChange={() => handleToggleLine(line.id)}
+                  className="size-3.5 shrink-0"
+                />
+                <span className={cn('min-w-0 flex-1 truncate text-sm', line.done && 'text-muted-foreground line-through')}>
+                  {line.text}
+                </span>
+              </label>
+            </li>
           ))}
-        </div>
-      </TodoPaper>
+        </ul>
+      </div>
     </div>
   )
 }

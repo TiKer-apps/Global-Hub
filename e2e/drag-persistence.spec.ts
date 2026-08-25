@@ -38,8 +38,16 @@ test('drags a detached post-it and keeps its position after reload', async ({ pa
   const id = await node.getAttribute('data-id')
   if (!id) throw new Error('post-it node has no data-id')
 
-  const before = await getPostItPosition(page, id)
+  // Recentre le canvas avant de mesurer : selon le layout des autres
+  // widgets (leur hauteur influence le zoom/pan calculé par `fitView` au
+  // montage), le node fraîchement détaché peut atterrir partiellement hors
+  // du viewport visible — un `page.mouse.move` vers un point hors viewport
+  // n'atteint rien, contrairement à un clic Playwright qui vérifierait
+  // l'actionabilité. "Fit View" garantit tous les nodes pleinement visibles.
+  await page.getByRole('button', { name: 'Fit View' }).click()
+  await expect(node).toBeInViewport()
 
+  const before = await getPostItPosition(page, id)
   const box = await node.boundingBox()
   if (!box) throw new Error('post-it node has no bounding box')
   const startX = box.x + box.width / 2

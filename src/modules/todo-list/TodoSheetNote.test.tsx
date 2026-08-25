@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import i18n from '@/i18n'
@@ -41,23 +41,35 @@ describe('TodoSheetNote', () => {
     expect(screen.getByText('Ligne simple')).toBeInTheDocument()
   })
 
-  it('clicking a checkable item strikes it through (toggles done)', async () => {
+  it('checking an item toggles done and strikes it through', async () => {
+    await seedSheet()
+    render(<TodoSheetNote sheetId="sheet-1" />)
+
+    await userEvent.click(await screen.findByRole('checkbox', { name: 'Item cochable' }))
+
+    const stored = await db.todoSheets.get('sheet-1')
+    expect(stored?.lines.find((l) => l.id === 'line-1')?.done).toBe(true)
+    await waitFor(() => expect(screen.getByText('Item cochable')).toHaveClass('line-through'))
+  })
+
+  it('toggles an item by clicking anywhere on its row, not just the checkbox', async () => {
     await seedSheet()
     render(<TodoSheetNote sheetId="sheet-1" />)
 
     await userEvent.click(await screen.findByText('Item cochable'))
 
-    const stored = await db.todoSheets.get('sheet-1')
-    expect(stored?.lines.find((l) => l.id === 'line-1')?.done).toBe(true)
+    await waitFor(() => expect(screen.getByRole('checkbox', { name: 'Item cochable' })).toBeChecked())
   })
 
-  it('clicking a plain line greys it out and appends a checkmark', async () => {
+  it('checking a plain line (legacy isItem: false) behaves the same, no distinct treatment', async () => {
     await seedSheet()
     render(<TodoSheetNote sheetId="sheet-1" />)
 
-    await userEvent.click(await screen.findByText('Ligne simple'))
+    await userEvent.click(await screen.findByRole('checkbox', { name: 'Ligne simple' }))
 
-    expect(await screen.findByText('Ligne simple ✓')).toBeInTheDocument()
+    const stored = await db.todoSheets.get('sheet-1')
+    expect(stored?.lines.find((l) => l.id === 'line-2')?.done).toBe(true)
+    await waitFor(() => expect(screen.getByText('Ligne simple')).toHaveClass('line-through'))
   })
 
   it('toggles the important flag', async () => {

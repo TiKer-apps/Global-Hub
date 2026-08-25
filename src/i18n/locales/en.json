@@ -101,7 +101,10 @@
   },
   "todoList": {
     "title": "Todo-list",
-    "placeholderDraft": "Click to write…",
+    "itemPlaceholder": "Add an item…",
+    "addItem": "Add",
+    "removeItem": "Remove \"{{text}}\"",
+    "emptyDraft": "No items yet.",
     "detachSheet": "Detach the sheet",
     "deleteSheet": "Delete sheet",
     "confirmDelete": "Delete this sheet?"
