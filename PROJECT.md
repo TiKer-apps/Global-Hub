@@ -5,6 +5,29 @@ modules (planning, notes, post-its, tâches, todo-list) sous forme de widgets.
 Sur grand écran, disposés librement sur un canvas zoomable ; sous 768px, en
 liste empilée (voir jalon "version mobile").
 
+## Statut — jalon du 2026-08-25 (documentation frontend)
+
+Un premier fichier `documentation/backend-flows.md` avait été ajouté
+(architecture cible backend pour les comptes/synchronisation, cf. plus
+bas "Reporté à plus tard"). Complété côté frontend par trois documents,
+même dossier, même esprit (diagrammes Mermaid, état factuel + questions
+ouvertes plutôt que décisions déguisées) :
+
+- `documentation/frontend-architecture.md` — canvas/nodes React Flow,
+  registre des modules, les 3 providers transverses (thème/style/
+  navigation), le pattern brouillon → détachement, et l'inventaire des 12
+  fichiers qui accèdent à Dexie directement aujourd'hui (aucune couche
+  d'abstraction).
+- `documentation/frontend-ui-conventions.md` — i18n, thème clair/sombre
+  (store partagé `useSyncExternalStore`), layout responsive desktop/
+  mobile, PWA (gap icônes toujours ouvert), accessibilité, tests.
+- `documentation/frontend-accounts-readiness.md` — le pont explicite avec
+  `backend-flows.md` : ce que "la couche repository doit exister côté
+  client avant ce chantier" implique concrètement (les 12 fichiers à
+  migrer, où vivrait l'état de session par analogie avec
+  `color-scheme.ts`), et les questions produit encore ouvertes (compte
+  obligatoire ou pas, migration des données locales pré-existantes).
+
 ## Statut — jalon du 2026-08-25 (todo-list : liste structurée + finitions dark mode)
 
 Deux petits chantiers indépendants, faits à la suite du jalon "dark mode" :
