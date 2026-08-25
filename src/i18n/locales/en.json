@@ -154,6 +154,11 @@
       "range": "{{start}}–{{end}}, {{date}}",
       "label": "Selection: {{value}}"
     },
+    "grid": {
+      "instructions": "Arrow keys to navigate, Shift + up/down to extend a range, Enter to create an event, Escape to cancel.",
+      "cellLabel": "{{day}}, {{hour}}h",
+      "cellLabelSelected": "{{day}}, {{hour}}h (in selection)"
+    },
     "importStatus_one": "{{count}} event imported.",
     "importStatus_other": "{{count}} events imported.",
     "event": {
