@@ -5,6 +5,60 @@ modules (planning, notes, post-its, tâches, todo-list) sous forme de widgets.
 Sur grand écran, disposés librement sur un canvas zoomable ; sous 768px, en
 liste empilée (voir jalon "version mobile").
 
+## Statut — jalon du 2026-08-25 (todo-list : liste structurée + finitions dark mode)
+
+Deux petits chantiers indépendants, faits à la suite du jalon "dark mode" :
+
+- **Controls/MiniMap React Flow restés blancs en dark mode** — ces deux
+  panneaux (`@xyflow/react`) ont leur propre thème, indépendant des
+  variables CSS de l'app : oubliés lors de l'activation du dark mode.
+  Corrigé via le prop natif `colorMode` de `<ReactFlow>` (`HubCanvas.tsx`),
+  câblé sur `useColorScheme()`. Ce hook est maintenant consommé à deux
+  endroits (`ModuleDrawer` et `HubCanvas`) : `color-scheme.ts` refactorisé
+  en petit store partagé (`useSyncExternalStore`) pour rester synchronisé
+  entre les deux, l'ancien `useState` local par composant aurait
+  désynchronisé les deux instances.
+- **Refonte de l'écriture dans la todo-list** — bug signalé : le texte de
+  l'éditeur riche (Tiptap) n'était pas aligné sur la cadence des lignes
+  réglées du fond papier (`.todo-paper`, 28px), le texte tapé était donc
+  visuellement coupé par les lignes. Traité en même temps la dette déjà
+  notée plus bas ("le module todo-list pourrait être simplifié plus
+  tard") plutôt qu'un simple correctif d'alignement CSS :
+  `TodoListWidget.tsx` n'utilise plus d'éditeur de texte riche — un champ
+  "Ajouter un élément" (Entrée ou bouton `+`) pousse directement chaque
+  ligne dans une vraie liste cochable (case à cocher, suppression
+  individuelle avant détachement). Toute nouvelle ligne est désormais
+  cochable (fini la distinction "commence par `-`" vs simple ligne
+  grisée) — simplification actée.
+  - **Itération 1** (gardait le fond papier, juste des rangées 28px
+    alignées) jugée insatisfaisante une fois vue en contexte réel : rendu
+    jugé pas assez soigné, point rouge décoratif (punaise) sans intérêt,
+    grand bloc vide fixe quand la liste est vide.
+  - **Itération 2 (retenue)** : abandon complet de l'esthétique papier
+    pour l'écriture — liste plate façon appli todo classique
+    (Todoist/Reminders), qui se dimensionne sur son contenu (rien = pas de
+    bloc, sinon `<ul>` scrollable), même pattern que `NotesWidget`/
+    `NoteList.tsx` (réutilisé plutôt que réinventé).
+  - **`TodoSheetNote.tsx` (fiche détachée) alignée sur ce choix** : même
+    constat une fois détachée (texte toujours coupé par le quadrillage,
+    et aucune case à cocher visible ne signalait que c'est une checklist)
+    → même liste plate + cases à cocher, plus de papier du tout pour la
+    todo-list. `TodoPaper.tsx` et `.todo-paper` (CSS) supprimés, devenus
+    du code mort (plus aucun consommateur) ; `.paper-surface` conservé
+    (toujours utilisé par le post-it).
+  - `TodoSheet`/`ChecklistLine` inchangés (pas de migration Dexie) : les
+    lignes déjà stockées avec `isItem: false` restent affichées à
+    l'identique (traitées comme n'importe quelle ligne cochable, sans
+    distinction visuelle).
+  - Vérifié par `TodoListWidget.test.tsx`/`TodoSheetNote.test.tsx`
+    réécrits + `e2e/dark-mode.spec.ts` adapté + captures d'écran
+    light/dark. Effet de bord détecté et corrigé au passage :
+    `e2e/drag-persistence.spec.ts` échouait de façon reproductible car le
+    rétrécissement du widget todo-list changeait le zoom `fitView` du
+    canvas, faisant atterrir le post-it nouvellement détaché
+    partiellement hors du viewport visible lors du test — corrigé en
+    cliquant "Fit View" avant de mesurer les coordonnées du glisser.
+
 ## Statut — jalon du 2026-08-20 (dark mode)
 
 Depuis le dernier jalon, 1 chantier en cours (branche `feat/dark-mode` —
@@ -961,8 +1015,10 @@ implémenter le comportement réel de chaque widget.
     disparaissait).
 
 - **Tâches** et **Todo-list** : deux composants distincts (styles
-  probablement très différents à terme), mais avec le même comportement
-  côté feature pour l'instant :
+  probablement très différents à terme). Comportement décrit ici pour
+  **Tâches** (aperçu `TaskPreview.tsx`, sur une note) — pour la
+  **Todo-list**, voir le jalon du 2026-08-25 ("liste structurée dès la
+  saisie"), ce qui suit ne s'applique plus qu'à Tâches :
   - Le contenu est un texte libre ; une ligne commençant par `-` est un
     item cochable.
   - Clic sur un item → texte barré (terminé). Deuxième clic → annule le
@@ -970,8 +1026,6 @@ implémenter le comportement réel de chaque widget.
   - Clic sur une ligne qui n'est *pas* un item (pas de `-`) → le texte
     grise et une coche s'affiche à côté (pas de barré dans ce cas). Un
     second clic annule ce grisé + coche.
-  - Le module todo-list pourrait être simplifié plus tard (à revoir, rien
-    d'acté).
 
 - **Important** : module transverse, pas lié à un seul type de contenu.
   Regroupe tous les éléments (événements de planning, notes, post-its...)

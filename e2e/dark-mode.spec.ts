@@ -54,22 +54,22 @@ test('no automated accessibility violations in dark mode', async ({ page }) => {
   expect(results.violations).toEqual([])
 })
 
-test('paper surfaces (post-it, todo sheet) keep readable dark text on their fixed light background in dark mode', async ({
-  page,
-}) => {
+test('the post-it paper surface keeps readable dark text on its fixed light background in dark mode', async ({ page }) => {
   await page.goto('/')
 
-  // Post-it et fiche todo-list ("papier") sont volontairement en dur
-  // (jaune/blanc), pas suivis par le thème — leur texte héritait quand
-  // même de `text-foreground`, quasi blanc en dark mode (1.11:1 mesuré
-  // par axe avant correctif `.paper-surface`, cf. index.css).
+  // Post-it ("papier") est volontairement en dur (jaune), pas suivi par le
+  // thème — son texte héritait quand même de `text-foreground`, quasi
+  // blanc en dark mode (1.11:1 mesuré par axe avant correctif
+  // `.paper-surface`, cf. index.css). La todo-list n'a plus de surface
+  // papier depuis sa refonte en liste plate (cf. PROJECT.md) — plus
+  // concernée par ce cas précis, mais toujours couverte par le scan axe
+  // ci-dessous via son contenu.
   await page.locator('[contenteditable="true"]').first().click()
   await page.keyboard.type('Contenu post-it')
   await page.getByRole('button', { name: 'Détacher le post-it' }).click()
 
-  const todoEditors = page.locator('[contenteditable="true"]')
-  await todoEditors.last().click()
-  await page.keyboard.type('- item todo')
+  await page.getByLabel('Ajouter un élément…').fill('item todo')
+  await page.getByLabel('Ajouter un élément…').press('Enter')
   await page.getByRole('button', { name: 'Détacher la fiche' }).click()
 
   await page.getByRole('button', { name: 'Ouvrir le menu des modules' }).click()

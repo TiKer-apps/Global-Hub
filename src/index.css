@@ -127,6 +127,16 @@
   html {
     @apply font-sans;
     }
+  /* `.nodrag` (React Flow) n'est qu'un marqueur comportemental côté JS —
+     empêche le drag du node depuis cette zone, mais ne définit aucun style.
+     Le curseur "grab" posé par la librairie sur le node lui-même
+     (`.react-flow__node.draggable`) est une propriété CSS héritée : sans
+     ce reset, tout le contenu `nodrag` (boutons, champs, listes...)
+     affichait quand même un curseur de glisser-déposer trompeur, alors
+     que cliquer là ne fait justement pas bouger le node. */
+  .nodrag {
+    cursor: default;
+  }
 }
 
 @layer components {
@@ -137,35 +147,21 @@
     @apply bg-orange-300 text-white;
   }
 
-  /* Post-it (jaune) et TodoPaper (blanc) sont des surfaces "papier"
-     volontairement en dur, pas suivies par le thème (cf. leurs propres
-     commentaires) — mais leur texte héritait quand même de
-     `text-foreground`/`--muted-foreground`, qui deviennent quasi blancs en
-     dark mode : texte illisible (contraste mesuré 1.11:1 par
-     @axe-core/playwright) voire invisible sur `bg-white`. Redéclare ces
-     variables localement (elles cascadent normalement, une redéclaration
-     sur un ancêtre l'emporte) pour que ces deux surfaces restent toujours
-     sombres sur clair, quel que soit `.dark` sur `<html>`.
+  /* Post-it (jaune), surface "papier" volontairement en dur, pas suivie
+     par le thème (cf. son propre commentaire) — mais son texte héritait
+     quand même de `text-foreground`/`--muted-foreground`, qui deviennent
+     quasi blancs en dark mode : texte illisible (contraste mesuré 1.11:1
+     par @axe-core/playwright). Redéclare ces variables localement (elles
+     cascadent normalement, une redéclaration sur un ancêtre l'emporte)
+     pour que cette surface reste toujours sombre sur clair, quel que soit
+     `.dark` sur `<html>`. (Todo-list avait le même traitement via
+     `.todo-paper` jusqu'à sa refonte en liste plate sans papier — cf.
+     TodoListWidget.tsx/TodoSheetNote.tsx, PROJECT.md.)
   */
   .paper-surface {
     --foreground: oklch(0.145 0 0);
     --muted-foreground: oklch(0.556 0 0);
     color: var(--foreground);
-  }
-
-  /* Fond + lignes réglées de TodoPaper, séparés de `.paper-surface`
-     (qui ne gère que le texte) : le quadrillage utilisait `var(--border)`,
-     un token qui bascule volontairement pour les surfaces UI en dark mode
-     (gris clair translucide → quasi blanc translucide) — posé sur un fond
-     resté `bg-white` en dur, ça rendait les lignes invisibles (blanc à 10%
-     sur blanc). Cette page reste un objet "papier" indépendant du thème
-     général (voir TodoPaper.tsx), mais avec SA PROPRE variante sombre —
-     un blanc plein écran est ressorti trop agressif une fois vu en
-     contexte réel (contrairement au post-it, plus petit et déjà coloré).
-  */
-  .todo-paper {
-    background-color: oklch(1 0 0);
-    --todo-paper-line: oklch(0.87 0 0);
   }
   .dark .todo-paper {
     background-color: oklch(0.87 0 0);
