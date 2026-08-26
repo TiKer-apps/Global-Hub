@@ -1,6 +1,6 @@
 # Backend : persistance & gestion d'utilisateurs — architecture cible
 
-Première pièce du dossier `documentation/`, à discuter avec Léo. Décrit
+Première pièce du dossier `documentation/`. Décrit
 l'architecture **cible** (pas un état intermédiaire) pour les chantiers
 "Comptes / authentification" et "Synchronisation multi-appareils",
 aujourd'hui listés comme reportés dans `PROJECT.md` ("Reporté à plus
@@ -141,12 +141,12 @@ flowchart TD
     B["Changement distant\n(updatedAt d'un autre appareil)"] --> C
     C -->|"local plus récent"| D["Le local écrase le distant"]
     C -->|"distant plus récent"| E["Le distant écrase le local"]
-    C -->|"égalité / pas d'horodatage fiable"| F["Non résolu automatiquement\n— à trancher avec Léo"]
+    C -->|"égalité / pas d'horodatage fiable"| F["Non résolu automatiquement\n— à trancher"]
 ```
 
 Stratégie retenue par défaut : dernier écrit gagne, sur `updatedAt` —
 suffisante pour un usage mono-utilisateur multi-appareils sans édition
-simultanée réelle. **Reste à trancher avec Léo** : la perte silencieuse
+simultanée réelle. **Reste à trancher** : la perte silencieuse
 d'une modification (cas "distant plus récent" qui écrase un edit local
 non encore synchronisé) est-elle acceptable telle quelle, ou faut-il au
 moins un signal visible à l'utilisateur ?
@@ -175,7 +175,7 @@ appareils.
 - Synchronisation par déclenchement client (pas de temps réel en V1).
 - Résolution de conflit : dernier écrit gagne, sur `updatedAt`.
 
-## Points encore ouverts à trancher avec Léo
+## Points encore ouverts
 
 - Le cas "distant plus récent" du Flux 4 doit-il être totalement
   silencieux, ou signalé à l'utilisateur ?
